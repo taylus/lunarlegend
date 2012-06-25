@@ -1,22 +1,48 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual C# Express 2010
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TiledXNA", "TiledXNA\TiledXNA\TiledXNA.csproj", "{ACDD2737-4B37-4250-89BF-26A91A263A5E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MapViewer", "TiledXNA\TiledXNA\MapViewer.csproj", "{ACDD2737-4B37-4250-89BF-26A91A263A5E}"
 EndProject
-Project("{96E2B04D-8817-42C6-938A-82C39BA4D311}") = "TiledXNAContent", "TiledXNA\TiledXNAContent\TiledXNAContent.contentproj", "{686759BB-D49A-4950-B4E5-55B0FA5FC5F7}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Content", "TiledXNA\TiledXNAContent\Content.contentproj", "{686759BB-D49A-4950-B4E5-55B0FA5FC5F7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Map.Common", "Map\Map.Common.csproj", "{233D04F6-8B0A-4DB0-A09C-160EC06D0757}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Debug|Mixed Platforms = Debug|Mixed Platforms
 		Debug|x86 = Debug|x86
+		Release|Any CPU = Release|Any CPU
+		Release|Mixed Platforms = Release|Mixed Platforms
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{ACDD2737-4B37-4250-89BF-26A91A263A5E}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{ACDD2737-4B37-4250-89BF-26A91A263A5E}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
+		{ACDD2737-4B37-4250-89BF-26A91A263A5E}.Debug|Mixed Platforms.Build.0 = Debug|x86
 		{ACDD2737-4B37-4250-89BF-26A91A263A5E}.Debug|x86.ActiveCfg = Debug|x86
 		{ACDD2737-4B37-4250-89BF-26A91A263A5E}.Debug|x86.Build.0 = Debug|x86
+		{ACDD2737-4B37-4250-89BF-26A91A263A5E}.Release|Any CPU.ActiveCfg = Release|x86
+		{ACDD2737-4B37-4250-89BF-26A91A263A5E}.Release|Mixed Platforms.ActiveCfg = Release|x86
+		{ACDD2737-4B37-4250-89BF-26A91A263A5E}.Release|Mixed Platforms.Build.0 = Release|x86
 		{ACDD2737-4B37-4250-89BF-26A91A263A5E}.Release|x86.ActiveCfg = Release|x86
 		{ACDD2737-4B37-4250-89BF-26A91A263A5E}.Release|x86.Build.0 = Release|x86
+		{686759BB-D49A-4950-B4E5-55B0FA5FC5F7}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{686759BB-D49A-4950-B4E5-55B0FA5FC5F7}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
 		{686759BB-D49A-4950-B4E5-55B0FA5FC5F7}.Debug|x86.ActiveCfg = Debug|x86
+		{686759BB-D49A-4950-B4E5-55B0FA5FC5F7}.Release|Any CPU.ActiveCfg = Release|x86
+		{686759BB-D49A-4950-B4E5-55B0FA5FC5F7}.Release|Mixed Platforms.ActiveCfg = Release|x86
 		{686759BB-D49A-4950-B4E5-55B0FA5FC5F7}.Release|x86.ActiveCfg = Release|x86
+		{233D04F6-8B0A-4DB0-A09C-160EC06D0757}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{233D04F6-8B0A-4DB0-A09C-160EC06D0757}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{233D04F6-8B0A-4DB0-A09C-160EC06D0757}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{233D04F6-8B0A-4DB0-A09C-160EC06D0757}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{233D04F6-8B0A-4DB0-A09C-160EC06D0757}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{233D04F6-8B0A-4DB0-A09C-160EC06D0757}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{233D04F6-8B0A-4DB0-A09C-160EC06D0757}.Release|Any CPU.Build.0 = Release|Any CPU
+		{233D04F6-8B0A-4DB0-A09C-160EC06D0757}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{233D04F6-8B0A-4DB0-A09C-160EC06D0757}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{233D04F6-8B0A-4DB0-A09C-160EC06D0757}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

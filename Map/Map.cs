@@ -37,6 +37,9 @@ public class Map
     //deserialized tmx file contents
     private Tiled.map map;
 
+    //GraphicsDevice for loading tilemap images
+    private GraphicsDevice graphicsDevice;
+
     //standard map properties read from the tmx
     public int Width { get; protected set; }
     public int Height { get; protected set; }
@@ -52,15 +55,16 @@ public class Map
     public List<Layer> Layers { get; protected set; }
     public List<ObjectGroup> ObjectGroups { get; protected set; }
 
-    public Map(string tmxFile)
+    public Map(string tmxFile, GraphicsDevice gd)
     {
         try
         {
-            tmxDirName = Path.GetDirectoryName(tmxFile);
-            tmxFileName = Path.GetFileName(tmxFile);
-
             map = DeserializeTMX(tmxFile);
             ValidateMapAttributes();
+
+            tmxDirName = Path.GetDirectoryName(tmxFile);
+            tmxFileName = Path.GetFileName(tmxFile);
+            graphicsDevice = gd;
 
             Width = int.Parse(map.width);
             Height = int.Parse(map.height);
@@ -88,7 +92,7 @@ public class Map
     private void LoadMapElements()
     {
         Properties = LoadProperties(map.properties);
-        TileSets = (from Tiled.tileset ts in map.tileset select new TileSet(tmxDirName, ts)).ToList();
+        TileSets = (from Tiled.tileset ts in map.tileset select new TileSet(tmxDirName, ts, graphicsDevice)).ToList();
         Layers = (from object o in map.Items where o.GetType() == typeof(Tiled.layer) select new Layer((Tiled.layer)o)).ToList();
         ObjectGroups = (from object o in map.Items where o.GetType() == typeof(Tiled.objectgroup) select new ObjectGroup((Tiled.objectgroup)o)).ToList();
     }

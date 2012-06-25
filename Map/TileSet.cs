@@ -20,7 +20,7 @@ public class TileSet
     private int Width { get { return Texture.Width / TileWidthPx; } }
     private int Height { get { return Texture.Height / TileHeightPx; } }
 
-    public TileSet(string tmxDirName, Tiled.tileset tileset)
+    public TileSet(string tmxDirName, Tiled.tileset tileset, GraphicsDevice gd)
     {
         if (tileset.source != null)
         {
@@ -47,7 +47,6 @@ public class TileSet
         string pathToTilesetImage = Path.Combine(tmxDirName, tilesetImage.source);
         using (FileStream fstream = new FileStream(pathToTilesetImage, FileMode.Open))
         {
-            GraphicsDevice gd = ServiceLocator.Get<GraphicsDevice>();
             Texture = Texture2D.FromStream(gd, fstream);
         }
 

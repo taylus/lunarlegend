@@ -41,13 +41,12 @@ public class TiledXNA : Game
     protected override void LoadContent()
     {
         spriteBatch = new SpriteBatch(GraphicsDevice);
-        ServiceLocator.Register<GraphicsDevice>(GraphicsDevice);
 
         font = Content.Load<SpriteFont>("font");
-        //map = new Map("maps/desert/desert.tmx");
-        //map = new Map("maps/gid_example/gids.tmx");
-        map = new Map("maps/test/testmap.tmx");
-        //map = new Map("maps/walls/walls_test.tmx");
+        //map = new Map("maps/desert/desert.tmx", GraphicsDevice);
+        //map = new Map("maps/gid_example/gids.tmx", GraphicsDevice);
+        map = new Map("maps/test/testmap.tmx", GraphicsDevice);
+        //map = new Map("maps/walls/walls_test.tmx", GraphicsDevice);
 
         ResetMapViewSettings();
     }
