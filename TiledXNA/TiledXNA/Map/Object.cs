@@ -1,0 +1,54 @@
+﻿using System;
+using System.Linq;
+using System.Collections.Generic;
+using Property = System.Collections.Generic.KeyValuePair<string, string>;
+using Microsoft.Xna.Framework;
+
+public class ObjectGroup
+{
+    public string Name { get; protected set; }
+    public Color Color { get; protected set; }
+    public float Opacity { get; protected set; }
+    public bool Visible { get; protected set; }
+    public List<Object> Objects { get; protected set; }
+
+    public ObjectGroup(Tiled.objectgroup objGroup)
+    {
+        Name = objGroup.name;
+        //TODO: color
+        //TODO: opacity
+        //TODO: visible
+
+        Objects = (from Tiled.@object obj in objGroup.@object select new Object(obj)).ToList();
+    }
+}
+
+public class Object
+{
+    public string Name { get; protected set; }
+    public string Type { get; protected set; }
+    public int X { get; protected set; }
+    public int Y { get; protected set; }
+    public int Width { get; protected set; }
+    public int Height { get; protected set; }
+    public uint GID { get; protected set; }
+    public bool Visible { get; protected set; }
+    public List<Property> Properties { get; protected set; }
+    public Rectangle Rectangle { get { return new Rectangle(X, Y, Width, Height); } }
+
+    public static readonly Color DEFAULT_COLOR = Color.Lerp(Color.Transparent, Color.Yellow, 0.35f);
+
+    public Object(Tiled.@object obj)
+    {
+        Name = obj.name;
+        Type = obj.type;
+        X = int.Parse(obj.x);
+        Y = int.Parse(obj.y);
+        Width = int.Parse(obj.width);
+        Height = int.Parse(obj.height);
+        //TODO: GID
+        //TODO: visible
+
+        Properties = Map.LoadProperties(obj.properties);
+    }
+}
