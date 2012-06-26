@@ -4,7 +4,7 @@ public static class Program
 {
     public static void Main(string[] args)
     {
-        using (TiledMapViewer game = new TiledMapViewer())
+        using (TiledDemoGame game = new TiledDemoGame())
         {
             game.Run();
         }

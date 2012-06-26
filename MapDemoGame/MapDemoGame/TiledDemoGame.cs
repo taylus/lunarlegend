@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Linq;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
@@ -6,21 +7,15 @@ using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 
-public class TiledXNA : Game
+public class TiledDemoGame : Game
 {
     private GraphicsDeviceManager graphics;
     private SpriteBatch spriteBatch;
     private SpriteFont font;
-    private MouseState currentMouseState;
-    private MouseState previousMouseState;
-
-    private const float ZOOM_FACTOR = 1.1f;
 
     private Map map;
-    private float mapScale;
-    private Vector2 mapDrawPosition;
 
-    public TiledXNA()
+    public TiledDemoGame()
     {
         graphics = new GraphicsDeviceManager(this);
         graphics.PreferredBackBufferWidth = 1024;
@@ -28,14 +23,7 @@ public class TiledXNA : Game
         graphics.ApplyChanges();
         IsMouseVisible = true;
         Content.RootDirectory = "Content";
-        Window.Title = "TMX Loader";
-        Window.AllowUserResizing = true;
-        Window.ClientSizeChanged += new EventHandler<EventArgs>(Window_ClientSizeChanged);
-    }
-
-    protected void Window_ClientSizeChanged(object sender, EventArgs e)
-    {
-        ResetMapViewSettings(false);
+        Window.Title = "Demo Game";
     }
 
     protected override void LoadContent()
@@ -43,12 +31,10 @@ public class TiledXNA : Game
         spriteBatch = new SpriteBatch(GraphicsDevice);
 
         font = Content.Load<SpriteFont>("font");
-        //map = new Map("maps/desert/desert.tmx", GraphicsDevice);
-        //map = new Map("maps/gid_example/gids.tmx", GraphicsDevice);
-        map = new Map("maps/test/testmap.tmx", GraphicsDevice);
-        //map = new Map("maps/walls/walls_test.tmx", GraphicsDevice);
-
-        ResetMapViewSettings();
+        //map = LoadMap("maps/desert/desert.tmx");
+        //map = LoadMap("maps/gid_example/gids.tmx");
+        map = LoadMap("maps/test/testmap.tmx");
+        //map = LoadMap("maps/walls/walls_test.tmx");
     }
 
     protected override void UnloadContent()
@@ -61,40 +47,10 @@ public class TiledXNA : Game
         //don't respond to input if the game isn't active
         if (!IsActive) return;
 
-        currentMouseState = Mouse.GetState();
-
         //exit on esc
         if (Keyboard.GetState().IsKeyDown(Keys.Escape))
             this.Exit();
 
-        //left mouse button
-        if (previousMouseState.LeftButton == ButtonState.Pressed && 
-            currentMouseState.LeftButton == ButtonState.Pressed &&
-            previousMouseState.Position() != currentMouseState.Position())
-        {
-            //dragging
-            Vector2 delta = previousMouseState.Position() - currentMouseState.Position();
-            mapDrawPosition -= delta;
-        }
-
-        //middle mouse button
-        if (currentMouseState.ScrollWheelValue > previousMouseState.ScrollWheelValue)
-        {
-            //scrolled up, zoom in
-            mapScale *= ZOOM_FACTOR;
-        }
-        else if(currentMouseState.ScrollWheelValue < previousMouseState.ScrollWheelValue)
-        {
-            //scrolled down, zoom out
-            mapScale /= ZOOM_FACTOR;
-        }
-        if (currentMouseState.MiddleButton == ButtonState.Pressed)
-        {
-            //reset view settings on middle button click
-            ResetMapViewSettings();
-        }
-
-        previousMouseState = currentMouseState;
         base.Update(gameTime);
     }
 
@@ -115,7 +71,7 @@ public class TiledXNA : Game
 
         //draw main content to screen
         spriteBatch.Begin();
-        spriteBatch.Draw(mapSurf, mapDrawPosition, null, Color.White, 0.0f, mapSurf.Bounds.Center.ToVector2(), mapScale, SpriteEffects.None, 0);
+        spriteBatch.Draw(mapSurf, Vector2.Zero, null, Color.White, 0.0f, Vector2.Zero, 1.0f, SpriteEffects.None, 0);
         DrawDebugMapInfo();
         spriteBatch.End();
 
@@ -144,9 +100,8 @@ public class TiledXNA : Game
         }
     }
 
-    private void ResetMapViewSettings(bool resetZoom = true)
+    private Map LoadMap(string tmxFile)
     {
-        mapDrawPosition = GraphicsDevice.Viewport.Bounds.Center.ToVector2();
-        if (resetZoom) mapScale = 1.0f;
+        return new Map(Path.Combine(Content.RootDirectory, tmxFile), GraphicsDevice);
     }
 }
