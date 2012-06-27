@@ -187,4 +187,11 @@ public class Map
             }
         }
     }
+
+    //note: this returns the first object with this name in the first objectgroup found to contain it
+    //if someone uses the same name for lots of objects they probably won't be able to get the one they want
+    public Object GetObject(string name)
+    {
+        return (from ObjectGroup objGroup in ObjectGroups where objGroup.ContainsObject(name) select objGroup.GetObject(name)).First();
+    }
 }

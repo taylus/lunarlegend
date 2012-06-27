@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.0" orientation="orthogonal" width="36" height="36" tilewidth="32" tileheight="32">
+ <properties>
+  <property name="map_name" value="Test Map"/>
+ </properties>
+ <tileset firstgid="1" name="lttp_castlebasement1" tilewidth="32" tileheight="32">
+  <image source="lttp_castlebasement1.png" width="2368" height="2012"/>
+ </tileset>
+ <layer name="base layer" width="36" height="36">
+  <data encoding="base64" compression="gzip">
+   H4sIAAAAAAAAC+2XTWrCUBRGX38m1m7CqOCwS7j7adqCK7gbMCq4labt7NuFUcGttCe8WSclGTwo3MGBcBNyzvTbTFJqYAs72MOhELgcp+N2GnwDR+4dnOAMF7gWApfjdNze5RafPaRUwRwWsIRVIXA5TsftNPQt/sy9hhd4hTdYFwKX43TcXucWf+fewgd8whc8PZYBl+N03N7mFv/Gn6Yp3cAt3MH9NHkJcDlOx+009C3REz3REz3REz3/oUc4hVs0iBZFz589xrNxM94Z31j0RE/0RE/0RM/vHjaqsVWNzWpsV2PDGlt2KBoDLuEUbrW5RWx4Y8sbm97Y9sbGt/VwNAZcwincqnOLZvyvgjksYAmr4WgMuIRTuFXlFh0nyTo4wRkucB2OxoBLOIVbNPQt2vC/Brawgz0chqMx4BJO4VaTW/QDiSWoSEAUAAA=
+  </data>
+ </layer>
+ <layer name="wall layer" width="36" height="36" opacity="0.01">
+  <properties>
+   <property name="layer_property" value=""/>
+  </properties>
+  <data encoding="base64" compression="gzip">
+   H4sIAAAAAAAAC+3OsQkAAAzDsHzW/7/qDYHSSQbvmiRjH/0dDw8PDw8PDw8PDw8PDw9P77GbFyJyio1AFAAA
+  </data>
+ </layer>
+ <objectgroup name="Object Layer 1" width="36" height="36">
+  <object name="info_player_start" x="576" y="576" width="32" height="32">
+   <properties>
+    <property name="face_dir" value="down"/>
+   </properties>
+  </object>
+ </objectgroup>
+</map>

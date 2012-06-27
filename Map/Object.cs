@@ -21,6 +21,19 @@ public class ObjectGroup
 
         Objects = (from Tiled.@object obj in objGroup.@object select new Object(obj)).ToList();
     }
+
+    public bool ContainsObject(string name)
+    {
+        return (from Object obj in Objects where obj.Name == name select obj).Any();
+    }
+
+    public Object GetObject(string name)
+    {
+        return (from Object obj in Objects where obj.Name == name select obj).First();
+    }
+
+    //TODO: should probably store objects in a Dictionary of name => object,
+    //but there's nothing stopping you from duplicating names in Tiled
 }
 
 public class Object
@@ -29,6 +42,7 @@ public class Object
     public string Type { get; protected set; }
     public int X { get; protected set; }
     public int Y { get; protected set; }
+    public Vector2 Position { get { return new Vector2((int)X, (int)Y); } }
     public int Width { get; protected set; }
     public int Height { get; protected set; }
     public uint GID { get; protected set; }

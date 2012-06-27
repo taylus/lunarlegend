@@ -13,13 +13,14 @@ public class TiledDemoGame : Game
     private SpriteBatch spriteBatch;
     private SpriteFont font;
 
-    private Map map;
+    private World world;
+    private Player player;
 
     public TiledDemoGame()
     {
         graphics = new GraphicsDeviceManager(this);
-        graphics.PreferredBackBufferWidth = 1024;
-        graphics.PreferredBackBufferHeight = 768;
+        graphics.PreferredBackBufferWidth = 800;
+        graphics.PreferredBackBufferHeight = 600;
         graphics.ApplyChanges();
         IsMouseVisible = true;
         Content.RootDirectory = "Content";
@@ -31,10 +32,24 @@ public class TiledDemoGame : Game
         spriteBatch = new SpriteBatch(GraphicsDevice);
 
         font = Content.Load<SpriteFont>("font");
-        //map = LoadMap("maps/desert/desert.tmx");
-        //map = LoadMap("maps/gid_example/gids.tmx");
-        map = LoadMap("maps/test/testmap.tmx");
+
         //map = LoadMap("maps/walls/walls_test.tmx");
+        Map map = LoadMap("maps/test_scroll/test_scroll.tmx");
+        world = new World(map, 1.0f, Vector2.Zero, GraphicsDevice);
+
+        //TODO: necessary to render every frame? (animated tiles?)
+        world.RenderMap(spriteBatch);
+
+        player = new Player(world, GetPlayerSpawnPosition(), (int)world.TileWidth, (int)world.TileHeight);
+    }
+
+    private Vector2 GetPlayerSpawnPosition()
+    {
+        //Object spawnPoint = world.Map.GetObject("info_player_start");
+        //if (spawnPoint != null) return world.ProjectPoint(spawnPoint.Position);
+
+        //log a warning: no player spawnpoint in the map!
+        return GraphicsDevice.Viewport.Bounds.Center.ToVector2();
     }
 
     protected override void UnloadContent()
@@ -47,45 +62,42 @@ public class TiledDemoGame : Game
         //don't respond to input if the game isn't active
         if (!IsActive) return;
 
+        KeyboardState keyboard = Keyboard.GetState();
+
         //exit on esc
-        if (Keyboard.GetState().IsKeyDown(Keys.Escape))
+        if (keyboard.IsKeyDown(Keys.Escape))
             this.Exit();
+
+        player.Move(keyboard);
+
+        if (keyboard.IsKeyDown(Keys.Space) && System.Diagnostics.Debugger.IsAttached)
+            System.Diagnostics.Debugger.Break();
 
         base.Update(gameTime);
     }
 
     protected override void Draw(GameTime gameTime)
     {
-        //draw the map to a temporary surface
-        //apply effects to that surface, instead of having the map do it
-        RenderTarget2D mapSurf = new RenderTarget2D(GraphicsDevice, map.WidthPx, map.HeightPx);
-        GraphicsDevice.SetRenderTarget(mapSurf);
-        GraphicsDevice.Clear(Color.Transparent);
-        spriteBatch.Begin();
-        map.Draw(spriteBatch, true);
-        spriteBatch.End();
-
-        //reset to screen, and clear it
-        GraphicsDevice.SetRenderTarget(null);
+        //clear the screen
         GraphicsDevice.Clear(Color.DimGray);
 
-        //draw main content to screen
+        //draw game objects to the screen
         spriteBatch.Begin();
-        spriteBatch.Draw(mapSurf, Vector2.Zero, null, Color.White, 0.0f, Vector2.Zero, 1.0f, SpriteEffects.None, 0);
-        DrawDebugMapInfo();
+        world.Draw(spriteBatch);
+        player.Draw(spriteBatch);
+        DrawDebugInfo();
         spriteBatch.End();
 
         base.Draw(gameTime);
     }
 
-    private void DrawDebugMapInfo()
+    private void DrawDebugInfo()
     {
         int stringPadding = 2;
         List<string> debugStrings = new List<string>();
-        debugStrings.Add("Map: " + map.Name);
-        debugStrings.Add("Layers: " + map.Layers.Count);
-        debugStrings.Add("Tilesets: " + map.TileSets.Count);
-        debugStrings.Add("Properties: " + map.Properties.Count);
+        debugStrings.Add(string.Format("View: ({0}, {1})", (int)world.ViewX, (int)world.ViewY));
+        debugStrings.Add(string.Format("World: ({0}, {1})", (int)player.WorldX, (int)player.WorldY));
+        debugStrings.Add(string.Format("Screen: ({0}, {1})", (int)player.ScreenX, (int)player.ScreenY));
 
         //background rectangle
         //string longestString = debugStrings.OrderByDescending(s => s.Length).First();
@@ -103,5 +115,10 @@ public class TiledDemoGame : Game
     private Map LoadMap(string tmxFile)
     {
         return new Map(Path.Combine(Content.RootDirectory, tmxFile), GraphicsDevice);
+    }
+
+    private Vector2 GetInitialViewOffset()
+    {
+        return GraphicsDevice.Viewport.Bounds.Center.ToVector2() - new Vector2(world.WidthPx / 2, world.HeightPx / 2);
     }
 }

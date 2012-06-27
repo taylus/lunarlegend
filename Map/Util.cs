@@ -25,6 +25,12 @@ public static class Util
         return new Vector2(ms.X, ms.Y);
     }
 
+    ////get the top-left offset of innerRect such that it is centered within outerRect
+    //public static Vector2 GetCenteredOffset(Rectangle outerRect, Rectangle innerRect)
+    //{
+    //    return outerRect.Center.ToVector2() - new Vector2(innerRect.Width / 2, innerRect.Height / 2);
+    //}
+
     public static Color ColorFromHexString(string hexColor)
     {
         if (hexColor.StartsWith("#"))
