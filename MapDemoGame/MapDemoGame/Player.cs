@@ -35,7 +35,7 @@ public class Player
     public float ScreenY { get { return ScreenPosition.Y; } }
     public Vector2 ScreenPosition { get { return world.WorldToScreenCoordinates(WorldPosition); } }
 
-    private const float DEFAULT_SPEED = 4.0f;
+    private const float DEFAULT_SPEED = 15.0f;
 
     public Player(World world, Vector2 pos, int w, int h, float speed = DEFAULT_SPEED)
     {
@@ -54,81 +54,107 @@ public class Player
 
     public void Move(KeyboardState keyboard)
     {
+        //TODO: simplify this? it works, but it's messy
+
+        //NOTE: the collision checks against the map borders are "predictive", which works even for fast speeds because they continue indefinitely
+        //      against walls with specified widths, we'll pass through them if our speed > their width (tunneling)
+        //      this will be a problem if anything is moving very fast, but I don't think that will be the case anywhere
+
         if (keyboard.IsKeyDown(Keys.W))
         {
-            //reset the player's position if they moved past the top edge
-            if (WorldY <= 0) WorldY = 0;
-            else
+            //move slower if going diagonally, and move less if we can't move a full step
+            float dist = (keyboard.IsKeyDown(Keys.A) || keyboard.IsKeyDown(Keys.D)) ? Speed * DIAG_FACTOR : Speed;
+            dist = MathHelper.Min(dist, MathHelper.Distance(WorldY, 0));
+
+            //check if movement is possible (TODO: collisions)
+            WorldY -= dist;
+
+            //scroll the map if possible
+            if (world.ViewY > 0 && ScreenY < world.ViewHeight / 2)
             {
-                //move slower if going diagonally
-                float howFar = (keyboard.IsKeyDown(Keys.A) || keyboard.IsKeyDown(Keys.D)) ? Speed * DIAG_FACTOR : Speed;
-
-                //check if movement is possible (TODO: collisions)
-                WorldY -= howFar;
-
-                //scroll the map if possible
-                if (world.ViewY > 0 && ScreenY < world.ViewHeight / 2)
-                    world.ViewY -= howFar;
+                //scroll one pixel at a time (in case we can't move a full step)
+                for (int i = 0; i < dist; i++)
+                {
+                    world.ViewY -= 1;
+                    if (world.ViewY < 0)
+                    {
+                        world.ViewY = 0;
+                        break;
+                    }
+                }
             }
         }
         else if (keyboard.IsKeyDown(Keys.S))
         {
-            //reset the player's position if they moved past the bottom edge
-            if ((WorldY + Height) >= world.HeightPx) WorldY = (world.HeightPx - Height);
-            else
+            //move slower if going diagonally, and move less if we can't move a full step
+            float dist = (keyboard.IsKeyDown(Keys.A) || keyboard.IsKeyDown(Keys.D)) ? Speed * DIAG_FACTOR : Speed;
+            dist = MathHelper.Min(dist, MathHelper.Distance(WorldY + Height, world.HeightPx));
+
+            //check if movement is possible (TODO: collisions)
+            WorldY += dist;
+
+            //scroll the map if possible
+            if ((world.ViewY + world.ViewHeight) < world.HeightPx && ScreenY > world.ViewHeight / 2)
             {
-                //move slower if going diagonally
-                float howFar = (keyboard.IsKeyDown(Keys.A) || keyboard.IsKeyDown(Keys.D)) ? Speed * DIAG_FACTOR : Speed;
-
-                //check if movement is possible (TODO: collisions)
-                WorldY += howFar;
-
-                //scroll the map if possible
-                if ((world.ViewY + world.ViewHeight) < world.HeightPx && ScreenY > world.ViewHeight / 2)
-                    world.ViewY += howFar;
+                //scroll one pixel at a time (in case we can't move a full step)
+                for (int i = 0; i < dist; i++)
+                {
+                    world.ViewY += 1;
+                    if (world.ViewY + world.ViewHeight > world.HeightPx)
+                    {
+                        world.ViewY = world.HeightPx - world.ViewHeight;
+                        break;
+                    }
+                }
             }
         }
         if (keyboard.IsKeyDown(Keys.A))
         {
-            //reset the player's position if they moved past the top edge
-            if (WorldX <= 0) WorldX = 0;
-            else
+            //move slower if going diagonally, and move less if we can't move a full step
+            float dist = (keyboard.IsKeyDown(Keys.W) || keyboard.IsKeyDown(Keys.S)) ? Speed * DIAG_FACTOR : Speed;
+            dist = MathHelper.Min(dist, MathHelper.Distance(WorldX, 0));
+
+            //check if movement is possible (TODO: collisions)
+            WorldX -= dist;
+
+            //scroll the map if possible
+            if (world.ViewX > 0 && ScreenX < world.ViewWidth / 2)
             {
-                //move slower if going diagonally
-                float howFar = (keyboard.IsKeyDown(Keys.W) || keyboard.IsKeyDown(Keys.S)) ? Speed * DIAG_FACTOR : Speed;
-
-                //check if movement is possible (TODO: collisions)
-                WorldX -= howFar;
-
-                //scroll the map if possible
-                if (world.ViewX > 0 && ScreenX < world.ViewWidth / 2)
-                    world.ViewX -= howFar;
+                //scroll one pixel at a time (in case we can't move a full step)
+                for (int i = 0; i < dist; i++)
+                {
+                    world.ViewX -= 1;
+                    if (world.ViewX < 0)
+                    {
+                        world.ViewX = 0;
+                        break;
+                    }
+                }
             }
         }
         else if (keyboard.IsKeyDown(Keys.D))
         {
-            //reset the player's position if they moved past the bottom edge
-            if ((WorldX + Width) >= world.WidthPx) WorldX = (world.WidthPx - Width);
-            else
+            //move slower if going diagonally, and move less if we can't move a full step
+            float dist = (keyboard.IsKeyDown(Keys.W) || keyboard.IsKeyDown(Keys.S)) ? Speed * DIAG_FACTOR : Speed;
+            dist = MathHelper.Min(dist, MathHelper.Distance(WorldX + Width, world.WidthPx));
+
+            //check if movement is possible (TODO: collisions)
+            WorldX += dist;
+
+            //scroll the map if possible
+            if ((world.ViewX + world.ViewWidth) < world.WidthPx && ScreenX > world.ViewWidth / 2)
             {
-                //move slower if going diagonally
-                float howFar = (keyboard.IsKeyDown(Keys.W) || keyboard.IsKeyDown(Keys.S)) ? Speed * DIAG_FACTOR : Speed;
-
-                //check if movement is possible (TODO: collisions)
-                WorldX += howFar;
-
-                //scroll the map if possible
-                if ((world.ViewX + world.ViewWidth) < world.WidthPx && ScreenX > world.ViewWidth / 2)
-                    world.ViewX += howFar;
+                //scroll one pixel at a time (in case we can't move a full step)
+                for (int i = 0; i < dist; i++)
+                {
+                    world.ViewX += 1;
+                    if (world.ViewX + world.ViewWidth > world.WidthPx)
+                    {
+                        world.ViewX = world.WidthPx - world.ViewWidth;
+                        break;
+                    }
+                }
             }
         }
     }
-}
-
-public enum Direction
-{
-    UP,
-    DOWN,
-    LEFT,
-    RIGHT
 }
