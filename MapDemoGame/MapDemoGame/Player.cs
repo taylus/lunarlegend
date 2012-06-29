@@ -10,6 +10,9 @@ public class Player
     //private const float DIAG_FACTOR = 0.707106781F;
     private const float DIAG_FACTOR = 0.85F;
 
+    //interval by which to scroll the map view, to stop early if a full step would move us beyond map boundaries
+    private const float SCROLL_STEP = 0.1f;
+
     public float Speed { get; set; }
     public int Width { get; set; }
     public int Height { get; set; }
@@ -35,7 +38,7 @@ public class Player
     public float ScreenY { get { return ScreenPosition.Y; } }
     public Vector2 ScreenPosition { get { return world.WorldToScreenCoordinates(WorldPosition); } }
 
-    private const float DEFAULT_SPEED = 15.0f;
+    private const float DEFAULT_SPEED = 5.0f;
 
     public Player(World world, Vector2 pos, int w, int h, float speed = DEFAULT_SPEED)
     {
@@ -69,13 +72,13 @@ public class Player
             //check if movement is possible (TODO: collisions)
             WorldY -= dist;
 
-            //scroll the map if possible
+            //scroll the map view, if possible
             if (world.ViewY > 0 && ScreenY < world.ViewHeight / 2)
             {
-                //scroll one pixel at a time (in case we can't move a full step)
-                for (int i = 0; i < dist; i++)
+                //scroll in small increments (in case we can't move a full step)
+                for (float i = 0; i < dist; i += SCROLL_STEP)
                 {
-                    world.ViewY -= 1;
+                    world.ViewY -= SCROLL_STEP;
                     if (world.ViewY < 0)
                     {
                         world.ViewY = 0;
@@ -93,13 +96,13 @@ public class Player
             //check if movement is possible (TODO: collisions)
             WorldY += dist;
 
-            //scroll the map if possible
+            //scroll the map view, if possible
             if ((world.ViewY + world.ViewHeight) < world.HeightPx && ScreenY > world.ViewHeight / 2)
             {
-                //scroll one pixel at a time (in case we can't move a full step)
-                for (int i = 0; i < dist; i++)
+                //scroll in small increments (in case we can't move a full step)
+                for (float i = 0; i < dist; i += SCROLL_STEP)
                 {
-                    world.ViewY += 1;
+                    world.ViewY += SCROLL_STEP;
                     if (world.ViewY + world.ViewHeight > world.HeightPx)
                     {
                         world.ViewY = world.HeightPx - world.ViewHeight;
@@ -117,13 +120,13 @@ public class Player
             //check if movement is possible (TODO: collisions)
             WorldX -= dist;
 
-            //scroll the map if possible
+            //scroll the map view, if possible
             if (world.ViewX > 0 && ScreenX < world.ViewWidth / 2)
             {
-                //scroll one pixel at a time (in case we can't move a full step)
-                for (int i = 0; i < dist; i++)
+                //scroll in small increments (in case we can't move a full step)
+                for (float i = 0; i < dist; i += SCROLL_STEP)
                 {
-                    world.ViewX -= 1;
+                    world.ViewX -= SCROLL_STEP;
                     if (world.ViewX < 0)
                     {
                         world.ViewX = 0;
@@ -141,13 +144,13 @@ public class Player
             //check if movement is possible (TODO: collisions)
             WorldX += dist;
 
-            //scroll the map if possible
+            //scroll the map view, if possible
             if ((world.ViewX + world.ViewWidth) < world.WidthPx && ScreenX > world.ViewWidth / 2)
             {
-                //scroll one pixel at a time (in case we can't move a full step)
-                for (int i = 0; i < dist; i++)
+                //scroll in small increments (in case we can't move a full step)
+                for (float i = 0; i < dist; i += SCROLL_STEP)
                 {
-                    world.ViewX += 1;
+                    world.ViewX += SCROLL_STEP;
                     if (world.ViewX + world.ViewWidth > world.WidthPx)
                     {
                         world.ViewX = world.WidthPx - world.ViewWidth;
