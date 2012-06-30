@@ -47,7 +47,7 @@ public class TiledDemoGame : Game
     private Vector2 GetPlayerSpawnPosition()
     {
         Object spawnPoint = world.Map.GetObject("info_player_start");
-        if (spawnPoint != null) return spawnPoint.Position;
+        if (spawnPoint != null) return spawnPoint.Position * world.Scale;
 
         //log a warning: no player spawnpoint in the map!
         return GraphicsDevice.Viewport.Bounds.Center.ToVector2();

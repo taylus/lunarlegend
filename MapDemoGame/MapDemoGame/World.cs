@@ -93,9 +93,9 @@ public class World
         ViewY = p.WorldPosition.Y - (ViewHeight / 2);
     }
 
-    //maps a point from map pixel coordinates to screen coordinates using the given scale and view
+    //maps a point from map pixel coordinates to screen coordinates using the current scale and view
     public Vector2 WorldToScreenCoordinates(Vector2 worldCoords)
     {
-        return (worldCoords * Scale) - ViewOffset;
+        return worldCoords - ViewOffset;
     }
 }
