@@ -89,7 +89,8 @@ public class World
 
     public void CenterViewOnPlayer(Player p)
     {
-
+        ViewX = p.WorldPosition.X - (ViewWidth / 2);
+        ViewY = p.WorldPosition.Y - (ViewHeight / 2);
     }
 
     //maps a point from map pixel coordinates to screen coordinates using the given scale and view

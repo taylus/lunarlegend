@@ -41,12 +41,13 @@ public class TiledDemoGame : Game
         world.RenderMap(spriteBatch);
 
         player = new Player(world, GetPlayerSpawnPosition(), (int)world.TileWidth, (int)world.TileHeight);
+        world.CenterViewOnPlayer(player);
     }
 
     private Vector2 GetPlayerSpawnPosition()
     {
-        //Object spawnPoint = world.Map.GetObject("info_player_start");
-        //if (spawnPoint != null) return world.ProjectPoint(spawnPoint.Position);
+        Object spawnPoint = world.Map.GetObject("info_player_start");
+        if (spawnPoint != null) return spawnPoint.Position;
 
         //log a warning: no player spawnpoint in the map!
         return GraphicsDevice.Viewport.Bounds.Center.ToVector2();
