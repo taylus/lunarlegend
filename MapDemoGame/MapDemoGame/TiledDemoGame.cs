@@ -22,6 +22,8 @@ public class TiledDemoGame : Game
     private const float GAME_SCALE = 1.0f;
     private Texture2D gameSurf;
 
+    private const string GAME_TITLE = "Demo Game";
+
     public TiledDemoGame()
     {
         graphics = new GraphicsDeviceManager(this);
@@ -30,7 +32,7 @@ public class TiledDemoGame : Game
         graphics.ApplyChanges();
         IsMouseVisible = true;
         Content.RootDirectory = "Content";
-        Window.Title = "Demo Game";
+        Window.Title = GAME_TITLE;
     }
 
     protected override void LoadContent()
@@ -69,12 +71,20 @@ public class TiledDemoGame : Game
         if (curKeyboard.IsKeyDown(Keys.Escape))
             this.Exit();
 
-        player.Move(curKeyboard);
-        world.Map.HighlightedTiles = world.Map.GetOccupyingTiles(player.WorldBoundingBox);
-
         if (!prevKeyboard.IsKeyDown(Keys.Space) && curKeyboard.IsKeyDown(Keys.Space))
         {
             world.Debug = !world.Debug;
+        }
+
+        player.Move(curKeyboard);
+        if (world.Debug)
+        {
+            world.Map.HighlightedTiles = world.Map.GetOccupyingTiles(player.WorldBoundingBox);
+            Window.Title = string.Format("{0} - FPS: {1}", GAME_TITLE, Math.Round(1 / gameTime.ElapsedGameTime.TotalSeconds));
+        }
+        else
+        {
+            Window.Title = GAME_TITLE;
         }
 
         prevKeyboard = curKeyboard;
