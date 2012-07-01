@@ -123,7 +123,7 @@ public class Map
         return map;
     }
 
-    public void Draw(SpriteBatch sb, bool debugDrawObjects = false)
+    public void Draw(SpriteBatch sb, Rectangle viewWindowPx, bool debugDrawObjects = false)
     {
         foreach (Layer layer in Layers)
         {
@@ -133,11 +133,31 @@ public class Map
             //layer opacity (white means no color tinting in XNA)
             Color layerColor = Color.Lerp(Color.Transparent, Color.White, MathHelper.Clamp(layer.Opacity, 0, 1));
 
+            //convert view position and dimensions from pixel to tile units
+            Rectangle viewWindowTiles = new Rectangle();
+            viewWindowTiles.X = viewWindowPx.X / TileWidth;
+            viewWindowTiles.Y = viewWindowPx.Y / TileHeight;
+            viewWindowTiles.Width = (int)Math.Ceiling(viewWindowPx.Width / (double)TileWidth);
+            viewWindowTiles.Height = (int)Math.Ceiling(viewWindowPx.Height / (double)TileWidth);
+
+            //possible partial tile offset
+            int viewTileOffsetX = viewWindowPx.X % TileWidth;
+            int viewTileOffsetY = viewWindowPx.Y % TileHeight;
+            if (viewTileOffsetX > 0) viewWindowTiles.Width += 1;
+            if (viewTileOffsetY > 0) viewWindowTiles.Height += 1;
+
             //draw each tile in the layer
             for (int y = 0; y < Height; y++)
             {
                 for (int x = 0; x < Width; x++)
                 {
+                    Rectangle tileDestRect = new Rectangle((x - viewWindowTiles.X) * TileWidth - viewTileOffsetX,
+                                                           (y - viewWindowTiles.Y) * TileHeight - viewTileOffsetY,
+                                                           TileWidth, TileHeight);
+
+                    //don't draw tiles we won't see
+                    if (!viewWindowTiles.Contains(x, y)) continue;
+
                     Tile tile = layer.Tiles[x, y];
                     if (tile.GID == 0) continue;
 
@@ -145,8 +165,7 @@ public class Map
                     TileSet tileset;
                     Rectangle tileSrcRect;
                     TileSets.ResolveTileGID(tile.GID, out tileset, out tileSrcRect);
-                    Rectangle tileDestRect = new Rectangle(x * TileWidth, y * TileHeight, TileWidth, TileHeight);
-  
+
                     //flip and rotation settings
                     SpriteEffects flip = SpriteEffects.None;
                     float rotation = 0.0f;
@@ -188,10 +207,15 @@ public class Map
         }
     }
 
-    //note: this returns the first object with this name in the first objectgroup found to contain it
-    //if someone uses the same name for lots of objects they probably won't be able to get the one they want
+    public void Draw(SpriteBatch sb, bool debugDrawObjects = false)
+    {
+        Draw(sb, graphicsDevice.Viewport.Bounds, debugDrawObjects);
+    }
+
+    //returns the first object with this name in the first objectgroup found to contain it
+    //if you use the same name for multiple objects, you're gonna have a bad time
     public Object GetObject(string name)
     {
-        return (from ObjectGroup objGroup in ObjectGroups where objGroup.ContainsObject(name) select objGroup.GetObject(name)).First();
+        return (from ObjectGroup objGroup in ObjectGroups where objGroup.ContainsObject(name) select objGroup.GetObject(name)).FirstOrDefault();
     }
 }

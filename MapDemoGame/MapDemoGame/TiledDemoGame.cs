@@ -33,12 +33,9 @@ public class TiledDemoGame : Game
 
         font = Content.Load<SpriteFont>("font");
 
-        //map = LoadMap("maps/walls/walls_test.tmx");
+        //Map map = LoadMap("maps/walls/walls_test.tmx");
         Map map = LoadMap("maps/test_scroll/test_scroll.tmx");
-        world = new World(map, 1.0f, Vector2.Zero, GraphicsDevice);
-
-        //TODO: necessary to render every frame? (animated tiles?)
-        world.RenderMap(spriteBatch);
+        world = new World(map, Vector2.Zero, GraphicsDevice);
 
         player = new Player(world, GetPlayerSpawnPosition(), (int)world.TileWidth, (int)world.TileHeight);
         world.CenterViewOnPlayer(player);
@@ -47,10 +44,11 @@ public class TiledDemoGame : Game
     private Vector2 GetPlayerSpawnPosition()
     {
         Object spawnPoint = world.Map.GetObject("info_player_start");
-        if (spawnPoint != null) return spawnPoint.Position * world.Scale;
+        if (spawnPoint != null) return spawnPoint.Position;
 
-        //log a warning: no player spawnpoint in the map!
-        return GraphicsDevice.Viewport.Bounds.Center.ToVector2();
+        //default to map's center
+        //TODO: log a warning about the missing spawnpoint
+        return new Vector2(world.WidthPx / 2, world.HeightPx / 2);
     }
 
     protected override void UnloadContent()
