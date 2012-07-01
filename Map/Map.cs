@@ -55,6 +55,7 @@ public class Map
     public List<Layer> Layers { get; protected set; }
     public List<ObjectGroup> ObjectGroups { get; protected set; }
 
+    //debug: highlight these tiles when drawing
     public List<Vector2> HighlightedTiles { get; set; }
 
     public Map(string tmxFile, GraphicsDevice gd)
@@ -126,7 +127,12 @@ public class Map
         return map;
     }
 
-    public void Draw(SpriteBatch sb, Rectangle viewWindowPx, bool debugDrawObjects = false)
+    public void Draw(SpriteBatch sb, bool debugDrawObjects = false)
+    {
+        Draw(sb, graphicsDevice.Viewport.Bounds, debugDrawObjects);
+    }
+
+    public void Draw(SpriteBatch sb, Rectangle viewWindowPx, bool debug = false)
     {
         foreach (Layer layer in Layers)
         {
@@ -183,7 +189,7 @@ public class Map
                         else rotation = -MathHelper.PiOver2;
                     }
 
-                    Color tileColor = HighlightedTiles.Contains(new Vector2(x, y)) ? new Color(255, 255, 0, 128) : layerColor;
+                    Color tileColor = debug && HighlightedTiles.Contains(new Vector2(x, y)) ? new Color(255, 255, 0, 128) : layerColor;
 
                     if (!tile.FlippedDiagonally)
                     {
@@ -200,21 +206,34 @@ public class Map
             }
         }
 
-        if (debugDrawObjects)
+        if (debug)
         {
+            DrawGridlines(sb, viewWindowPx);
+
             foreach (ObjectGroup objGroup in ObjectGroups)
             {
                 foreach (Object obj in objGroup.Objects)
                 {
-                    Util.DrawRectangle(sb, obj.Rectangle, Object.DEFAULT_COLOR);
+                    Rectangle objRect = new Rectangle((int)(obj.Position.X - viewWindowPx.X), 
+                                                      (int)(obj.Position.Y - viewWindowPx.Y), 
+                                                      obj.Width, obj.Height);
+                    Util.DrawRectangle(sb, objRect, Object.DEFAULT_COLOR);
                 }
             }
         }
     }
 
-    public void Draw(SpriteBatch sb, bool debugDrawObjects = false)
+    private void DrawGridlines(SpriteBatch sb, Rectangle viewWindowPx)
     {
-        Draw(sb, graphicsDevice.Viewport.Bounds, debugDrawObjects);
+        for (int x = 0; x < HeightPx; x += TileWidth)
+        {
+            Util.DrawLine(sb, 1.0f, new Vector2(x - viewWindowPx.X, 0), new Vector2(x - viewWindowPx.X, viewWindowPx.Height), Color.Black);
+        }
+
+        for (int y = 0; y < HeightPx; y += TileHeight)
+        {
+            Util.DrawLine(sb, 1.0f, new Vector2(0, y - viewWindowPx.Y), new Vector2(viewWindowPx.Width, y - viewWindowPx.Y), Color.Black);
+        }
     }
 
     //returns the first object with this name in the first objectgroup found to contain it

@@ -50,7 +50,7 @@ public class Object
     public List<Property> Properties { get; protected set; }
     public Rectangle Rectangle { get { return new Rectangle(X, Y, Width, Height); } }
 
-    public static readonly Color DEFAULT_COLOR = Color.Lerp(Color.Transparent, Color.Yellow, 0.35f);
+    public static readonly Color DEFAULT_COLOR = Color.Lerp(Color.Transparent, Color.LimeGreen, 0.35f);
 
     public Object(Tiled.@object obj)
     {

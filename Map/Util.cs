@@ -94,6 +94,20 @@ public static class Util
         sb.Draw(dummyTexture, rect, color);
     }
 
+    public static void DrawLine(SpriteBatch sb, float width, Vector2 p1, Vector2 p2, Color color)
+    {
+        if (dummyTexture == null)
+        {
+            dummyTexture = new Texture2D(sb.GraphicsDevice, 1, 1);
+            dummyTexture.SetData(new Color[] { Color.White });
+        }
+
+        float rotation = (float)Math.Atan2(p2.Y - p1.Y, p2.X - p1.X);
+        float length = Vector2.Distance(p1, p2);
+
+        sb.Draw(dummyTexture, p1, null, color, rotation, Vector2.Zero, new Vector2(length, width), SpriteEffects.None, 0);
+    }
+
     //taken from http://www.dotnetperls.com/decompress
     public static byte[] DecompressGzip(byte[] gzip)
     {

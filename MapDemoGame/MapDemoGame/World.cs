@@ -30,18 +30,21 @@ public class World
     public Rectangle ViewWindow { get { return new Rectangle((int)ViewX, (int)ViewY, ViewWidth, ViewHeight); } }
     public Vector2 ViewOffset{ get { return new Vector2(ViewX, ViewY); } }
 
-    public World(Map map, Rectangle viewWindow)
+    public bool Debug { get; set; }
+
+    public World(Map map, Rectangle viewWindow, bool debug = false)
     {
         Map = map;
         ViewX = viewWindow.X;
         ViewY = viewWindow.Y;
         ViewWidth = viewWindow.Width;
         ViewHeight = viewWindow.Height;
+        Debug = debug;
     }
 
     public void Draw(SpriteBatch sb)
     {
-        Map.Draw(sb, ViewWindow);
+        Map.Draw(sb, ViewWindow, Debug);
     }
 
     public void CenterViewOnPlayer(Player p)

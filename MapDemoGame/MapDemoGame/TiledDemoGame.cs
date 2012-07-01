@@ -12,6 +12,8 @@ public class TiledDemoGame : Game
     private GraphicsDeviceManager graphics;
     private SpriteBatch spriteBatch;
     private SpriteFont font;
+    private KeyboardState prevKeyboard;
+    private KeyboardState curKeyboard;
 
     private World world;
     private Player player;
@@ -40,7 +42,7 @@ public class TiledDemoGame : Game
         //Map map = LoadMap("maps/walls/walls_test.tmx");
         Map map = LoadMap("maps/test_scroll/test_scroll.tmx");
         Rectangle scaledViewWindow = GraphicsDevice.Viewport.Bounds.Scale(1 / GAME_SCALE);
-        world = new World(map, scaledViewWindow);
+        world = new World(map, scaledViewWindow, true);
 
         player = new Player(world, GetPlayerSpawnPosition(), (int)world.TileWidth, (int)world.TileHeight);
         world.CenterViewOnPlayer(player);
@@ -61,18 +63,21 @@ public class TiledDemoGame : Game
         //don't respond to input if the game isn't active
         if (!IsActive) return;
 
-        KeyboardState keyboard = Keyboard.GetState();
+        curKeyboard = Keyboard.GetState();
 
         //exit on esc
-        if (keyboard.IsKeyDown(Keys.Escape))
+        if (curKeyboard.IsKeyDown(Keys.Escape))
             this.Exit();
 
-        player.Move(keyboard);
+        player.Move(curKeyboard);
         world.Map.HighlightedTiles = world.Map.GetOccupyingTiles(player.WorldBoundingBox);
 
-        if (keyboard.IsKeyDown(Keys.Space) && System.Diagnostics.Debugger.IsAttached)
-            System.Diagnostics.Debugger.Break();
+        if (!prevKeyboard.IsKeyDown(Keys.Space) && curKeyboard.IsKeyDown(Keys.Space))
+        {
+            world.Debug = !world.Debug;
+        }
 
+        prevKeyboard = curKeyboard;
         base.Update(gameTime);
     }
 
@@ -86,7 +91,7 @@ public class TiledDemoGame : Game
         //draw the scaled game surface and any additional overlays
         spriteBatch.Begin();
         spriteBatch.Draw(gameSurf, Vector2.Zero, null, Color.White, 0.0f, Vector2.Zero, GAME_SCALE, SpriteEffects.None, 0);
-        DrawDebugInfo();
+        if(world.Debug) DrawDebugInfo();
         spriteBatch.End();
 
         base.Draw(gameTime);
