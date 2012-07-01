@@ -11,44 +11,32 @@ using Property = System.Collections.Generic.KeyValuePair<string, string>;
 
 /// <summary>
 /// Represents a concept of a sliding window "view" on top of a map.
+/// The map is partially rendered based on this window every frame.
 /// The view scrolls around the map at the player's control, providing movement.
 /// The view "locks" and will not move beyond the edges of the map.
-/// 
-/// The underlying map is also rendered to an image, which is able to be scaled.
 /// </summary>
 public class World
 {
-    private GraphicsDevice graphicsDevice;
-
     public Map Map { get; protected set; }
     public float TileWidth { get { return Map.TileWidth; } }
     public float TileHeight { get { return Map.TileWidth; } }
     public float WidthPx { get { return Map.WidthPx; } }
     public float HeightPx { get { return Map.HeightPx; } }
-    public int ViewWidth { get { return graphicsDevice.Viewport.Width; } }
-    public int ViewHeight { get { return graphicsDevice.Viewport.Height; } }
+    public int ViewWidth { get; protected set; }
+    public int ViewHeight { get; protected set; }
 
     public float ViewX { get; set; }
     public float ViewY { get; set; }
     public Rectangle ViewWindow { get { return new Rectangle((int)ViewX, (int)ViewY, ViewWidth, ViewHeight); } }
-    public Vector2 ViewOffset
-    {
-        get
-        {
-            return new Vector2(ViewX, ViewY);
-        }
-        set
-        {
-            ViewX = value.X;
-            ViewY = value.Y;
-        }
-    }
+    public Vector2 ViewOffset{ get { return new Vector2(ViewX, ViewY); } }
 
-    public World(Map map, Vector2 viewOffset, GraphicsDevice gd)
+    public World(Map map, Rectangle viewWindow)
     {
         Map = map;
-        ViewOffset = viewOffset;
-        graphicsDevice = gd;
+        ViewX = viewWindow.X;
+        ViewY = viewWindow.Y;
+        ViewWidth = viewWindow.Width;
+        ViewHeight = viewWindow.Height;
     }
 
     public void Draw(SpriteBatch sb)

@@ -16,6 +16,10 @@ public class TiledDemoGame : Game
     private World world;
     private Player player;
 
+    //render everything to a temp surface for scaling
+    private const float GAME_SCALE = 1.0f;
+    private Texture2D gameSurf;
+
     public TiledDemoGame()
     {
         graphics = new GraphicsDeviceManager(this);
@@ -30,12 +34,13 @@ public class TiledDemoGame : Game
     protected override void LoadContent()
     {
         spriteBatch = new SpriteBatch(GraphicsDevice);
-
+        gameSurf = new RenderTarget2D(GraphicsDevice, GraphicsDevice.Viewport.Width, GraphicsDevice.Viewport.Height);
         font = Content.Load<SpriteFont>("font");
 
         //Map map = LoadMap("maps/walls/walls_test.tmx");
         Map map = LoadMap("maps/test_scroll/test_scroll.tmx");
-        world = new World(map, Vector2.Zero, GraphicsDevice);
+        Rectangle scaledViewWindow = GraphicsDevice.Viewport.Bounds.Scale(1 / GAME_SCALE);
+        world = new World(map, scaledViewWindow);
 
         player = new Player(world, GetPlayerSpawnPosition(), (int)world.TileWidth, (int)world.TileHeight);
         world.CenterViewOnPlayer(player);
@@ -75,15 +80,31 @@ public class TiledDemoGame : Game
         base.Update(gameTime);
     }
 
-    protected override void Draw(GameTime gameTime)
+    //render the world and all game objects to the temporary surface for scaling
+    private void RenderGameToTempSurface()
     {
-        //clear the screen
-        GraphicsDevice.Clear(Color.DimGray);
-
-        //draw game objects to the screen
+        //draw the game to the temp surface at normal scale
+        GraphicsDevice.SetRenderTarget((RenderTarget2D)gameSurf);
+        GraphicsDevice.Clear(Color.Transparent);
         spriteBatch.Begin();
         world.Draw(spriteBatch);
         player.Draw(spriteBatch);
+        spriteBatch.End();
+
+        //reset drawing to the screen
+        GraphicsDevice.SetRenderTarget(null);
+    }
+
+    protected override void Draw(GameTime gameTime)
+    {
+        RenderGameToTempSurface();
+
+        //clear the screen
+        GraphicsDevice.Clear(Color.DimGray);
+
+        //draw the scaled game surface and any additional overlays
+        spriteBatch.Begin();
+        spriteBatch.Draw(gameSurf, Vector2.Zero, null, Color.White, 0.0f, Vector2.Zero, GAME_SCALE, SpriteEffects.None, 0);
         DrawDebugInfo();
         spriteBatch.End();
 

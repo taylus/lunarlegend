@@ -25,6 +25,11 @@ public static class Util
         return new Vector2(ms.X, ms.Y);
     }
 
+    public static Rectangle Scale(this Rectangle rect, float scale)
+    {
+        return new Rectangle(rect.X, rect.Y, (int)(rect.Width * scale), (int)(rect.Height * scale));
+    }
+
     ////get the top-left offset of innerRect such that it is centered within outerRect
     //public static Vector2 GetCenteredOffset(Rectangle outerRect, Rectangle innerRect)
     //{
