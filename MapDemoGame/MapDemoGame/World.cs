@@ -50,7 +50,7 @@ public class World
         ViewY = Math.Max(p.WorldPosition.Y - (ViewHeight / 2), 0);
     }
 
-    //maps a point from map pixel coordinates to screen coordinates using the current scale and view
+    //maps a point from map pixel coordinates to screen coordinates by offsetting the current view
     public Vector2 WorldToScreenCoordinates(Vector2 worldCoords)
     {
         return worldCoords - ViewOffset;

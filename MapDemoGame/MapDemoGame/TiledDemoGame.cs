@@ -56,11 +56,6 @@ public class TiledDemoGame : Game
         return new Vector2(world.WidthPx / 2, world.HeightPx / 2);
     }
 
-    protected override void UnloadContent()
-    {
-        //TODO: unload any non-ContentManager content here
-    }
-
     protected override void Update(GameTime gameTime)
     {
         //don't respond to input if the game isn't active
@@ -73,26 +68,12 @@ public class TiledDemoGame : Game
             this.Exit();
 
         player.Move(keyboard);
+        world.Map.HighlightedTiles = world.Map.GetOccupyingTiles(player.WorldBoundingBox);
 
         if (keyboard.IsKeyDown(Keys.Space) && System.Diagnostics.Debugger.IsAttached)
             System.Diagnostics.Debugger.Break();
 
         base.Update(gameTime);
-    }
-
-    //render the world and all game objects to the temporary surface for scaling
-    private void RenderGameToTempSurface()
-    {
-        //draw the game to the temp surface at normal scale
-        GraphicsDevice.SetRenderTarget((RenderTarget2D)gameSurf);
-        GraphicsDevice.Clear(Color.Transparent);
-        spriteBatch.Begin();
-        world.Draw(spriteBatch);
-        player.Draw(spriteBatch);
-        spriteBatch.End();
-
-        //reset drawing to the screen
-        GraphicsDevice.SetRenderTarget(null);
     }
 
     protected override void Draw(GameTime gameTime)
@@ -109,6 +90,21 @@ public class TiledDemoGame : Game
         spriteBatch.End();
 
         base.Draw(gameTime);
+    }
+
+    //render the world and all game objects to the temporary surface for scaling
+    private void RenderGameToTempSurface()
+    {
+        //draw the game to the temp surface at normal scale
+        GraphicsDevice.SetRenderTarget((RenderTarget2D)gameSurf);
+        GraphicsDevice.Clear(Color.Transparent);
+        spriteBatch.Begin();
+        world.Draw(spriteBatch);
+        player.Draw(spriteBatch);
+        spriteBatch.End();
+
+        //reset drawing to the screen
+        GraphicsDevice.SetRenderTarget(null);
     }
 
     private void DrawDebugInfo()

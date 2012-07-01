@@ -17,30 +17,21 @@ public class Player
 
     public float WorldX { get; set; }
     public float WorldY { get; set; }
-    public Rectangle BoundingBox { get { return new Rectangle((int)ScreenX, (int)ScreenY, Width, Height); } }
-    public Vector2 WorldPosition
-    {
-        get
-        {
-            return new Vector2(WorldX, WorldY);
-        }
-        set
-        {
-            WorldX = value.X;
-            WorldY = value.Y;
-        }
-    }
+    public Vector2 WorldPosition { get { return new Vector2(WorldX, WorldY); } }
+    public Rectangle WorldBoundingBox { get { return new Rectangle((int)WorldX, (int)WorldY, Width, Height); } }
 
     public float ScreenX { get { return ScreenPosition.X; } }
     public float ScreenY { get { return ScreenPosition.Y; } }
     public Vector2 ScreenPosition { get { return world.WorldToScreenCoordinates(WorldPosition); } }
+    public Rectangle ScreenBoundingBox { get { return new Rectangle((int)ScreenX, (int)ScreenY, Width, Height); } }
 
     private const float DEFAULT_SPEED = 4.0f;
 
     public Player(World world, Vector2 pos, int w, int h, float speed = DEFAULT_SPEED)
     {
         this.world = world;
-        WorldPosition = pos;
+        WorldX = pos.X;
+        WorldY = pos.Y;
         Speed = speed;
         Width = w;
         Height = h;
@@ -49,7 +40,7 @@ public class Player
 
     public void Draw(SpriteBatch sb)
     {
-        Util.DrawRectangle(sb, BoundingBox, Color);
+        Util.DrawRectangle(sb, ScreenBoundingBox, Color);
     }
 
     public void Move(KeyboardState keyboard)

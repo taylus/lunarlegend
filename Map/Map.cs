@@ -55,6 +55,8 @@ public class Map
     public List<Layer> Layers { get; protected set; }
     public List<ObjectGroup> ObjectGroups { get; protected set; }
 
+    public List<Vector2> HighlightedTiles { get; set; }
+
     public Map(string tmxFile, GraphicsDevice gd)
     {
         try
@@ -73,6 +75,7 @@ public class Map
             Version = map.version;
 
             LoadMapElements();
+            HighlightedTiles = new List<Vector2>();
         }
         catch (Exception e)
         {
@@ -180,16 +183,18 @@ public class Map
                         else rotation = -MathHelper.PiOver2;
                     }
 
+                    Color tileColor = HighlightedTiles.Contains(new Vector2(x, y)) ? new Color(255, 255, 0, 128) : layerColor;
+
                     if (!tile.FlippedDiagonally)
                     {
                         //no rotation, but possibly horizontally/vertically flipped
-                        sb.Draw(tileset.Texture, tileDestRect, tileSrcRect, layerColor, 0.0f, Vector2.Zero, flip, 0);
+                        sb.Draw(tileset.Texture, tileDestRect, tileSrcRect, tileColor, 0.0f, Vector2.Zero, flip, 0);
                     }
                     else
                     {
                         //if tile is rotated, need to draw at an adjusted dest rect due to the way XNA draws things with offsets
                         Rectangle adjustedDestRect = new Rectangle(tileDestRect.X + tileDestRect.Width / 2, tileDestRect.Y + tileDestRect.Height / 2, TileWidth, TileHeight);
-                        sb.Draw(tileset.Texture, adjustedDestRect, tileSrcRect, layerColor, rotation, tileDestRect.Center.ToVector2(), flip, 0);
+                        sb.Draw(tileset.Texture, adjustedDestRect, tileSrcRect, tileColor, rotation, tileDestRect.Center.ToVector2(), flip, 0);
                     }
                 }
             }
@@ -217,5 +222,25 @@ public class Map
     public Object GetObject(string name)
     {
         return (from ObjectGroup objGroup in ObjectGroups where objGroup.ContainsObject(name) select objGroup.GetObject(name)).FirstOrDefault();
+    }
+
+    //get all tile coordinates that the given pixel coordinate rectangle occupies
+    public List<Vector2> GetOccupyingTiles(Rectangle rect)
+    {
+        int tileUpperLeftX = rect.Left / TileWidth;
+        int tileUpperLeftY = rect.Top / TileHeight;
+        int tileBottomRightX = (rect.Right - 1) / TileWidth;
+        int tileBottomRightY = (rect.Bottom - 1) / TileHeight;
+        List<Vector2> occupiedTiles = new List<Vector2>();
+
+        for (int x = tileUpperLeftX; x <= tileBottomRightX; x++)
+        {
+            for (int y = tileUpperLeftY; y <= tileBottomRightY; y++)
+            {
+                occupiedTiles.Add(new Vector2(x, y));
+            }
+        }
+
+        return occupiedTiles;
     }
 }
