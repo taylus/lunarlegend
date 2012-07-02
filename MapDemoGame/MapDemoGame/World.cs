@@ -49,8 +49,8 @@ public class World
 
     public void CenterViewOnPlayer(Player p)
     {
-        ViewX = Math.Max(p.WorldPosition.X - (ViewWidth / 2), 0);
-        ViewY = Math.Max(p.WorldPosition.Y - (ViewHeight / 2), 0);
+        ViewX = Math.Max(p.WorldPosition.X + (p.Width / 2) - (ViewWidth / 2), 0);
+        ViewY = Math.Max(p.WorldPosition.Y + (p.Height / 2) - (ViewHeight / 2), 0);
     }
 
     //maps a point from map pixel coordinates to screen coordinates by offsetting the current view

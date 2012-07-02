@@ -71,7 +71,7 @@ public class Player
 
             //must calculate player and view distances separately, as player may move independently of view
             float worldWiewScrollDist = MathHelper.Min(playerMoveDist, MathHelper.Distance(world.ViewY, 0));
-            if (ScreenY < world.ViewHeight / 2)
+            if (ScreenY + (Height / 2) < world.ViewHeight / 2)
                 world.ViewY -= worldWiewScrollDist;
         }
         else if (keyboard.IsKeyDown(Keys.S))
@@ -94,7 +94,7 @@ public class Player
 
             //must calculate player and view distances separately, as player may move independently of view
             float worldWiewScrollDist = MathHelper.Min(playerMoveDist, MathHelper.Distance(world.ViewY + world.ViewHeight, world.HeightPx));
-            if (ScreenY >= world.ViewHeight / 2)
+            if (ScreenY + (Height / 2) >= world.ViewHeight / 2)
                 world.ViewY += worldWiewScrollDist;
         }
         if (keyboard.IsKeyDown(Keys.A))
@@ -117,7 +117,7 @@ public class Player
 
             //must calculate player and view distances separately, as player may move independently of view
             float worldWiewScrollDist = MathHelper.Min(playerMoveDist, MathHelper.Distance(world.ViewX, 0));
-            if (ScreenX < world.ViewWidth / 2)
+            if (ScreenX + (Width / 2) < world.ViewWidth / 2)
                 world.ViewX -= worldWiewScrollDist;
         }
         else if (keyboard.IsKeyDown(Keys.D))
@@ -140,7 +140,7 @@ public class Player
 
             //must calculate player and view distances separately, as player may move independently of view
             float worldWiewScrollDist = MathHelper.Min(playerMoveDist, MathHelper.Distance(world.ViewX + world.ViewWidth, world.WidthPx));
-            if (ScreenX >= world.ViewWidth / 2)
+            if (ScreenX + (Width / 2) >= world.ViewWidth / 2)
                 world.ViewX += worldWiewScrollDist;
         }
     }
