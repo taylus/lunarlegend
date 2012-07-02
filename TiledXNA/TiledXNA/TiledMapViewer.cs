@@ -153,6 +153,6 @@ public class TiledMapViewer : Game
 
     private Map LoadMap(string tmxFile)
     {
-        return new Map(Path.Combine(Content.RootDirectory, tmxFile), GraphicsDevice);
+        return new Map(Path.Combine(Content.RootDirectory, tmxFile), GraphicsDevice, font);
     }
 }

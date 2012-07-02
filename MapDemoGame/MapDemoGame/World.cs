@@ -18,16 +18,16 @@ using Property = System.Collections.Generic.KeyValuePair<string, string>;
 public class World
 {
     public Map Map { get; protected set; }
-    public float TileWidth { get { return Map.TileWidth; } }
-    public float TileHeight { get { return Map.TileWidth; } }
-    public float WidthPx { get { return Map.WidthPx; } }
-    public float HeightPx { get { return Map.HeightPx; } }
+    public int TileWidth { get { return Map.TileWidth; } }
+    public int TileHeight { get { return Map.TileWidth; } }
+    public int WidthPx { get { return Map.WidthPx; } }
+    public int HeightPx { get { return Map.HeightPx; } }
     public int ViewWidth { get; protected set; }
     public int ViewHeight { get; protected set; }
 
     public float ViewX { get; set; }
     public float ViewY { get; set; }
-    public Rectangle ViewWindow { get { return new Rectangle((int)ViewX, (int)ViewY, ViewWidth, ViewHeight); } }
+    public Rectangle ViewWindow { get { return new Rectangle((int)Math.Round(ViewX), (int)Math.Round(ViewY), ViewWidth, ViewHeight); } }
     public Vector2 ViewOffset{ get { return new Vector2(ViewX, ViewY); } }
 
     public bool Debug { get; set; }

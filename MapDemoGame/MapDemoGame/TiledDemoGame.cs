@@ -44,7 +44,7 @@ public class TiledDemoGame : Game
         //Map map = LoadMap("maps/walls/walls_test.tmx");
         Map map = LoadMap("maps/test_scroll/test_scroll.tmx");
         Rectangle scaledViewWindow = GraphicsDevice.Viewport.Bounds.Scale(1 / GAME_SCALE);
-        world = new World(map, scaledViewWindow, true);
+        world = new World(map, scaledViewWindow, false);
 
         player = new Player(world, GetPlayerSpawnPosition(), (int)world.TileWidth, (int)world.TileHeight);
         world.CenterViewOnPlayer(player);
@@ -79,7 +79,7 @@ public class TiledDemoGame : Game
         player.Move(curKeyboard);
         if (world.Debug)
         {
-            world.Map.HighlightedTiles = world.Map.GetOccupyingTiles(player.WorldBoundingBox);
+            //world.Map.HighlightedTiles = world.Map.GetOccupyingTiles(player.WorldRect);
             Window.Title = string.Format("{0} - FPS: {1}", GAME_TITLE, Math.Round(1 / gameTime.ElapsedGameTime.TotalSeconds));
         }
         else
@@ -145,7 +145,7 @@ public class TiledDemoGame : Game
 
     private Map LoadMap(string tmxFile)
     {
-        return new Map(Path.Combine(Content.RootDirectory, tmxFile), GraphicsDevice);
+        return new Map(Path.Combine(Content.RootDirectory, tmxFile), GraphicsDevice, font);
     }
 
     private Vector2 GetInitialViewOffset()

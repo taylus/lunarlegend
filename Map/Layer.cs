@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Collections.Generic;
+using Microsoft.Xna.Framework;
 
 public class Layer
 {
@@ -131,6 +132,17 @@ public class Layer
     public override string ToString()
     {
         return Name;
+    }
+
+    public bool TileIntersect(List<Point> tileCoords)
+    {
+        foreach (Point tileCoord in tileCoords)
+        {
+            if (Tiles[tileCoord.X, tileCoord.Y].GID != 0)
+                return true;
+        }
+
+        return false;
     }
 }
 

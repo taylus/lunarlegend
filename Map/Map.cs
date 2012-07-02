@@ -56,9 +56,11 @@ public class Map
     public List<ObjectGroup> ObjectGroups { get; protected set; }
 
     //debug: highlight these tiles when drawing
-    public List<Vector2> HighlightedTiles { get; set; }
+    public List<Point> HighlightedTiles { get; set; }
+    private SpriteFont font;
+    private static readonly Color tileCoordColor = Color.Lerp(Color.Transparent, Color.White, 0.25f);
 
-    public Map(string tmxFile, GraphicsDevice gd)
+    public Map(string tmxFile, GraphicsDevice gd, SpriteFont font)
     {
         try
         {
@@ -76,7 +78,8 @@ public class Map
             Version = map.version;
 
             LoadMapElements();
-            HighlightedTiles = new List<Vector2>();
+            HighlightedTiles = new List<Point>();
+            this.font = font;
         }
         catch (Exception e)
         {
@@ -189,18 +192,30 @@ public class Map
                         else rotation = -MathHelper.PiOver2;
                     }
 
-                    Color tileColor = debug && HighlightedTiles.Contains(new Vector2(x, y)) ? new Color(255, 255, 0, 128) : layerColor;
+                    Color tileColor = debug && HighlightedTiles.Contains(new Point(x, y)) ? new Color(255, 255, 0, 128) : layerColor;
 
                     if (!tile.FlippedDiagonally)
                     {
                         //no rotation, but possibly horizontally/vertically flipped
                         sb.Draw(tileset.Texture, tileDestRect, tileSrcRect, tileColor, 0.0f, Vector2.Zero, flip, 0);
+                        if (debug)
+                        {
+                            string coords = string.Format("{0},{1}", x, y);
+                            Vector2 msgOrigin = font.MeasureString(coords) / 2;
+                            sb.DrawString(font, coords, new Vector2((int)(tileDestRect.Center.X - msgOrigin.X), (int)(tileDestRect.Center.Y - msgOrigin.Y)), tileCoordColor);
+                        }
                     }
                     else
                     {
                         //if tile is rotated, need to draw at an adjusted dest rect due to the way XNA draws things with offsets
                         Rectangle adjustedDestRect = new Rectangle(tileDestRect.X + tileDestRect.Width / 2, tileDestRect.Y + tileDestRect.Height / 2, TileWidth, TileHeight);
                         sb.Draw(tileset.Texture, adjustedDestRect, tileSrcRect, tileColor, rotation, tileDestRect.Center.ToVector2(), flip, 0);
+                        if (debug)
+                        {
+                            string coords = string.Format("{0},{1}", x, y);
+                            Vector2 msgOrigin = font.MeasureString(coords) / 2;
+                            sb.DrawString(font, coords, new Vector2((int)(adjustedDestRect.Center.X - msgOrigin.X), (int)(adjustedDestRect.Center.Y - msgOrigin.Y)), tileCoordColor);
+                        }
                     }
                 }
             }
@@ -244,19 +259,19 @@ public class Map
     }
 
     //get all tile coordinates that the given pixel coordinate rectangle occupies
-    public List<Vector2> GetOccupyingTiles(Rectangle rect)
+    public List<Point> GetOccupyingTiles(Rectangle rect)
     {
         int tileUpperLeftX = rect.Left / TileWidth;
         int tileUpperLeftY = rect.Top / TileHeight;
         int tileBottomRightX = (rect.Right - 1) / TileWidth;
         int tileBottomRightY = (rect.Bottom - 1) / TileHeight;
-        List<Vector2> occupiedTiles = new List<Vector2>();
+        List<Point> occupiedTiles = new List<Point>();
 
         for (int x = tileUpperLeftX; x <= tileBottomRightX; x++)
         {
             for (int y = tileUpperLeftY; y <= tileBottomRightY; y++)
             {
-                occupiedTiles.Add(new Vector2(x, y));
+                occupiedTiles.Add(new Point(x, y));
             }
         }
 

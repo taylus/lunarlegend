@@ -30,6 +30,12 @@ public static class Util
         return new Rectangle(rect.X, rect.Y, (int)(rect.Width * scale), (int)(rect.Height * scale));
     }
 
+    //rounds f up to the nearest multiple of m
+    public static float NearestMultiple(float f, float m)
+    {
+        return (float)Math.Ceiling(f / m) * m;
+    }
+
     ////get the top-left offset of innerRect such that it is centered within outerRect
     //public static Vector2 GetCenteredOffset(Rectangle outerRect, Rectangle innerRect)
     //{

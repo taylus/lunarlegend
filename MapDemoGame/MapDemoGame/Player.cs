@@ -1,4 +1,6 @@
-﻿using Microsoft.Xna.Framework;
+﻿using System;
+using System.Collections.Generic;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -7,8 +9,8 @@ public class Player
     private World world;
 
     //constant by which to reduce movement speed per axis when moving diagonally (1 / sqrt(2))
-    //private const float DIAG_FACTOR = 0.707106781F;
-    private const float DIAG_FACTOR = 0.85F;
+    //private const float DIAG_FACTOR = 0.707106781f;
+    private const float DIAG_FACTOR = 0.85f;
 
     public float Speed { get; set; }
     public int Width { get; set; }
@@ -18,12 +20,12 @@ public class Player
     public float WorldX { get; set; }
     public float WorldY { get; set; }
     public Vector2 WorldPosition { get { return new Vector2(WorldX, WorldY); } }
-    public Rectangle WorldBoundingBox { get { return new Rectangle((int)WorldX, (int)WorldY, Width, Height); } }
+    public Rectangle WorldRect { get { return new Rectangle((int)Math.Round(WorldX), (int)Math.Round(WorldY), Width, Height); } }
 
     public float ScreenX { get { return ScreenPosition.X; } }
     public float ScreenY { get { return ScreenPosition.Y; } }
     public Vector2 ScreenPosition { get { return world.WorldToScreenCoordinates(WorldPosition); } }
-    public Rectangle ScreenBoundingBox { get { return new Rectangle((int)ScreenX, (int)ScreenY, Width, Height); } }
+    public Rectangle ScreenRect { get { return new Rectangle((int)Math.Round(ScreenX), (int)Math.Round(ScreenY), Width, Height); } }
 
     private const float DEFAULT_SPEED = 4.0f;
 
@@ -40,19 +42,14 @@ public class Player
 
     public void Draw(SpriteBatch sb)
     {
-        Util.DrawRectangle(sb, ScreenBoundingBox, Color);
+        Util.DrawRectangle(sb, ScreenRect, Color);
     }
 
     public void Move(KeyboardState keyboard)
     {
-        //TODO: simplify this? it works, but it's messy
-
         //NOTE: the collision checks against the map borders are "predictive", which works even for fast speeds because they continue indefinitely
         //      against walls with specified widths, we'll pass through them if our speed > their width (tunneling)
         //      this will be a problem if anything is moving very fast, but I don't think that will be the case anywhere
-
-        //FIX: scrolling the world view in increments makes the player rattle around a bit
-        //     as floating point discrepencies add up between the player's world coords and calculated screen coords
 
         if (keyboard.IsKeyDown(Keys.W))
         {
@@ -60,7 +57,16 @@ public class Player
             float playerSpeed = (keyboard.IsKeyDown(Keys.A) || keyboard.IsKeyDown(Keys.D)) ? Speed * DIAG_FACTOR : Speed;
             float playerMoveDist = MathHelper.Min(playerSpeed, MathHelper.Distance(WorldY, 0));
 
-            //check if movement is possible (TODO: collisions)
+            //adjust movement distance for wall collisions (TODO: make pixel-perfect for half wall tiles)
+            Rectangle predictRect = new Rectangle((int)WorldX, (int)(WorldY - playerMoveDist), Width, Height);
+            List<Point> tiles = world.Map.GetOccupyingTiles(predictRect);
+            world.Map.HighlightedTiles = tiles;
+            if (world.Map.Layers.GetByName("wall layer").TileIntersect(tiles))
+            {
+                //can't fully move up -- move the distance between us and the current tile's top side
+                playerMoveDist = WorldY % world.TileHeight;
+            }
+
             WorldY -= playerMoveDist;
 
             //must calculate player and view distances separately, as player may move independently of view
@@ -74,7 +80,16 @@ public class Player
             float playerSpeed = (keyboard.IsKeyDown(Keys.A) || keyboard.IsKeyDown(Keys.D)) ? Speed * DIAG_FACTOR : Speed;
             float playerMoveDist = MathHelper.Min(playerSpeed, MathHelper.Distance(WorldY + Height, world.HeightPx));
 
-            //check if movement is possible (TODO: collisions)
+            //adjust movement distance for wall collisions (TODO: make pixel-perfect for half wall tiles)
+            Rectangle predictRect = new Rectangle((int)WorldX, (int)(WorldY + playerMoveDist), Width, Height);
+            List<Point> tiles = world.Map.GetOccupyingTiles(predictRect);
+            world.Map.HighlightedTiles = tiles;
+            if (world.Map.Layers.GetByName("wall layer").TileIntersect(tiles))
+            {
+                //can't fully move down -- move the distance between us and the current tile's bottom side
+                playerMoveDist = Util.NearestMultiple((int)WorldY, world.TileHeight) - WorldY;
+            }
+
             WorldY += playerMoveDist;
 
             //must calculate player and view distances separately, as player may move independently of view
@@ -88,7 +103,16 @@ public class Player
             float playerSpeed = (keyboard.IsKeyDown(Keys.W) || keyboard.IsKeyDown(Keys.S)) ? Speed * DIAG_FACTOR : Speed;
             float playerMoveDist = MathHelper.Min(playerSpeed, MathHelper.Distance(WorldX, 0));
 
-            //check if movement is possible (TODO: collisions)
+            //adjust movement distance for wall collisions (TODO: make pixel-perfect for half wall tiles)
+            Rectangle predictRect = new Rectangle((int)(WorldX - playerMoveDist), (int)WorldY, Width, Height);
+            List<Point> tiles = world.Map.GetOccupyingTiles(predictRect);
+            world.Map.HighlightedTiles = tiles;
+            if (world.Map.Layers.GetByName("wall layer").TileIntersect(tiles))
+            {
+                //can't fully move left -- move the distance between us and the current tile's left side
+                playerMoveDist = WorldX % world.TileWidth;
+            }
+
             WorldX -= playerMoveDist;
 
             //must calculate player and view distances separately, as player may move independently of view
@@ -102,7 +126,16 @@ public class Player
             float playerSpeed = (keyboard.IsKeyDown(Keys.W) || keyboard.IsKeyDown(Keys.S)) ? Speed * DIAG_FACTOR : Speed;
             float playerMoveDist = MathHelper.Min(playerSpeed, MathHelper.Distance(WorldX + Width, world.WidthPx));
 
-            //check if movement is possible (TODO: collisions)
+            //adjust movement distance for wall collisions (TODO: make pixel-perfect for half wall tiles)
+            Rectangle predictRect = new Rectangle((int)(WorldX + playerMoveDist), (int)WorldY, Width, Height);
+            List<Point> tiles = world.Map.GetOccupyingTiles(predictRect);
+            world.Map.HighlightedTiles = tiles;
+            if (world.Map.Layers.GetByName("wall layer").TileIntersect(tiles))
+            {
+                //can't fully move right -- move the distance between us and the current tile's right side
+                playerMoveDist = Util.NearestMultiple((int)WorldX, world.TileWidth) - WorldX;
+            }
+
             WorldX += playerMoveDist;
 
             //must calculate player and view distances separately, as player may move independently of view

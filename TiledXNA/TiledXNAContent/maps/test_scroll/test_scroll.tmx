@@ -11,12 +11,12 @@
    H4sIAAAAAAAAC+2XTWrCUBRGX38m1m7CqOCwS7j7adqCK7gbMCq4labt7NuFUcGttCe8WSclGTwo3MGBcBNyzvTbTFJqYAs72MOhELgcp+N2GnwDR+4dnOAMF7gWApfjdNze5RafPaRUwRwWsIRVIXA5TsftNPQt/sy9hhd4hTdYFwKX43TcXucWf+fewgd8whc8PZYBl+N03N7mFv/Gn6Yp3cAt3MH9NHkJcDlOx+009C3REz3REz3REz3/oUc4hVs0iBZFz589xrNxM94Z31j0RE/0RE/0RM/vHjaqsVWNzWpsV2PDGlt2KBoDLuEUbrW5RWx4Y8sbm97Y9sbGt/VwNAZcwincqnOLZvyvgjksYAmr4WgMuIRTuFXlFh0nyTo4wRkucB2OxoBLOIVbNPQt2vC/Brawgz0chqMx4BJO4VaTW/QDiSWoSEAUAAA=
   </data>
  </layer>
- <layer name="wall layer" width="36" height="36" opacity="0.00">
+ <layer name="wall layer" width="36" height="36" opacity="0.5">
   <properties>
    <property name="layer_property" value=""/>
   </properties>
   <data encoding="base64" compression="gzip">
-   H4sIAAAAAAAAC+3OsQkAAAzDsHzW/7/qDYHSSQbvmiRjH/0dDw8PDw8PDw8PDw8PDw9P77GbFyJyio1AFAAA
+   H4sIAAAAAAAAC+3SwQkAIAwEwXSW/ruyhSgxiMzBPpUBzYhIqanp8fDw8PDwTHq67JOeyp2T7/Wap7JbntOzv/7nrvHw8PDw1DzSTguo8VxZQBQAAA==
   </data>
  </layer>
  <objectgroup name="Object Layer 1" width="36" height="36">
