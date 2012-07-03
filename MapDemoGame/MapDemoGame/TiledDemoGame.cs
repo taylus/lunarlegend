@@ -14,6 +14,8 @@ public class TiledDemoGame : Game
     private SpriteFont font;
     private KeyboardState prevKeyboard;
     private KeyboardState curKeyboard;
+    private MouseState prevMouse;
+    private MouseState curMouse;
 
     private World world;
     private Player player;
@@ -66,6 +68,7 @@ public class TiledDemoGame : Game
         if (!IsActive) return;
 
         curKeyboard = Keyboard.GetState();
+        curMouse = Mouse.GetState();
 
         //exit on esc
         if (curKeyboard.IsKeyDown(Keys.Escape))
@@ -87,7 +90,22 @@ public class TiledDemoGame : Game
             Window.Title = GAME_TITLE;
         }
 
+        if (world.Debug)
+        {
+            Point mouseTileCoords = world.Map.GetTileAt(world.ScreenToWorldCoordinates(curMouse.Position()));
+
+            if (curMouse.LeftButton == ButtonState.Pressed && !world.CollisionLayer.ContainsTileAt(mouseTileCoords))
+            {
+                world.CollisionLayer.Tiles[mouseTileCoords.X, mouseTileCoords.Y] = world.Map.GetWallTile();
+            }
+            else if (curMouse.RightButton == ButtonState.Pressed && world.CollisionLayer.ContainsTileAt(mouseTileCoords))
+            {
+                world.CollisionLayer.Tiles[mouseTileCoords.X, mouseTileCoords.Y] = new Tile();
+            }
+        }
+
         prevKeyboard = curKeyboard;
+        prevMouse = curMouse;
         base.Update(gameTime);
     }
 
@@ -145,11 +163,6 @@ public class TiledDemoGame : Game
 
     private Map LoadMap(string tmxFile)
     {
-        return new Map(Path.Combine(Content.RootDirectory, tmxFile), GraphicsDevice, font);
-    }
-
-    private Vector2 GetInitialViewOffset()
-    {
-        return GraphicsDevice.Viewport.Bounds.Center.ToVector2() - new Vector2(world.WidthPx / 2, world.HeightPx / 2);
+        return new Map(Path.Combine(Content.RootDirectory, tmxFile), GraphicsDevice, font, "wall layer");
     }
 }

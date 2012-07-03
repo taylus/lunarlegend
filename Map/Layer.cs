@@ -138,11 +138,16 @@ public class Layer
     {
         foreach (Point tileCoord in tileCoords)
         {
-            if (Tiles[tileCoord.X, tileCoord.Y].GID != 0)
+            if (ContainsTileAt(tileCoord))
                 return true;
         }
 
         return false;
+    }
+
+    public bool ContainsTileAt(Point point)
+    {
+        return Tiles[point.X, point.Y].GID != 0;
     }
 }
 
@@ -162,6 +167,6 @@ public static class LayerExtensions
     /// </summary>
     public static Layer GetByName(this List<Layer> layers, string layerName)
     {
-        return (from Layer l in layers where l.Name == layerName select l).First();
+        return (from Layer l in layers where l.Name == layerName select l).FirstOrDefault();
     }
 }

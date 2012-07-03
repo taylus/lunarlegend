@@ -27,6 +27,14 @@ public struct Tile
         GID = rawGID;
     }
 
+    public Tile(uint gid, bool flippedHorizontally = false, bool flippedVertically = false, bool flippedDiagonally = false)
+    {
+        GID = gid;
+        FlippedHorizontally = flippedHorizontally;
+        FlippedVertically = flippedVertically;
+        FlippedDiagonally = flippedDiagonally;
+    }
+
     public static Tile[] FromRawGIDs(uint[] rawGIDs)
     {
         Tile[] tiles = new Tile[rawGIDs.Length];

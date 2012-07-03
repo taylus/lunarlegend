@@ -27,7 +27,7 @@ public class Player
     public Vector2 ScreenPosition { get { return world.WorldToScreenCoordinates(WorldPosition); } }
     public Rectangle ScreenRect { get { return new Rectangle((int)Math.Round(ScreenX), (int)Math.Round(ScreenY), Width, Height); } }
 
-    private const float DEFAULT_SPEED = 4.0f;
+    private const float DEFAULT_SPEED = 3.0f;
 
     public Player(World world, Vector2 pos, int w, int h, float speed = DEFAULT_SPEED)
     {
@@ -61,7 +61,7 @@ public class Player
             Rectangle predictRect = new Rectangle((int)WorldX, (int)(WorldY - playerMoveDist), Width, Height);
             List<Point> tiles = world.Map.GetOccupyingTiles(predictRect);
             world.Map.HighlightedTiles = tiles;
-            if (world.Map.Layers.GetByName("wall layer").TileIntersect(tiles))
+            if (world.CollisionLayer.TileIntersect(tiles))
             {
                 //can't fully move up -- move the distance between us and the current tile's top side
                 playerMoveDist = WorldY % world.TileHeight;
@@ -84,7 +84,7 @@ public class Player
             Rectangle predictRect = new Rectangle((int)WorldX, (int)(WorldY + playerMoveDist), Width, Height);
             List<Point> tiles = world.Map.GetOccupyingTiles(predictRect);
             world.Map.HighlightedTiles = tiles;
-            if (world.Map.Layers.GetByName("wall layer").TileIntersect(tiles))
+            if (world.CollisionLayer.TileIntersect(tiles))
             {
                 //can't fully move down -- move the distance between us and the current tile's bottom side
                 playerMoveDist = Util.NearestMultiple((int)WorldY, world.TileHeight) - WorldY;
@@ -107,7 +107,7 @@ public class Player
             Rectangle predictRect = new Rectangle((int)(WorldX - playerMoveDist), (int)WorldY, Width, Height);
             List<Point> tiles = world.Map.GetOccupyingTiles(predictRect);
             world.Map.HighlightedTiles = tiles;
-            if (world.Map.Layers.GetByName("wall layer").TileIntersect(tiles))
+            if (world.CollisionLayer.TileIntersect(tiles))
             {
                 //can't fully move left -- move the distance between us and the current tile's left side
                 playerMoveDist = WorldX % world.TileWidth;
@@ -130,7 +130,7 @@ public class Player
             Rectangle predictRect = new Rectangle((int)(WorldX + playerMoveDist), (int)WorldY, Width, Height);
             List<Point> tiles = world.Map.GetOccupyingTiles(predictRect);
             world.Map.HighlightedTiles = tiles;
-            if (world.Map.Layers.GetByName("wall layer").TileIntersect(tiles))
+            if (world.CollisionLayer.TileIntersect(tiles))
             {
                 //can't fully move right -- move the distance between us and the current tile's right side
                 playerMoveDist = Util.NearestMultiple((int)WorldX, world.TileWidth) - WorldX;

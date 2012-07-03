@@ -55,12 +55,15 @@ public class Map
     public List<Layer> Layers { get; protected set; }
     public List<ObjectGroup> ObjectGroups { get; protected set; }
 
+    //the single layer this map uses for collision
+    public Layer CollisionLayer { get; protected set; }
+
     //debug: highlight these tiles when drawing
     public List<Point> HighlightedTiles { get; set; }
     private SpriteFont font;
     private static readonly Color tileCoordColor = Color.Lerp(Color.Transparent, Color.White, 0.25f);
 
-    public Map(string tmxFile, GraphicsDevice gd, SpriteFont font)
+    public Map(string tmxFile, GraphicsDevice gd, SpriteFont font, string collisionLayerName = null)
     {
         try
         {
@@ -80,6 +83,11 @@ public class Map
             LoadMapElements();
             HighlightedTiles = new List<Point>();
             this.font = font;
+
+            if (!string.IsNullOrWhiteSpace(collisionLayerName))
+            {
+                SetCollisionLayer(collisionLayerName);
+            }
         }
         catch (Exception e)
         {
@@ -141,6 +149,9 @@ public class Map
         {
             //don't bother with invisible layers
             if (layer.Opacity <= 0) continue;
+
+            //only draw the collision layer in debug mode
+            if (layer == CollisionLayer && !debug) continue;
 
             //layer opacity (white means no color tinting in XNA)
             Color layerColor = Color.Lerp(Color.Transparent, Color.White, MathHelper.Clamp(layer.Opacity, 0, 1));
@@ -207,9 +218,9 @@ public class Map
                     }
                     else
                     {
-                        //if tile is rotated, need to draw at an adjusted dest rect due to the way XNA draws things with offsets
+                        //if tile is rotated, need to offset dest rect due to the way XNA draws things centered when rotated
                         Rectangle adjustedDestRect = new Rectangle(tileDestRect.X + tileDestRect.Width / 2, tileDestRect.Y + tileDestRect.Height / 2, TileWidth, TileHeight);
-                        sb.Draw(tileset.Texture, adjustedDestRect, tileSrcRect, tileColor, rotation, tileDestRect.Center.ToVector2(), flip, 0);
+                        sb.Draw(tileset.Texture, adjustedDestRect, tileSrcRect, tileColor, rotation, new Vector2(TileWidth / 2, TileHeight / 2), flip, 0);
                         if (debug)
                         {
                             string coords = string.Format("{0},{1}", x, y);
@@ -251,6 +262,22 @@ public class Map
         }
     }
 
+    public void SetCollisionLayer(string name)
+    {
+        Layer layer = Layers.GetByName(name);
+        if (layer != null) 
+            CollisionLayer = layer;
+        else 
+            throw new Exception("Error setting collision layer: layer \"" + name + "\" not found."); 
+    }
+
+    //gets the first (any will do) tile from the collision layer
+    public Tile GetWallTile()
+    {
+        if (CollisionLayer == null) return new Tile();
+        return (from Tile t in CollisionLayer.Tiles where t.GID != 0 select t).FirstOrDefault();
+    }
+
     //returns the first object with this name in the first objectgroup found to contain it
     //if you use the same name for multiple objects, you're gonna have a bad time
     public Object GetObject(string name)
@@ -276,5 +303,11 @@ public class Map
         }
 
         return occupiedTiles;
+    }
+
+    //gets the tile coordinate containing the given pixel coordinate
+    public Point GetTileAt(Vector2 pos)
+    {
+        return new Point((int)pos.X / TileWidth, (int)pos.Y / TileHeight);
     }
 }

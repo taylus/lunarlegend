@@ -22,6 +22,7 @@ public class World
     public int TileHeight { get { return Map.TileWidth; } }
     public int WidthPx { get { return Map.WidthPx; } }
     public int HeightPx { get { return Map.HeightPx; } }
+    public Layer CollisionLayer { get { return Map.CollisionLayer; } }
     public int ViewWidth { get; protected set; }
     public int ViewHeight { get; protected set; }
 
@@ -57,5 +58,11 @@ public class World
     public Vector2 WorldToScreenCoordinates(Vector2 worldCoords)
     {
         return worldCoords - ViewOffset;
+    }
+
+    //maps a point from screen coordinates to map pixel coordinates by offsetting the current view
+    public Vector2 ScreenToWorldCoordinates(Vector2 screenCoords)
+    {
+        return screenCoords + ViewOffset;
     }
 }
