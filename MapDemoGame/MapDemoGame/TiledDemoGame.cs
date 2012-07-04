@@ -144,9 +144,9 @@ public class TiledDemoGame : Game
     {
         int stringPadding = 2;
         List<string> debugStrings = new List<string>();
-        debugStrings.Add(string.Format("View: ({0}, {1})", (int)world.ViewX, (int)world.ViewY));
-        debugStrings.Add(string.Format("World: ({0}, {1})", (int)player.WorldX, (int)player.WorldY));
-        debugStrings.Add(string.Format("Screen: ({0}, {1})", (int)player.ScreenX, (int)player.ScreenY));
+        debugStrings.Add(string.Format("View: ({0}, {1})", world.ViewWindow.X, world.ViewWindow.Y));
+        debugStrings.Add(string.Format("World: ({0}, {1})", player.WorldRect.X, player.WorldRect.Y));
+        debugStrings.Add(string.Format("Screen: ({0}, {1})", player.ScreenRect.X, player.ScreenRect.Y));
 
         //background rectangle
         //string longestString = debugStrings.OrderByDescending(s => s.Length).First();

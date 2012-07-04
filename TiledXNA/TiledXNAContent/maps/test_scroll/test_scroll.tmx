@@ -6,6 +6,29 @@
  <tileset firstgid="1" name="lttp_castlebasement1" tilewidth="32" tileheight="32">
   <image source="lttp_castlebasement1.png" width="2368" height="2012"/>
  </tileset>
+ <tileset firstgid="4589" name="walls" tilewidth="32" tileheight="32">
+  <image source="walls.png" trans="ff00ff" width="96" height="64"/>
+  <tile id="1">
+   <properties>
+    <property name="diag" value="dl"/>
+   </properties>
+  </tile>
+  <tile id="2">
+   <properties>
+    <property name="diag" value="dr"/>
+   </properties>
+  </tile>
+  <tile id="4">
+   <properties>
+    <property name="diag" value="ul"/>
+   </properties>
+  </tile>
+  <tile id="5">
+   <properties>
+    <property name="diag" value="ur"/>
+   </properties>
+  </tile>
+ </tileset>
  <layer name="base layer" width="36" height="36">
   <data encoding="base64" compression="gzip">
    H4sIAAAAAAAAC+2XW0pCURhGd7cHOw4iNcnHhvDPJyt0BP8EvIEDaBJZ4cs3C28gzaSWnAIJzM6xtgbnYYHso3utfZANf6cUQhd60IcBDCOBy3E6bqfBOzBhfQozmMMClpHA5Tgdt0/TFq+ch1CFGlxCHRqRwOU4HbfTsGrxG9abcAt3cA/tSOBynI7bm2mLP7I+gid4hhe4LscBl+N03D5KW/wNf0hCOIJjOIHTJHgMcDlOx+00rFr+dc9VEi5aSXhYh7XX4v0UPUVP0XNoPdxN4et99XFnhX30tDbs1TrcHuEUbtEgWrSPnvGB9ZyVv+0xPhtrxjPjO7b+f9ylZ7zl91l7Np3vp3y+h9/q2Xa+Xcnas+18sXv+mqKn6Cl64vYwoxqzqjGzGrOrMcMas2xWlAdcwincGqUtYoY3Znljpjdme2PGt3Z2lAdcwincaqYtqrBfFWpwCXVoZEd5wCWcwq1q2qJJKdgUZjCHBSyzozzgEk7hFg2rFnXYrws96MMAhtlRHnAJp3Crm7boHblcZm9AFAAA
@@ -16,7 +39,7 @@
    <property name="layer_property" value=""/>
   </properties>
   <data encoding="base64" compression="gzip">
-   H4sIAAAAAAAAC+3VwQkAIAwEwess/XdlCR6SBI0b2I8Ijn4MSUGUVPfgqfNU3GHS++DBg+cej3NOt2e3jmeuJ+OvdPb86nHmZU/H4MGDBw/RSQsRqR6JQBQAAA==
+   H4sIAAAAAAAAC+3P0Q0AEAxFUSvYf0YfNrABbVVD3ZfcH4k4Wi2lETl1av0yj9V0elrTbF5/0JiihwcPnhweyTvRntU5nryeXZ/k/s8eyV72RAwPHjx4iCwNLgQFK0AUAAA=
   </data>
  </layer>
  <objectgroup name="Object Layer 1" width="36" height="36">

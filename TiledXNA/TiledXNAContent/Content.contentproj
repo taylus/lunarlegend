@@ -65,6 +65,12 @@
       <Processor>TextureProcessor</Processor>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="maps\test_scroll\walls.png">
+      <Name>walls</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="maps\walls\walls_test.tmx">
       <Name>walls_test</Name>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

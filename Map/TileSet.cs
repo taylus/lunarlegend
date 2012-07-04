@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using System.Collections.Generic;
+using Property = System.Collections.Generic.KeyValuePair<string, string>;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -15,6 +16,7 @@ public class TileSet
     public int TileHeightPx { get; private set; }
     public Color? TransparentColor { get; private set; }
     public Texture2D Texture { get; private set; }
+    public Dictionary<int, List<Property>> TileProperties { get; private set; }
 
     //width of tileset in tiles
     private int Width { get { return Texture.Width / TileWidthPx; } }
@@ -52,14 +54,36 @@ public class TileSet
 
         if (TransparentColor != null)
             Texture = Util.ApplyColorKeyTransparency(Texture, TransparentColor.Value);
+
+        TileProperties = LoadTileProperties(tileset.tile);
     }
 
-    //determine the crop rectangle of a tile by its GID offset
-    public Rectangle DetermineTileCropRect(int gidOffset)
+    //loads list of tileset properties into a dictionary keyed by local GID
+    private Dictionary<int, List<Property>> LoadTileProperties(Tiled.tilesetTile[] tilesetTiles)
     {
-        int x = (gidOffset - 1) % Width;
-        int y = (gidOffset - 1) / Width;
+        if (tilesetTiles == null) return new Dictionary<int, List<Property>>();
+        return (from Tiled.tilesetTile t in tilesetTiles
+                group t by t.id into g
+                select new
+                {
+                    Key = int.Parse(g.Key),
+                    Value = (from Tiled.property p in g.First().properties.property 
+                             select new Property(p.name, p.value)).ToList()
+                }).ToDictionary(t => t.Key, t => t.Value);
+    }
+
+    //determine the crop rectangle of a tile by its local GID
+    public Rectangle DetermineTileCropRect(int localGID)
+    {
+        int x = localGID % Width;
+        int y = localGID / Width;
         return new Rectangle(x * TileWidthPx, y * TileHeightPx, TileWidthPx, TileHeightPx);
+    }
+
+    //determine if the given rect overlaps any non-transparent pixels with the given tile
+    public bool PixelCollisionWithTile(Rectangle rect, int localGID)
+    {
+        return false;
     }
 
     ////crop out the tile texture at the given offset
@@ -92,7 +116,7 @@ public static class TileSetExtensions
             if (ts.FirstGID <= tileGID)
             {
                 tileset = ts;
-                tileRect = ts.DetermineTileCropRect((int)(tileGID - tileset.FirstGID + 1));
+                tileRect = ts.DetermineTileCropRect((int)(tileGID - tileset.FirstGID));
                 return;
             }
         }

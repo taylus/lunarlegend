@@ -27,7 +27,7 @@ public class Player
     public Vector2 ScreenPosition { get { return world.WorldToScreenCoordinates(WorldPosition); } }
     public Rectangle ScreenRect { get { return new Rectangle((int)Math.Round(ScreenX), (int)Math.Round(ScreenY), Width, Height); } }
 
-    private const float DEFAULT_SPEED = 3.0f;
+    private const float DEFAULT_SPEED = 3.5f;
 
     public Player(World world, Vector2 pos, int w, int h, float speed = DEFAULT_SPEED)
     {
@@ -51,13 +51,18 @@ public class Player
         //      against walls with specified widths, we'll pass through them if our speed > their width (tunneling)
         //      this will be a problem if anything is moving very fast, but I don't think that will be the case anywhere
 
+        //TODO: diagonal walls? glide along slope by moving in X and Y instead of just one
+        //      tiles could store a "I am diagonal moving upper right", etc diag type
+        //      how to enter this into Tiled/read it back out of TMX?
+
         if (keyboard.IsKeyDown(Keys.W))
         {
             //move slower if going diagonally, and move less if we can't move a full step
             float playerSpeed = (keyboard.IsKeyDown(Keys.A) || keyboard.IsKeyDown(Keys.D)) ? Speed * DIAG_FACTOR : Speed;
             float playerMoveDist = MathHelper.Min(playerSpeed, MathHelper.Distance(WorldY, 0));
+            float viewMoveDist = playerMoveDist;
 
-            //adjust movement distance for wall collisions (TODO: make pixel-perfect for half wall tiles)
+            //adjust movement distance for wall collisions
             Rectangle predictRect = new Rectangle((int)WorldX, (int)(WorldY - playerMoveDist), Width, Height);
             List<Point> tiles = world.Map.GetOccupyingTiles(predictRect);
             world.Map.HighlightedTiles = tiles;
@@ -70,7 +75,7 @@ public class Player
             WorldY -= playerMoveDist;
 
             //must calculate player and view distances separately, as player may move independently of view
-            float worldWiewScrollDist = MathHelper.Min(playerMoveDist, MathHelper.Distance(world.ViewY, 0));
+            float worldWiewScrollDist = MathHelper.Min(viewMoveDist, MathHelper.Distance(world.ViewY, 0));
             if (ScreenY + (Height / 2) < world.ViewHeight / 2)
                 world.ViewY -= worldWiewScrollDist;
         }
@@ -79,8 +84,9 @@ public class Player
             //move slower if going diagonally, and move less if we can't move a full step
             float playerSpeed = (keyboard.IsKeyDown(Keys.A) || keyboard.IsKeyDown(Keys.D)) ? Speed * DIAG_FACTOR : Speed;
             float playerMoveDist = MathHelper.Min(playerSpeed, MathHelper.Distance(WorldY + Height, world.HeightPx));
+            float viewMoveDist = playerMoveDist;
 
-            //adjust movement distance for wall collisions (TODO: make pixel-perfect for half wall tiles)
+            //adjust movement distance for wall collisions
             Rectangle predictRect = new Rectangle((int)WorldX, (int)(WorldY + playerMoveDist), Width, Height);
             List<Point> tiles = world.Map.GetOccupyingTiles(predictRect);
             world.Map.HighlightedTiles = tiles;
@@ -93,7 +99,7 @@ public class Player
             WorldY += playerMoveDist;
 
             //must calculate player and view distances separately, as player may move independently of view
-            float worldWiewScrollDist = MathHelper.Min(playerMoveDist, MathHelper.Distance(world.ViewY + world.ViewHeight, world.HeightPx));
+            float worldWiewScrollDist = MathHelper.Min(viewMoveDist, MathHelper.Distance(world.ViewY + world.ViewHeight, world.HeightPx));
             if (ScreenY + (Height / 2) >= world.ViewHeight / 2)
                 world.ViewY += worldWiewScrollDist;
         }
@@ -102,8 +108,9 @@ public class Player
             //move slower if going diagonally, and move less if we can't move a full step
             float playerSpeed = (keyboard.IsKeyDown(Keys.W) || keyboard.IsKeyDown(Keys.S)) ? Speed * DIAG_FACTOR : Speed;
             float playerMoveDist = MathHelper.Min(playerSpeed, MathHelper.Distance(WorldX, 0));
+            float viewMoveDist = playerMoveDist;
 
-            //adjust movement distance for wall collisions (TODO: make pixel-perfect for half wall tiles)
+            //adjust movement distance for wall collisions
             Rectangle predictRect = new Rectangle((int)(WorldX - playerMoveDist), (int)WorldY, Width, Height);
             List<Point> tiles = world.Map.GetOccupyingTiles(predictRect);
             world.Map.HighlightedTiles = tiles;
@@ -116,7 +123,7 @@ public class Player
             WorldX -= playerMoveDist;
 
             //must calculate player and view distances separately, as player may move independently of view
-            float worldWiewScrollDist = MathHelper.Min(playerMoveDist, MathHelper.Distance(world.ViewX, 0));
+            float worldWiewScrollDist = MathHelper.Min(viewMoveDist, MathHelper.Distance(world.ViewX, 0));
             if (ScreenX + (Width / 2) < world.ViewWidth / 2)
                 world.ViewX -= worldWiewScrollDist;
         }
@@ -125,8 +132,9 @@ public class Player
             //move slower if going diagonally, and move less if we can't move a full step
             float playerSpeed = (keyboard.IsKeyDown(Keys.W) || keyboard.IsKeyDown(Keys.S)) ? Speed * DIAG_FACTOR : Speed;
             float playerMoveDist = MathHelper.Min(playerSpeed, MathHelper.Distance(WorldX + Width, world.WidthPx));
+            float viewMoveDist = playerMoveDist;
 
-            //adjust movement distance for wall collisions (TODO: make pixel-perfect for half wall tiles)
+            //adjust movement distance for wall collisions
             Rectangle predictRect = new Rectangle((int)(WorldX + playerMoveDist), (int)WorldY, Width, Height);
             List<Point> tiles = world.Map.GetOccupyingTiles(predictRect);
             world.Map.HighlightedTiles = tiles;
@@ -139,7 +147,7 @@ public class Player
             WorldX += playerMoveDist;
 
             //must calculate player and view distances separately, as player may move independently of view
-            float worldWiewScrollDist = MathHelper.Min(playerMoveDist, MathHelper.Distance(world.ViewX + world.ViewWidth, world.WidthPx));
+            float worldWiewScrollDist = MathHelper.Min(viewMoveDist, MathHelper.Distance(world.ViewX + world.ViewWidth, world.WidthPx));
             if (ScreenX + (Width / 2) >= world.ViewWidth / 2)
                 world.ViewX += worldWiewScrollDist;
         }
