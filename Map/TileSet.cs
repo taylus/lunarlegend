@@ -124,4 +124,29 @@ public static class TileSetExtensions
         tileRect = Rectangle.Empty;
         tileset = null;
     }
+
+    public static List<Property> GetTileProperties(this List<TileSet> tilesets, uint tileGID)
+    {
+        foreach (TileSet ts in tilesets.OrderByDescending(t => t.FirstGID))
+        {
+            if (ts.FirstGID <= tileGID)
+            {
+                int localGID = (int)tileGID - ts.FirstGID;
+                if (ts.TileProperties.ContainsKey(localGID))
+                    return ts.TileProperties[localGID];
+                else
+                    return new List<Property>();
+            }
+        }
+
+        return new List<Property>();
+    }
+}
+
+public static class PropertyExtensions
+{
+    public static string GetValue(this List<Property> properties, string name)
+    {
+        return (from Property p in properties where p.Key == name select p.Value).FirstOrDefault();
+    }
 }

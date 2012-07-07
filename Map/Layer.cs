@@ -146,13 +146,6 @@ public class Layer
         return false;
     }
 
-    //return true if this layer has any non-empty tiles at any of the given coords, AND return the GIDs for those tiles
-    public bool TileIntersect(List<Point> tileCoords, out List<uint> GIDs)
-    {
-        GIDs = (from Point tileCoord in tileCoords where ContainsTileAt(tileCoord) select Tiles[tileCoord.X, tileCoord.Y].GID).ToList();
-        return GIDs.Count > 0;
-    }
-
     public bool ContainsTileAt(Point point)
     {
         return Tiles[point.X, point.Y].GID != 0;
