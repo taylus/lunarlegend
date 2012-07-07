@@ -92,7 +92,7 @@ public class TiledDemoGame : Game
 
         if (world.Debug)
         {
-            Point mouseTileCoords = world.Map.GetTileAt(world.ScreenToWorldCoordinates(curMouse.Position()));
+            Point mouseTileCoords = world.Map.GetTileAt(world.ScreenToWorldCoordinates(curMouse.Position() / GAME_SCALE));
 
             if (curMouse.LeftButton == ButtonState.Pressed && !world.CollisionLayer.ContainsTileAt(mouseTileCoords))
             {
