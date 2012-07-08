@@ -36,7 +36,7 @@
   <object name="dest1" type="info_teleport_destination" x="960" y="960" width="32" height="32"/>
   <object name="level change" type="trigger_changelevel" x="129" y="994" width="138" height="29">
    <properties>
-    <property name="level" value="test_scroll/test_scroll.tmx"/>
+    <property name="level" value="layer_test/layers.tmx"/>
    </properties>
   </object>
  </objectgroup>

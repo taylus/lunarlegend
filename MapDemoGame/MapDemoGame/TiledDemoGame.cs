@@ -21,8 +21,9 @@ public class TiledDemoGame : Game
     private Player player;
 
     //render everything to a temp surface for scaling
-    private static float gameScale;
     private Texture2D gameSurf;
+    private static float gameScale;
+    private const float DEFAULT_GAME_SCALE = 1.0f;
 
     private const string GAME_TITLE = "Demo Game";
 
@@ -44,16 +45,24 @@ public class TiledDemoGame : Game
         font = Content.Load<SpriteFont>("font");
 
         //LoadWorld("maps/walls/walls_test.tmx");
-        //LoadWorld("maps/test_scroll/test_scroll.tmx");
-        LoadWorld("maps/layer_test/layers.tmx", 2.0f);
+        LoadWorld("maps/test_scroll/test_scroll.tmx");
+        //LoadWorld("maps/layer_test/layers.tmx");
     }
 
-    private void LoadWorld(string tmxMapFile, float scale = 1.0f)
+    private void LoadWorld(string tmxMapFile)
     {
-        if (scale == 0) throw new ArgumentException("Game scale cannot be zero.");
-        gameScale = scale;
-
         Map map = new Map(Path.Combine(Content.RootDirectory, tmxMapFile), GraphicsDevice, font);
+        string mapScaleProperty = map.Properties.GetValue("scale");
+        if (!string.IsNullOrWhiteSpace(mapScaleProperty))
+        {
+            gameScale = float.Parse(mapScaleProperty);
+            if (gameScale == 0) gameScale = DEFAULT_GAME_SCALE;
+        }
+        else
+        {
+            gameScale = DEFAULT_GAME_SCALE;
+        }
+
         Rectangle scaledViewWindow = GraphicsDevice.Viewport.Bounds.Scale(1 / gameScale);
         world = new World(map, scaledViewWindow, false);
         player = new Player(world, GetPlayerSpawnPosition(), (int)world.TileWidth, (int)world.TileHeight);
