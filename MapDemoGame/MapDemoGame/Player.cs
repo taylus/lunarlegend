@@ -170,21 +170,5 @@ public class Player
             if (ScreenX + (Width / 2) >= world.ViewWidth / 2)
                 world.ViewX += worldWiewScrollDist;
         }
-
-        TouchEntities();
-    }
-
-    public void TouchEntities()
-    {
-        //TODO: spatially index the entities so we're not checking all of them
-        foreach (Entity e in world.Entities)
-        {
-            if (!e.Active) continue;
-
-            if (WorldRect.Intersects(e.Object.Rectangle))
-            {
-                e.Touch(this);
-            }
-        }
     }
 }

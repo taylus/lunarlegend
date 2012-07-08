@@ -253,12 +253,12 @@ public class Map
     {
         for (int x = 0; x < HeightPx; x += TileWidth)
         {
-            Util.DrawLine(sb, 1.0f, new Vector2(x - viewWindowPx.X, 0), new Vector2(x - viewWindowPx.X, Math.Min(viewWindowPx.Height, HeightPx)), Color.Black);
+            Util.DrawLine(sb, 1.0f, new Vector2(x - viewWindowPx.X, 0), new Vector2(x - viewWindowPx.X, Math.Min(viewWindowPx.Height, HeightPx - viewWindowPx.Y)), Color.Black);
         }
 
         for (int y = 0; y < HeightPx; y += TileHeight)
         {
-            Util.DrawLine(sb, 1.0f, new Vector2(0, y - viewWindowPx.Y), new Vector2(Math.Min(viewWindowPx.Width, WidthPx), y - viewWindowPx.Y), Color.Black);
+            Util.DrawLine(sb, 1.0f, new Vector2(0, y - viewWindowPx.Y), new Vector2(Math.Min(viewWindowPx.Width, WidthPx - viewWindowPx.X), y - viewWindowPx.Y), Color.Black);
         }
     }
 

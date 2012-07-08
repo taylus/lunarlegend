@@ -43,11 +43,15 @@ public class TiledDemoGame : Game
         gameSurf = new RenderTarget2D(GraphicsDevice, GraphicsDevice.Viewport.Width, GraphicsDevice.Viewport.Height);
         font = Content.Load<SpriteFont>("font");
 
-        //Map map = LoadMap("maps/walls/walls_test.tmx");
-        Map map = LoadMap("maps/test_scroll/test_scroll.tmx");
+        //LoadWorld("maps/walls/walls_test.tmx");
+        LoadWorld("maps/test_scroll/test_scroll.tmx");
+    }
+
+    private void LoadWorld(string tmxMapFile)
+    {
+        Map map = new Map(Path.Combine(Content.RootDirectory, tmxMapFile), GraphicsDevice, font, "wall layer");
         Rectangle scaledViewWindow = GraphicsDevice.Viewport.Bounds.Scale(1 / GAME_SCALE);
         world = new World(map, scaledViewWindow, false);
-
         player = new Player(world, GetPlayerSpawnPosition(), (int)world.TileWidth, (int)world.TileHeight);
         world.CenterViewOnPlayer(player);
     }
@@ -64,7 +68,7 @@ public class TiledDemoGame : Game
 
     protected override void Update(GameTime gameTime)
     {
-        //don't respond to input if the game isn't active
+        //don't respond to input if the game window isn't active
         if (!IsActive) return;
 
         curKeyboard = Keyboard.GetState();
@@ -74,14 +78,14 @@ public class TiledDemoGame : Game
         if (curKeyboard.IsKeyDown(Keys.Escape))
             this.Exit();
 
+        //toggle debug mode
         if (!prevKeyboard.IsKeyDown(Keys.Space) && curKeyboard.IsKeyDown(Keys.Space))
         {
             world.Debug = !world.Debug;
             Window.Title = !world.Debug? GAME_TITLE : string.Format("{0} - FPS: {1}", GAME_TITLE, Math.Round(1 / gameTime.ElapsedGameTime.TotalSeconds));
         }
 
-        player.Move(curKeyboard);
-
+        //debug mode wall editor
         if (world.Debug)
         {
             Point mouseTileCoords = world.Map.GetTileAt(world.ScreenToWorldCoordinates(curMouse.Position() / GAME_SCALE));
@@ -96,9 +100,39 @@ public class TiledDemoGame : Game
             }
         }
 
+        //normal game logic
+        player.Move(curKeyboard);
+        TouchEntities();
+
         prevKeyboard = curKeyboard;
         prevMouse = curMouse;
         base.Update(gameTime);
+    }
+
+    public void TouchEntities()
+    {
+        //TODO: spatially index the entities so we're not checking all of them
+        foreach (Entity e in world.Entities)
+        {
+            if (!e.Active) continue;
+
+            if (player.WorldRect.Intersects(e.Object.Rectangle))
+            {
+                //handle special entities where the game engine needs to do something special
+                //TODO: this is a code smell... if we get a lot of these, then expose engine functionality to entities somehow (service locator?)
+                if (e.GetType() == typeof(ChangeLevel))
+                {
+                    bool preserveDebug = world.Debug;
+                    LoadWorld(Path.Combine("maps", ((ChangeLevel)e).LevelName));
+                    world.Debug = preserveDebug;
+                    break;
+                }
+                else
+                {
+                    e.Touch(player);
+                }
+            }
+        }
     }
 
     protected override void Draw(GameTime gameTime)
@@ -151,10 +185,5 @@ public class TiledDemoGame : Game
         {
             spriteBatch.DrawString(font, debugStrings[i], new Vector2(stringPadding, font.LineSpacing * i), Color.White);
         }
-    }
-
-    private Map LoadMap(string tmxFile)
-    {
-        return new Map(Path.Combine(Content.RootDirectory, tmxFile), GraphicsDevice, font, "wall layer");
     }
 }

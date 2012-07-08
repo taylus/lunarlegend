@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Reflection;
 using System.Collections.Generic;
+using Property = System.Collections.Generic.KeyValuePair<string, string>;
 using Microsoft.Xna.Framework;
 
 //represents a basic entity that can be triggered by some means (player touch, worldspawn, etc)
@@ -49,7 +50,7 @@ public class TeleportEntrance : Entity
 {
     public TeleportDestination Destination { get; set; }
 
-    new public static string GetEntityTypeName() { return "info_teleport"; }
+    new public static string GetEntityTypeName() { return "trigger_teleport"; }
 
     public override void Touch(Player p)
     {
@@ -59,13 +60,29 @@ public class TeleportEntrance : Entity
         }
     }
 
-    public TeleportEntrance(Object obj) : base(obj) {}
+    public TeleportEntrance(Object obj) : base(obj) { }
 }
 
 public class TeleportDestination : Entity
 {
     new public static string GetEntityTypeName() { return "info_teleport_destination"; }
     public TeleportDestination(Object obj) : base(obj) { }
+}
+
+public class ChangeLevel : Entity
+{
+    new public static string GetEntityTypeName() { return "trigger_changelevel"; }
+    public string LevelName 
+    { 
+        get 
+        { 
+            string levelName = Object.Properties.GetValue("level");
+            if(levelName.EndsWith(".tmx")) return levelName;
+            return levelName + ".tmx";
+        } 
+    }
+
+    public ChangeLevel(Object obj) : base(obj) { }
 }
 
 public static class EntityExtensions
