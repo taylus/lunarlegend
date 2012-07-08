@@ -253,12 +253,12 @@ public class Map
     {
         for (int x = 0; x < HeightPx; x += TileWidth)
         {
-            Util.DrawLine(sb, 1.0f, new Vector2(x - viewWindowPx.X, 0), new Vector2(x - viewWindowPx.X, viewWindowPx.Height), Color.Black);
+            Util.DrawLine(sb, 1.0f, new Vector2(x - viewWindowPx.X, 0), new Vector2(x - viewWindowPx.X, Math.Min(viewWindowPx.Height, HeightPx)), Color.Black);
         }
 
         for (int y = 0; y < HeightPx; y += TileHeight)
         {
-            Util.DrawLine(sb, 1.0f, new Vector2(0, y - viewWindowPx.Y), new Vector2(viewWindowPx.Width, y - viewWindowPx.Y), Color.Black);
+            Util.DrawLine(sb, 1.0f, new Vector2(0, y - viewWindowPx.Y), new Vector2(Math.Min(viewWindowPx.Width, WidthPx), y - viewWindowPx.Y), Color.Black);
         }
     }
 
@@ -267,8 +267,6 @@ public class Map
         Layer layer = Layers.GetByName(name);
         if (layer != null) 
             CollisionLayer = layer;
-        else 
-            throw new Exception("Error setting collision layer: layer \"" + name + "\" not found."); 
     }
 
     //gets the first (any will do) tile from the collision layer

@@ -58,8 +58,8 @@ public class World
         ViewY = p.WorldPosition.Y + (p.Height / 2) - (ViewHeight / 2);
 
         //constrain to map boundaries
-        ViewX = Math.Min(Math.Max(ViewX, 0), Map.WidthPx - ViewWidth);
-        ViewY = Math.Min(Math.Max(ViewY, 0), Map.HeightPx - ViewHeight);
+        ViewX = Math.Max(Math.Min(ViewX, Map.WidthPx - ViewWidth), 0);
+        ViewY = Math.Max(Math.Min(ViewY, Map.HeightPx - ViewHeight), 0);
     }
 
     //maps a point from map pixel coordinates to screen coordinates by offsetting the current view

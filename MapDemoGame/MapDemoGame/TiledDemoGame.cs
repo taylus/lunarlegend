@@ -77,18 +77,10 @@ public class TiledDemoGame : Game
         if (!prevKeyboard.IsKeyDown(Keys.Space) && curKeyboard.IsKeyDown(Keys.Space))
         {
             world.Debug = !world.Debug;
+            Window.Title = !world.Debug? GAME_TITLE : string.Format("{0} - FPS: {1}", GAME_TITLE, Math.Round(1 / gameTime.ElapsedGameTime.TotalSeconds));
         }
 
         player.Move(curKeyboard);
-        if (world.Debug)
-        {
-            //world.Map.HighlightedTiles = world.Map.GetOccupyingTiles(player.WorldRect);
-            Window.Title = string.Format("{0} - FPS: {1}", GAME_TITLE, Math.Round(1 / gameTime.ElapsedGameTime.TotalSeconds));
-        }
-        else
-        {
-            Window.Title = GAME_TITLE;
-        }
 
         if (world.Debug)
         {

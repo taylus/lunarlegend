@@ -69,14 +69,17 @@ public class Player
             float playerMoveDist = MathHelper.Min(playerSpeed, MathHelper.Distance(WorldY, 0));
             float viewMoveDist = playerMoveDist;
 
-            //adjust movement distance for wall collisions
-            Rectangle predictRect = new Rectangle((int)WorldX, (int)(WorldY - playerMoveDist), Width, Height);
-            List<Point> tiles = world.Map.GetOccupyingTiles(predictRect);
-            world.Map.HighlightedTiles = tiles;
-            if (world.CollisionLayer.TileIntersect(tiles))
+            if (world.CollisionLayer != null)
             {
-                //can't fully move up -- move the distance between us and the current tile's top side
-                playerMoveDist = WorldY % world.TileHeight;
+                //adjust movement distance for wall collisions
+                Rectangle predictRect = new Rectangle((int)WorldX, (int)(WorldY - playerMoveDist), Width, Height);
+                List<Point> tiles = world.Map.GetOccupyingTiles(predictRect);
+                world.Map.HighlightedTiles = tiles;
+                if (world.CollisionLayer.TileIntersect(tiles))
+                {
+                    //can't fully move up -- move the distance between us and the current tile's top side
+                    playerMoveDist = WorldY % world.TileHeight;
+                }
             }
 
             WorldY -= playerMoveDist;
@@ -93,14 +96,17 @@ public class Player
             float playerMoveDist = MathHelper.Min(playerSpeed, MathHelper.Distance(WorldY + Height, world.HeightPx));
             float viewMoveDist = playerMoveDist;
 
-            //adjust movement distance for wall collisions
-            Rectangle predictRect = new Rectangle((int)WorldX, (int)(WorldY + playerMoveDist), Width, Height);
-            List<Point> tiles = world.Map.GetOccupyingTiles(predictRect);
-            world.Map.HighlightedTiles = tiles;
-            if (world.CollisionLayer.TileIntersect(tiles))
+            if (world.CollisionLayer != null)
             {
-                //can't fully move down -- move the distance between us and the current tile's bottom side
-                playerMoveDist = Util.NearestMultiple((int)WorldY, world.TileHeight) - WorldY;
+                //adjust movement distance for wall collisions
+                Rectangle predictRect = new Rectangle((int)WorldX, (int)(WorldY + playerMoveDist), Width, Height);
+                List<Point> tiles = world.Map.GetOccupyingTiles(predictRect);
+                world.Map.HighlightedTiles = tiles;
+                if (world.CollisionLayer.TileIntersect(tiles))
+                {
+                    //can't fully move down -- move the distance between us and the current tile's bottom side
+                    playerMoveDist = Util.NearestMultiple((int)WorldY, world.TileHeight) - WorldY;
+                }
             }
 
             WorldY += playerMoveDist;
@@ -117,14 +123,17 @@ public class Player
             float playerMoveDist = MathHelper.Min(playerSpeed, MathHelper.Distance(WorldX, 0));
             float viewMoveDist = playerMoveDist;
 
-            //adjust movement distance for wall collisions
-            Rectangle predictRect = new Rectangle((int)(WorldX - playerMoveDist), (int)WorldY, Width, Height);
-            List<Point> tiles = world.Map.GetOccupyingTiles(predictRect);
-            world.Map.HighlightedTiles = tiles;
-            if (world.CollisionLayer.TileIntersect(tiles))
+            if (world.CollisionLayer != null)
             {
-                //can't fully move left -- move the distance between us and the current tile's left side
-                playerMoveDist = WorldX % world.TileWidth;
+                //adjust movement distance for wall collisions
+                Rectangle predictRect = new Rectangle((int)(WorldX - playerMoveDist), (int)WorldY, Width, Height);
+                List<Point> tiles = world.Map.GetOccupyingTiles(predictRect);
+                world.Map.HighlightedTiles = tiles;
+                if (world.CollisionLayer.TileIntersect(tiles))
+                {
+                    //can't fully move left -- move the distance between us and the current tile's left side
+                    playerMoveDist = WorldX % world.TileWidth;
+                }
             }
 
             WorldX -= playerMoveDist;
@@ -141,14 +150,17 @@ public class Player
             float playerMoveDist = MathHelper.Min(playerSpeed, MathHelper.Distance(WorldX + Width, world.WidthPx));
             float viewMoveDist = playerMoveDist;
 
-            //adjust movement distance for wall collisions
-            Rectangle predictRect = new Rectangle((int)(WorldX + playerMoveDist), (int)WorldY, Width, Height);
-            List<Point> tiles = world.Map.GetOccupyingTiles(predictRect);
-            world.Map.HighlightedTiles = tiles;
-            if (world.CollisionLayer.TileIntersect(tiles))
+            if (world.CollisionLayer != null)
             {
-                //can't fully move right -- move the distance between us and the current tile's right side
-                playerMoveDist = Util.NearestMultiple((int)WorldX, world.TileWidth) - WorldX;
+                //adjust movement distance for wall collisions
+                Rectangle predictRect = new Rectangle((int)(WorldX + playerMoveDist), (int)WorldY, Width, Height);
+                List<Point> tiles = world.Map.GetOccupyingTiles(predictRect);
+                world.Map.HighlightedTiles = tiles;
+                if (world.CollisionLayer.TileIntersect(tiles))
+                {
+                    //can't fully move right -- move the distance between us and the current tile's right side
+                    playerMoveDist = Util.NearestMultiple((int)WorldX, world.TileWidth) - WorldX;
+                }
             }
 
             WorldX += playerMoveDist;
