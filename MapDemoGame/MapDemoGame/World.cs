@@ -23,13 +23,15 @@ public class World
     public int WidthPx { get { return Map.WidthPx; } }
     public int HeightPx { get { return Map.HeightPx; } }
     public Layer CollisionLayer { get { return Map.CollisionLayer; } }
-    public int ViewWidth { get; protected set; }
-    public int ViewHeight { get; protected set; }
 
     public float ViewX { get; set; }
     public float ViewY { get; set; }
+    public int ViewWidth { get; protected set; }
+    public int ViewHeight { get; protected set; }
     public Rectangle ViewWindow { get { return new Rectangle((int)Math.Round(ViewX), (int)Math.Round(ViewY), ViewWidth, ViewHeight); } }
     public Vector2 ViewOffset{ get { return new Vector2(ViewX, ViewY); } }
+
+    public List<Entity> Entities { get; protected set; }
 
     public bool Debug { get; set; }
 
@@ -41,6 +43,8 @@ public class World
         ViewWidth = viewWindow.Width;
         ViewHeight = viewWindow.Height;
         Debug = debug;
+
+        Entities = SpawnEntities();
     }
 
     public void Draw(SpriteBatch sb)
@@ -50,8 +54,12 @@ public class World
 
     public void CenterViewOnPlayer(Player p)
     {
-        ViewX = Math.Max(p.WorldPosition.X + (p.Width / 2) - (ViewWidth / 2), 0);
-        ViewY = Math.Max(p.WorldPosition.Y + (p.Height / 2) - (ViewHeight / 2), 0);
+        ViewX = p.WorldPosition.X + (p.Width / 2) - (ViewWidth / 2);
+        ViewY = p.WorldPosition.Y + (p.Height / 2) - (ViewHeight / 2);
+
+        //constrain to map boundaries
+        ViewX = Math.Min(Math.Max(ViewX, 0), Map.WidthPx - ViewWidth);
+        ViewY = Math.Min(Math.Max(ViewY, 0), Map.HeightPx - ViewHeight);
     }
 
     //maps a point from map pixel coordinates to screen coordinates by offsetting the current view
@@ -64,5 +72,49 @@ public class World
     public Vector2 ScreenToWorldCoordinates(Vector2 screenCoords)
     {
         return screenCoords + ViewOffset;
+    }
+
+    private List<Entity> SpawnEntities()
+    {
+        List<Entity> entities = new List<Entity>();
+
+        //first pass: instantiate all entities by type
+        foreach (ObjectGroup objGroup in Map.ObjectGroups)
+        {
+            foreach (Object obj in objGroup.Objects)
+            {
+                Type t = Entity.GetEntityType(obj.Type);
+                if (t == null) throw new Exception("No Entity class found for Object type \"" + obj.Type + "\".");
+                entities.Add((Entity)Activator.CreateInstance(t, obj));
+            }
+        }
+
+        //second pass: wire up properties for specific entity types
+        //TODO: move this into overriding functions?
+        foreach (Entity e in entities)
+        {
+            if (e.GetType() == typeof(TeleportEntrance))
+            {
+                TeleportEntrance teleporter = (TeleportEntrance)e;
+
+                string destEntityName = e.Object.Properties.GetValue("target");
+                if (string.IsNullOrWhiteSpace(destEntityName))
+                {
+                    //TODO: warn that teleport entrance has no destination specified!
+                    continue;
+                }
+
+                Entity destEntity = entities.GetByName(destEntityName);
+                if (destEntity.GetType() != typeof(TeleportDestination))
+                {
+                    //TODO: warn that teleport destination is the wrong type of entity!
+                    continue;
+                }
+
+                teleporter.Destination = (TeleportDestination)destEntity;
+            }
+        }
+
+        return entities;
     }
 }

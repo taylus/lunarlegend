@@ -45,6 +45,13 @@ public class Player
         Util.DrawRectangle(sb, ScreenRect, Color);
     }
 
+    public void TeleportTo(Vector2 pos)
+    {
+        WorldX = pos.X;
+        WorldY = pos.Y;
+        world.CenterViewOnPlayer(this);
+    }
+
     public void Move(KeyboardState keyboard)
     {
         //NOTE: the collision checks against the map borders are "predictive", which works even for fast speeds because they continue indefinitely
@@ -150,6 +157,22 @@ public class Player
             float worldWiewScrollDist = MathHelper.Min(viewMoveDist, MathHelper.Distance(world.ViewX + world.ViewWidth, world.WidthPx));
             if (ScreenX + (Width / 2) >= world.ViewWidth / 2)
                 world.ViewX += worldWiewScrollDist;
+        }
+
+        TouchEntities();
+    }
+
+    public void TouchEntities()
+    {
+        //TODO: spatially index the entities so we're not checking all of them
+        foreach (Entity e in world.Entities)
+        {
+            if (!e.Active) continue;
+
+            if (WorldRect.Intersects(e.Object.Rectangle))
+            {
+                e.Touch(this);
+            }
         }
     }
 }

@@ -43,10 +43,16 @@
   </data>
  </layer>
  <objectgroup name="Object Layer 1" width="36" height="36">
-  <object name="info_player_start" x="576" y="576" width="32" height="32">
+  <object name="start" type="info_player_start" x="576" y="576" width="32" height="32">
    <properties>
     <property name="face_dir" value="down"/>
    </properties>
   </object>
+  <object name="door1" type="info_teleport" x="128" y="224" width="64" height="32">
+   <properties>
+    <property name="target" value="dest1"/>
+   </properties>
+  </object>
+  <object name="dest1" type="info_teleport_destination" x="960" y="960" width="32" height="32"/>
  </objectgroup>
 </map>

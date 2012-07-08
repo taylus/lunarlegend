@@ -54,7 +54,7 @@ public class TiledDemoGame : Game
 
     private Vector2 GetPlayerSpawnPosition()
     {
-        Object spawnPoint = world.Map.GetObject("info_player_start");
+        Entity spawnPoint = world.Entities.GetByType("info_player_start");
         if (spawnPoint != null) return spawnPoint.Position;
 
         //default to map's center

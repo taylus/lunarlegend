@@ -240,8 +240,8 @@ public class Map
             {
                 foreach (Object obj in objGroup.Objects)
                 {
-                    Rectangle objRect = new Rectangle((int)(obj.Position.X - viewWindowPx.X), 
-                                                      (int)(obj.Position.Y - viewWindowPx.Y), 
+                    Rectangle objRect = new Rectangle((int)(obj.X - viewWindowPx.X), 
+                                                      (int)(obj.Y - viewWindowPx.Y), 
                                                       obj.Width, obj.Height);
                     Util.DrawRectangle(sb, objRect, Object.DEFAULT_COLOR);
                 }
@@ -276,13 +276,6 @@ public class Map
     {
         if (CollisionLayer == null) return new Tile();
         return (from Tile t in CollisionLayer.Tiles where t.GID != 0 select t).FirstOrDefault();
-    }
-
-    //returns the first object with this name in the first objectgroup found to contain it
-    //if you use the same name for multiple objects, you're gonna have a bad time
-    public Object GetObject(string name)
-    {
-        return (from ObjectGroup objGroup in ObjectGroups where objGroup.ContainsObject(name) select objGroup.GetObject(name)).FirstOrDefault();
     }
 
     //get all tile coordinates that the given pixel coordinate rectangle occupies
