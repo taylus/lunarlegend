@@ -48,8 +48,8 @@ public class Object
         Type = obj.type;
         X = int.Parse(obj.x);
         Y = int.Parse(obj.y);
-        Width = int.Parse(obj.width);
-        Height = int.Parse(obj.height);
+        Width = obj.width != null? int.Parse(obj.width) : 0;
+        Height = obj.height != null? int.Parse(obj.height) : 0;
         //TODO: GID
         //TODO: visible
 

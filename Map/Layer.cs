@@ -163,11 +163,20 @@ internal enum LayerDataFormat
 
 public static class LayerExtensions
 {
-    /// <summary>
-    /// Returns the (first) layer with the given name.
-    /// </summary>
+    //returns the (first) layer with the given name
     public static Layer GetByName(this List<Layer> layers, string layerName)
     {
         return (from Layer l in layers where l.Name == layerName select l).FirstOrDefault();
+    }
+
+    //returns the index of the (first) layer with the given name
+    public static int? GetIndexByName(this List<Layer> layers, string layerName)
+    {
+        for (int i = 0; i < layers.Count; i++)
+        {
+            if (layers[i].Name == layerName) return i;
+        }
+
+        return null;
     }
 }

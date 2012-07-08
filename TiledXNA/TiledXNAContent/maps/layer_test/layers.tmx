@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.0" orientation="orthogonal" width="30" height="31" tilewidth="16" tileheight="16">
+ <properties>
+  <property name="player_layer" value="treetrunks"/>
+  <property name="wall_layer" value="walls"/>
+ </properties>
+ <tileset firstgid="1" name="ground" tilewidth="16" tileheight="16">
+  <image source="ground.gif" trans="000000" width="272" height="160"/>
+ </tileset>
+ <tileset firstgid="171" name="trees" tilewidth="16" tileheight="16">
+  <image source="trees.png" trans="000000" width="320" height="208"/>
+ </tileset>
+ <tileset firstgid="431" name="walls" tilewidth="16" tileheight="16">
+  <image source="walls.png" trans="ff00ff" width="96" height="64"/>
+ </tileset>
+ <tileset firstgid="455" name="well" tilewidth="16" tileheight="16">
+  <image source="well.gif" trans="000000" width="96" height="80"/>
+ </tileset>
+ <tileset firstgid="485" name="shrubs" tilewidth="16" tileheight="16">
+  <image source="shrubs.gif" trans="ff00ff" width="128" height="160"/>
+ </tileset>
+ <layer name="base" width="30" height="31">
+  <data encoding="base64" compression="gzip">
+   H4sIAAAAAAAAC+2V0QmAMAwFO4C6gbqBuoE6QjfuaEaIUEr02WopaD6OSAm98KCmNsbUSlaaQs6+kHMCPR2gSnSuoGcEtDfdMc69ZyEs1/B7Z2A3yiXGedbjM7Mb5SLdFzPXmTvMwQZVug/NlQs0l6Ioyp+h/6JbCBtUH+nsCtoTDjlpD7jxZYYL9+Gkvee6l2nZLeV1OBuQSQoVu6Uscjl9t5RFTudXWM2z95PqvPPmYubYAK4WC8+IDgAA
+  </data>
+ </layer>
+ <layer name="treetrunks" width="30" height="31">
+  <data encoding="base64" compression="gzip">
+   H4sIAAAAAAAAC+2UTQ6CMBBGW/9uIIpXUA+gC9TTKwtlgR4DQU/gM9GNIUqlNE0zL3lh0QzfTClVqjkFXrHECm94N6j/F62V6mEfBzjEke4+d0xGhBOcYoyzH7kr1teWepvzngUuHcz6JiFrg1vcvXL3PA+YGvRhYx+O1J8wczj/k5y8M14c54ZE3TnykS77NP0HmvZi844RwkDOxHd8uo/afqvP+jaz1fXi014JghA+DxkXy+CIDgAA
+  </data>
+ </layer>
+ <layer name="treetops1" width="30" height="31">
+  <data encoding="base64" compression="gzip">
+   H4sIAAAAAAAAC+3Xx08CQRTH8dm1XK2AmqgXBRNF/3BrLGd7vSp2vSmg0kxssX73MMkuzM5WTvJLPgfCbh68vH0MOSHEKc5wLuJLlyFEN3rQiz70Y9gUYgRFrnnAI55irGtljDrjSCODCes1NdP45v0f/FoXGo33LmMFq1iL4bNkqTltNvbBnl3sYR8HOMRRDLWt1PfBngtc4grXuMFtiBpBe1ZCGRVUUcNzwJq6niXodxIp03mPwfc30YZ2dKBTMQO66HomZ3u0rm6CGkmkMIBBDAWsq+uZnO2Mqb53klpTyAasaUXXMznbMy51dZnFHOaxgEUs2d6Po2eqrGMDm9jCNnYU10XpmSrHOEFOBNu3UfdRHgURfN9G3Uef+BL6fav6bl77yGtu3H53ZNz2htc+8jM3qt8dGbe94bWPws6NjNve8Hq2ws6NjG5v6J4tP3OjS9i94TU3fhNmb+jmppVW/mvs5zjVrm9W7Oc43RkhSu54xu+RRwFFw3mOa8Z/Misl6pRRQRU1w3mOC7Pr/ZxRXqjzije846Nux/0BPkYWdYgOAAA=
+  </data>
+ </layer>
+ <layer name="treetops2" width="30" height="31">
+  <data encoding="base64" compression="gzip">
+   H4sIAAAAAAAAC+3USW7CQBCF4cYXCJNhBWyYNsDBIQFxAWYuQBgvwMwFkgA/O1gES11NNxKU9Em2paonWapS6rZ8T6kEkp6yWiny0shYzs2Rl0fBcm6JvDIqlnPvVRU1fOILdTQszG2hjQ666KFvIDdo7gjfGGOCKWYGcoPmLrHCGhtssTOQGzT3B7/4wxGny8eQPDdo7gfPYUQQRQxxA7n/zfWvdirLew55FFA0kPvIuc9Y0rug2y+9C7r90rug2y+9C7r90rug2y+9C5J+6f6+0v6bqvc/MlNNB5kDDB3kzrFwkLvHwUFuiB3xHOyJT2bC4X6eAZFXHa+IDgAA
+  </data>
+ </layer>
+ <layer name="treetops3" width="30" height="31">
+  <data encoding="base64" compression="gzip">
+   H4sIAAAAAAAAC+3Xy0sCURTH8XNvj21l+QqqTWqQ1h9eaVSue2u2rbSXbbN3tu35FQpEuOIMx6lgfvDZjJdzQIZz7ojoJWVF0shYxaI9JEe/BSwG3Pc3s4Z1bKDY5Vxc8T/ZRwllHKCCQ8fZGcW+ZzjHBS5Rx5XjrOa794BHPOEZTbw4zmq+e8aIWAxgEEMYNnr1XYnSI4Y4EkhiMoC+P5mnVxa5AHuG+V9ZwjJWkEcBq9+/9ToT/WQTW9jGDnaxJ95mop8c4RgnqKKGU/E2E/3kGg3c4BZ3uBdvM9FPXvGGd3zgs/XQ9H8mjlBrFGOIYBwTJpiZOEu9FNLIYK6tfjgTw4T5e4ly34tZ3ft1+/5y7bkp+k1bvft15/5y7Tntb7vO/fUF6e6XaIgOAAA=
+  </data>
+ </layer>
+ <layer name="walls" width="30" height="31" opacity="0.28">
+  <data encoding="base64" compression="gzip">
+   H4sIAAAAAAAAC+2VOQ4AIAgE9f+P8YvGws4ILl7FTDKduMQYKDmlgoiyjReZVq6FmjmrHZ2JZHvqonjuUTKV/lZ6AejwJ2x+eaNoH6uzVuklMrtO7bqbmTt2FyL6rDtmWo6IDgAA
+  </data>
+ </layer>
+ <objectgroup name="entities" width="30" height="31">
+  <object name="start" type="info_player_start" x="235" y="227"/>
+ </objectgroup>
+</map>

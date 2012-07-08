@@ -58,17 +58,22 @@ public class Map
     //the single layer this map uses for collision
     public Layer CollisionLayer { get; protected set; }
 
+    //the layer on which the player is drawn 
+    //anything above this is drawn on top of the player
+    public int PlayerLayerIndex { get; protected set; }
+
     //debug: highlight these tiles when drawing
     public List<Point> HighlightedTiles { get; set; }
     private SpriteFont font;
     private static readonly Color tileCoordColor = Color.Lerp(Color.Transparent, Color.White, 0.25f);
 
-    public Map(string tmxFile, GraphicsDevice gd, SpriteFont font, string collisionLayerName = null)
+    public Map(string tmxFile, GraphicsDevice gd, SpriteFont font, string collisionLayerName = null, string playerLayerName = null)
     {
         try
         {
             map = DeserializeTMX(tmxFile);
             ValidateMapAttributes();
+            ValidateMapElements();
 
             tmxDirName = Path.GetDirectoryName(tmxFile);
             tmxFileName = Path.GetFileName(tmxFile);
@@ -88,10 +93,33 @@ public class Map
             {
                 SetCollisionLayer(collisionLayerName);
             }
+            else
+            {
+                //if no argument provided, check the map properties
+                collisionLayerName = Properties.GetValue("wall_layer");
+                if (!string.IsNullOrWhiteSpace(collisionLayerName))
+                {
+                    SetCollisionLayer(collisionLayerName);
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(playerLayerName))
+            {
+                SetPlayerLayerIndex(playerLayerName);
+            }
+            else
+            {
+                //if no argument provided, check the map properties
+                playerLayerName = Properties.GetValue("player_layer");
+                if (!string.IsNullOrWhiteSpace(playerLayerName))
+                {
+                    SetPlayerLayerIndex(playerLayerName);
+                }
+            }
         }
         catch (Exception e)
         {
-            throw new Exception("Error loading map.", e);
+            throw new Exception("Error loading map: " + e.Message, e);
         }
     }
 
@@ -102,6 +130,11 @@ public class Map
         if (string.IsNullOrWhiteSpace(map.height)) throw new Exception("Map height is not specified.");
         if (string.IsNullOrWhiteSpace(map.tilewidth)) throw new Exception("Map tile width is not specified.");
         if (string.IsNullOrWhiteSpace(map.tileheight)) throw new Exception("Map tile height is not specified.");
+    }
+
+    private void ValidateMapElements()
+    {
+        if (map.tileset == null || map.tileset.Length <= 0) throw new Exception("Map contains no tilesets.");
     }
 
     private void LoadMapElements()
@@ -138,15 +171,20 @@ public class Map
         return map;
     }
 
-    public void Draw(SpriteBatch sb, bool debugDrawObjects = false)
+    //draw all layers at once
+    public void Draw(SpriteBatch sb, bool debug = false)
     {
-        Draw(sb, graphicsDevice.Viewport.Bounds, debugDrawObjects);
+        Draw(sb, graphicsDevice.Viewport.Bounds, debug);
     }
 
-    public void Draw(SpriteBatch sb, Rectangle viewWindowPx, bool debug = false)
+    //draw the given range of layers (for layering effect)
+    public void Draw(SpriteBatch sb, Rectangle viewWindowPx, bool debug = false, int startLayerIndex = 0, int endLayerIndex = int.MaxValue)
     {
-        foreach (Layer layer in Layers)
+        if (startLayerIndex >= Layers.Count) return;
+        for(int i = startLayerIndex; i <= endLayerIndex && i < Layers.Count; i++)
         {
+            Layer layer = Layers[i];
+
             //don't bother with invisible layers
             if (layer.Opacity <= 0) continue;
 
@@ -213,7 +251,7 @@ public class Map
                         {
                             string coords = string.Format("{0},{1}", x, y);
                             Vector2 msgOrigin = font.MeasureString(coords) / 2;
-                            sb.DrawString(font, coords, new Vector2((int)(tileDestRect.Center.X - msgOrigin.X), (int)(tileDestRect.Center.Y - msgOrigin.Y)), tileCoordColor);
+                            //sb.DrawString(font, coords, new Vector2((int)(tileDestRect.Center.X - msgOrigin.X), (int)(tileDestRect.Center.Y - msgOrigin.Y)), tileCoordColor);
                         }
                     }
                     else
@@ -225,14 +263,15 @@ public class Map
                         {
                             string coords = string.Format("{0},{1}", x, y);
                             Vector2 msgOrigin = font.MeasureString(coords) / 2;
-                            sb.DrawString(font, coords, new Vector2((int)(adjustedDestRect.Center.X - msgOrigin.X), (int)(adjustedDestRect.Center.Y - msgOrigin.Y)), tileCoordColor);
+                            //sb.DrawString(font, coords, new Vector2((int)(adjustedDestRect.Center.X - msgOrigin.X), (int)(adjustedDestRect.Center.Y - msgOrigin.Y)), tileCoordColor);
                         }
                     }
                 }
             }
         }
 
-        if (debug)
+        //only draw debug items once, below the player
+        if (debug && startLayerIndex <= PlayerLayerIndex)
         {
             DrawGridlines(sb, viewWindowPx);
 
@@ -265,11 +304,16 @@ public class Map
     public void SetCollisionLayer(string name)
     {
         Layer layer = Layers.GetByName(name);
-        if (layer != null) 
-            CollisionLayer = layer;
+        if (layer != null) CollisionLayer = layer;
     }
 
-    //gets the first (any will do) tile from the collision layer
+    public void SetPlayerLayerIndex(string name)
+    {
+        int? index = Layers.GetIndexByName(name);
+        PlayerLayerIndex = index == null ? 0 : index.Value;
+    }
+
+    //gets the first tile from the collision layer (any will do, they're all treated the same)
     public Tile GetWallTile()
     {
         if (CollisionLayer == null) return new Tile();

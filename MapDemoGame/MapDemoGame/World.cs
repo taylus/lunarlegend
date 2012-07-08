@@ -47,9 +47,14 @@ public class World
         Entities = SpawnEntities();
     }
 
-    public void Draw(SpriteBatch sb)
+    public void DrawBelowPlayer(SpriteBatch sb)
     {
-        Map.Draw(sb, ViewWindow, Debug);
+        Map.Draw(sb, ViewWindow, Debug, 0, Map.PlayerLayerIndex);
+    }
+
+    public void DrawAbovePlayer(SpriteBatch sb)
+    {
+        Map.Draw(sb, ViewWindow, Debug, Map.PlayerLayerIndex + 1);
     }
 
     public void CenterViewOnPlayer(Player p)

@@ -21,7 +21,7 @@ public class TiledDemoGame : Game
     private Player player;
 
     //render everything to a temp surface for scaling
-    private const float GAME_SCALE = 1.0f;
+    private static float gameScale;
     private Texture2D gameSurf;
 
     private const string GAME_TITLE = "Demo Game";
@@ -44,15 +44,20 @@ public class TiledDemoGame : Game
         font = Content.Load<SpriteFont>("font");
 
         //LoadWorld("maps/walls/walls_test.tmx");
-        LoadWorld("maps/test_scroll/test_scroll.tmx");
+        //LoadWorld("maps/test_scroll/test_scroll.tmx");
+        LoadWorld("maps/layer_test/layers.tmx", 2.0f);
     }
 
-    private void LoadWorld(string tmxMapFile)
+    private void LoadWorld(string tmxMapFile, float scale = 1.0f)
     {
-        Map map = new Map(Path.Combine(Content.RootDirectory, tmxMapFile), GraphicsDevice, font, "wall layer");
-        Rectangle scaledViewWindow = GraphicsDevice.Viewport.Bounds.Scale(1 / GAME_SCALE);
+        if (scale == 0) throw new ArgumentException("Game scale cannot be zero.");
+        gameScale = scale;
+
+        Map map = new Map(Path.Combine(Content.RootDirectory, tmxMapFile), GraphicsDevice, font);
+        Rectangle scaledViewWindow = GraphicsDevice.Viewport.Bounds.Scale(1 / gameScale);
         world = new World(map, scaledViewWindow, false);
         player = new Player(world, GetPlayerSpawnPosition(), (int)world.TileWidth, (int)world.TileHeight);
+        player.Speed /= gameScale;
         world.CenterViewOnPlayer(player);
     }
 
@@ -88,7 +93,7 @@ public class TiledDemoGame : Game
         //debug mode wall editor
         if (world.Debug)
         {
-            Point mouseTileCoords = world.Map.GetTileAt(world.ScreenToWorldCoordinates(curMouse.Position() / GAME_SCALE));
+            Point mouseTileCoords = world.Map.GetTileAt(world.ScreenToWorldCoordinates(curMouse.Position() / gameScale));
 
             if (curMouse.LeftButton == ButtonState.Pressed && !world.CollisionLayer.ContainsTileAt(mouseTileCoords))
             {
@@ -144,7 +149,7 @@ public class TiledDemoGame : Game
 
         //draw the scaled game surface and any additional overlays
         spriteBatch.Begin();
-        spriteBatch.Draw(gameSurf, Vector2.Zero, null, Color.White, 0.0f, Vector2.Zero, GAME_SCALE, SpriteEffects.None, 0);
+        spriteBatch.Draw(gameSurf, Vector2.Zero, null, Color.White, 0.0f, Vector2.Zero, gameScale, SpriteEffects.None, 0);
         if(world.Debug) DrawDebugInfo();
         spriteBatch.End();
 
@@ -158,8 +163,9 @@ public class TiledDemoGame : Game
         GraphicsDevice.SetRenderTarget((RenderTarget2D)gameSurf);
         GraphicsDevice.Clear(Color.Transparent);
         spriteBatch.Begin();
-        world.Draw(spriteBatch);
+        world.DrawBelowPlayer(spriteBatch);
         player.Draw(spriteBatch);
+        world.DrawAbovePlayer(spriteBatch);
         spriteBatch.End();
 
         //reset drawing to the screen

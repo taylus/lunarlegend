@@ -2,6 +2,11 @@ Content\font.xnb
 Content\maps\desert\desert.tmx
 Content\maps\desert\desert.tsx
 Content\maps\gid_example\gids.tmx
+Content\maps\layer_test\ground.gif
+Content\maps\layer_test\shrubs.gif
+Content\maps\layer_test\trees.png
+Content\maps\layer_test\walls.png
+Content\maps\layer_test\well.gif
 Content\maps\test\testmap.tmx
 Content\maps\test_scroll\lttp_castlebasement1.png
 Content\maps\test_scroll\walls.png
@@ -12,3 +17,4 @@ Content\maps\test\lttp_castlebasement1.png
 Content\maps\walls\lttp_map25.png
 Content\maps\walls\walls.png
 Content\maps\test_scroll\test_scroll.tmx
+Content\maps\layer_test\layers.tmx
