@@ -183,7 +183,7 @@ public class Player
                     if (!movingDiagonally)
                     {
                         //"sidestep" up if there's no tile to the upper left
-                        Point upperLeftTileCoords = GetTileCoordinates(new Vector2(-playerMoveDist, -playerMoveDist));
+                        Point upperLeftTileCoords = GetTileCoordinates(new Vector2(-playerMoveDist, 0));
                         if (!world.CollisionLayer.ContainsTileAt(upperLeftTileCoords))
                         {
                             float collisionOverlap = WorldY % world.TileHeight;
@@ -193,7 +193,7 @@ public class Player
                         }
 
                         //"sidestep" down if there's no tile to the lower left
-                        Point lowerLeftTileCoords = GetTileCoordinates(new Vector2(-playerMoveDist, Height + playerMoveDist));
+                        Point lowerLeftTileCoords = GetTileCoordinates(new Vector2(-playerMoveDist, Height));
                         if (!world.CollisionLayer.ContainsTileAt(lowerLeftTileCoords))
                         {
                             float collisionOverlap = (world.TileHeight - (WorldY % world.TileHeight)) % world.TileHeight;
