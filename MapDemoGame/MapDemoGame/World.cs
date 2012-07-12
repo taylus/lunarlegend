@@ -67,6 +67,40 @@ public class World
         ViewY = Math.Max(Math.Min(ViewY, Map.HeightPx - ViewHeight), 0);
     }
 
+    //must adjust view window separately from player, as player may move independently of view
+    public void ScrollViewWithinMapBounds(Player player, Vector2 scrollOffset)
+    {
+        if (scrollOffset.X < 0)
+        {
+            //scroll left
+            float scrollDistX = MathHelper.Min(Math.Abs(scrollOffset.X), MathHelper.Distance(ViewX, 0));
+            if (player.ScreenX + (player.Width / 2) < ViewWidth / 2)
+                ViewX -= scrollDistX;
+        }
+        else if (scrollOffset.X > 0)
+        {
+            //scroll right
+            float scrollDistX = MathHelper.Min(scrollOffset.X, MathHelper.Distance(ViewX + ViewWidth, WidthPx));
+            if (player.ScreenX + (player.Width / 2) >= ViewWidth / 2)
+                ViewX += scrollDistX;
+        }
+
+        if (scrollOffset.Y < 0)
+        {
+            //scroll up
+            float scrollDistY = MathHelper.Min(Math.Abs(scrollOffset.Y), MathHelper.Distance(ViewY, 0));
+            if (player.ScreenY + (player.Height / 2) < ViewHeight / 2)
+                ViewY -= scrollDistY;
+        }
+        else if (scrollOffset.Y > 0)
+        {
+            //scroll down
+            float scrollDistY = MathHelper.Min(scrollOffset.Y, MathHelper.Distance(ViewY + ViewHeight, HeightPx));
+            if (player.ScreenY + (player.Height / 2) >= ViewHeight / 2)
+                ViewY += scrollDistY;
+        }
+    }
+
     //maps a point from map pixel coordinates to screen coordinates by offsetting the current view
     public Vector2 WorldToScreenCoordinates(Vector2 worldCoords)
     {

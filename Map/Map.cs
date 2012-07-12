@@ -258,7 +258,7 @@ public class Map
                         {
                             string coords = string.Format("{0},{1}", x, y);
                             Vector2 msgOrigin = font.MeasureString(coords) / 2;
-                            //sb.DrawString(font, coords, new Vector2((int)(tileDestRect.Center.X - msgOrigin.X), (int)(tileDestRect.Center.Y - msgOrigin.Y)), tileCoordColor);
+                            sb.DrawString(font, coords, new Vector2((int)(tileDestRect.Center.X - msgOrigin.X), (int)(tileDestRect.Center.Y - msgOrigin.Y)), tileCoordColor);
                         }
                     }
                     else
@@ -270,7 +270,7 @@ public class Map
                         {
                             string coords = string.Format("{0},{1}", x, y);
                             Vector2 msgOrigin = font.MeasureString(coords) / 2;
-                            //sb.DrawString(font, coords, new Vector2((int)(adjustedDestRect.Center.X - msgOrigin.X), (int)(adjustedDestRect.Center.Y - msgOrigin.Y)), tileCoordColor);
+                            sb.DrawString(font, coords, new Vector2((int)(adjustedDestRect.Center.X - msgOrigin.X), (int)(adjustedDestRect.Center.Y - msgOrigin.Y)), tileCoordColor);
                         }
                     }
                 }

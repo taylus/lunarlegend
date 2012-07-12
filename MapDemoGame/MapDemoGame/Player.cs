@@ -52,49 +52,80 @@ public class Player
         world.CenterViewOnPlayer(this);
     }
 
+    public Point GetTileCoordinates(Vector2? offset = null)
+    {
+        Vector2 v = offset != null? offset.Value : Vector2.Zero;
+        return new Point((int)((WorldX + v.X) / world.TileWidth), (int)((WorldY + v.Y) / world.TileHeight));
+    }
+
     public void Move(KeyboardState keyboard)
     {
-        //NOTE: the collision checks against the map borders are "predictive", which works even for fast speeds because they continue indefinitely
-        //      against walls with specified widths, we'll pass through them if our speed > their width (tunneling)
-        //      this will be a problem if anything is moving very fast, but I don't think that will be the case anywhere
+        //NOTE: collision checks are "predictive" which poses a "tunnelling" problem when moving at high speeds
+        //      checks against the map borders are OK because those continue indefinitely
+        //      checks against walls with specified sizes means if our speed > the wall's size, we'll pass right through it
+        //      if anything needs to move that fast (seems unlikely) this will need to change to some kind of continuous collision detection
 
-        //TODO: diagonal walls? glide along slope by moving in X and Y instead of just one
-        //      tiles could store a "I am diagonal moving upper right", etc diag type
-        //      how to enter this into Tiled/read it back out of TMX?
+        //walls are currently grid-aligned, full tile blocks
+        //moving into a wall prevents movement, but the player will "sidestep" if they just barely touched it
+
+        //move slower if going diagonally
+        bool movingDiagonally = (keyboard.IsKeyDown(Keys.W) && (keyboard.IsKeyDown(Keys.A) || keyboard.IsKeyDown(Keys.D)) ||
+                                 keyboard.IsKeyDown(Keys.A) && (keyboard.IsKeyDown(Keys.W) || keyboard.IsKeyDown(Keys.S)) ||
+                                 keyboard.IsKeyDown(Keys.S) && (keyboard.IsKeyDown(Keys.A) || keyboard.IsKeyDown(Keys.D)) ||
+                                 keyboard.IsKeyDown(Keys.D) && (keyboard.IsKeyDown(Keys.W) || keyboard.IsKeyDown(Keys.S)));
+        float playerSpeed = movingDiagonally ? Speed * DIAG_FACTOR : Speed;
 
         if (keyboard.IsKeyDown(Keys.W))
         {
-            //move slower if going diagonally, and move less if we can't move a full step
-            float playerSpeed = (keyboard.IsKeyDown(Keys.A) || keyboard.IsKeyDown(Keys.D)) ? Speed * DIAG_FACTOR : Speed;
+            //move less if we can't move a full step
             float playerMoveDist = MathHelper.Min(playerSpeed, MathHelper.Distance(WorldY, 0));
-            float viewMoveDist = playerMoveDist;
+            Vector2 viewScrollOffset = new Vector2(0, -playerMoveDist);
 
+            //collision detection against walls
             if (world.CollisionLayer != null)
             {
-                //adjust movement distance for wall collisions
+                //predict collisions and adjust movement distance accordingly
                 Rectangle predictRect = new Rectangle((int)WorldX, (int)(WorldY - playerMoveDist), Width, Height);
                 List<Point> tiles = world.Map.GetOccupyingTiles(predictRect);
                 world.Map.HighlightedTiles = tiles;
                 if (world.CollisionLayer.TileIntersect(tiles))
                 {
+                    if (!movingDiagonally)
+                    {
+                        //"sidestep" to the right if there's no tile to the upper right
+                        Point upperRightTileCoords = GetTileCoordinates(new Vector2(Width, -playerMoveDist));
+                        if (!world.CollisionLayer.ContainsTileAt(upperRightTileCoords))
+                        {
+                            float collisionOverlap = (world.TileWidth - (WorldX % world.TileWidth)) % world.TileWidth;
+                            float sideStepDist = Math.Min(playerMoveDist, collisionOverlap);
+                            WorldX += sideStepDist;
+                            viewScrollOffset.X += sideStepDist;
+                        }
+
+                        //"sidestep" to the left if we're not already moving left, and there's no tile to the upper left
+                        Point upperLeftTileCoords = GetTileCoordinates(new Vector2(0, -playerMoveDist));
+                        if (!world.CollisionLayer.ContainsTileAt(upperLeftTileCoords))
+                        {
+                            float collisionOverlap = WorldX % world.TileWidth;
+                            float sideStepDist = Math.Min(playerMoveDist, collisionOverlap);
+                            WorldX -= sideStepDist;
+                            viewScrollOffset.X -= sideStepDist;
+                        }
+                    }
+
                     //can't fully move up -- move the distance between us and the current tile's top side
                     playerMoveDist = WorldY % world.TileHeight;
                 }
             }
 
             WorldY -= playerMoveDist;
-
-            //must calculate player and view distances separately, as player may move independently of view
-            float worldWiewScrollDist = MathHelper.Min(viewMoveDist, MathHelper.Distance(world.ViewY, 0));
-            if (ScreenY + (Height / 2) < world.ViewHeight / 2)
-                world.ViewY -= worldWiewScrollDist;
+            world.ScrollViewWithinMapBounds(this, viewScrollOffset);
         }
         else if (keyboard.IsKeyDown(Keys.S))
         {
-            //move slower if going diagonally, and move less if we can't move a full step
-            float playerSpeed = (keyboard.IsKeyDown(Keys.A) || keyboard.IsKeyDown(Keys.D)) ? Speed * DIAG_FACTOR : Speed;
+            //move less if we can't move a full step
             float playerMoveDist = MathHelper.Min(playerSpeed, MathHelper.Distance(WorldY + Height, world.HeightPx));
-            float viewMoveDist = playerMoveDist;
+            Vector2 viewScrollOffset = new Vector2(0, playerMoveDist);
 
             if (world.CollisionLayer != null)
             {
@@ -104,24 +135,42 @@ public class Player
                 world.Map.HighlightedTiles = tiles;
                 if (world.CollisionLayer.TileIntersect(tiles))
                 {
+                    if (!movingDiagonally)
+                    {
+                        //"sidestep" to the right if there's no tile to the lower right
+                        Point lowerRightTileCoords = GetTileCoordinates(new Vector2(Width, Height + playerMoveDist));
+                        if (!world.CollisionLayer.ContainsTileAt(lowerRightTileCoords))
+                        {
+                            float collisionOverlap = (world.TileWidth - (WorldX % world.TileWidth)) % world.TileWidth;
+                            float sideStepDist = Math.Min(playerMoveDist, collisionOverlap);
+                            WorldX += sideStepDist;
+                            viewScrollOffset.X += sideStepDist;
+                        }
+
+                        //"sidestep" to the left if there's no tile to the lower left
+                        Point lowerLeftTileCoords = GetTileCoordinates(new Vector2(0, Height + playerMoveDist));
+                        if (!world.CollisionLayer.ContainsTileAt(lowerLeftTileCoords))
+                        {
+                            float collisionOverlap = WorldX % world.TileWidth;
+                            float sideStepDist = Math.Min(playerMoveDist, collisionOverlap);
+                            WorldX -= sideStepDist;
+                            viewScrollOffset.X -= sideStepDist;
+                        }
+                    }
+
                     //can't fully move down -- move the distance between us and the current tile's bottom side
                     playerMoveDist = Util.NearestMultiple((int)WorldY, world.TileHeight) - WorldY;
                 }
             }
 
             WorldY += playerMoveDist;
-
-            //must calculate player and view distances separately, as player may move independently of view
-            float worldWiewScrollDist = MathHelper.Min(viewMoveDist, MathHelper.Distance(world.ViewY + world.ViewHeight, world.HeightPx));
-            if (ScreenY + (Height / 2) >= world.ViewHeight / 2)
-                world.ViewY += worldWiewScrollDist;
+            world.ScrollViewWithinMapBounds(this, viewScrollOffset);
         }
         if (keyboard.IsKeyDown(Keys.A))
         {
-            //move slower if going diagonally, and move less if we can't move a full step
-            float playerSpeed = (keyboard.IsKeyDown(Keys.W) || keyboard.IsKeyDown(Keys.S)) ? Speed * DIAG_FACTOR : Speed;
+            //move less if we can't move a full step
             float playerMoveDist = MathHelper.Min(playerSpeed, MathHelper.Distance(WorldX, 0));
-            float viewMoveDist = playerMoveDist;
+            Vector2 viewScrollOffset = new Vector2(-playerMoveDist, 0);
 
             if (world.CollisionLayer != null)
             {
@@ -131,24 +180,42 @@ public class Player
                 world.Map.HighlightedTiles = tiles;
                 if (world.CollisionLayer.TileIntersect(tiles))
                 {
+                    if (!movingDiagonally)
+                    {
+                        //"sidestep" up if there's no tile to the upper left
+                        Point upperLeftTileCoords = GetTileCoordinates(new Vector2(-playerMoveDist, -playerMoveDist));
+                        if (!world.CollisionLayer.ContainsTileAt(upperLeftTileCoords))
+                        {
+                            float collisionOverlap = WorldY % world.TileHeight;
+                            float sideStepDist = Math.Min(playerMoveDist, collisionOverlap);
+                            WorldY -= sideStepDist;
+                            viewScrollOffset.Y -= sideStepDist;
+                        }
+
+                        //"sidestep" down if there's no tile to the lower left
+                        Point lowerLeftTileCoords = GetTileCoordinates(new Vector2(-playerMoveDist, Height + playerMoveDist));
+                        if (!world.CollisionLayer.ContainsTileAt(lowerLeftTileCoords))
+                        {
+                            float collisionOverlap = (world.TileHeight - (WorldY % world.TileHeight)) % world.TileHeight;
+                            float sideStepDist = Math.Min(playerMoveDist, collisionOverlap);
+                            WorldY += sideStepDist;
+                            viewScrollOffset.Y += sideStepDist;
+                        }
+                    }
+
                     //can't fully move left -- move the distance between us and the current tile's left side
                     playerMoveDist = WorldX % world.TileWidth;
                 }
             }
 
             WorldX -= playerMoveDist;
-
-            //must calculate player and view distances separately, as player may move independently of view
-            float worldWiewScrollDist = MathHelper.Min(viewMoveDist, MathHelper.Distance(world.ViewX, 0));
-            if (ScreenX + (Width / 2) < world.ViewWidth / 2)
-                world.ViewX -= worldWiewScrollDist;
+            world.ScrollViewWithinMapBounds(this, viewScrollOffset);
         }
         else if (keyboard.IsKeyDown(Keys.D))
         {
-            //move slower if going diagonally, and move less if we can't move a full step
-            float playerSpeed = (keyboard.IsKeyDown(Keys.W) || keyboard.IsKeyDown(Keys.S)) ? Speed * DIAG_FACTOR : Speed;
+            //move less if we can't move a full step
             float playerMoveDist = MathHelper.Min(playerSpeed, MathHelper.Distance(WorldX + Width, world.WidthPx));
-            float viewMoveDist = playerMoveDist;
+            Vector2 viewScrollOffset = new Vector2(playerMoveDist, 0);
 
             if (world.CollisionLayer != null)
             {
@@ -158,17 +225,36 @@ public class Player
                 world.Map.HighlightedTiles = tiles;
                 if (world.CollisionLayer.TileIntersect(tiles))
                 {
+                    if (!movingDiagonally)
+                    {
+                        //"sidestep" up if there's no tile to the upper right
+                        Point upperRightTileCoords = GetTileCoordinates(new Vector2(Width + playerMoveDist, 0));
+                        if (!world.CollisionLayer.ContainsTileAt(upperRightTileCoords))
+                        {
+                            float collisionOverlap = WorldY % world.TileHeight;
+                            float sideStepDist = Math.Min(playerMoveDist, collisionOverlap);
+                            WorldY -= sideStepDist;
+                            viewScrollOffset.Y -= sideStepDist;
+                        }
+
+                        //"sidestep" down if there's no tile to the lower right
+                        Point lowerRightTileCoords = GetTileCoordinates(new Vector2(Width + playerMoveDist, Height));
+                        if (!world.CollisionLayer.ContainsTileAt(lowerRightTileCoords))
+                        {
+                            float collisionOverlap = (world.TileHeight - (WorldY % world.TileHeight)) % world.TileHeight;
+                            float sideStepDist = Math.Min(playerMoveDist, collisionOverlap);
+                            WorldY += sideStepDist;
+                            viewScrollOffset.Y += sideStepDist;
+                        }
+                    }
+
                     //can't fully move right -- move the distance between us and the current tile's right side
                     playerMoveDist = Util.NearestMultiple((int)WorldX, world.TileWidth) - WorldX;
                 }
             }
 
             WorldX += playerMoveDist;
-
-            //must calculate player and view distances separately, as player may move independently of view
-            float worldWiewScrollDist = MathHelper.Min(viewMoveDist, MathHelper.Distance(world.ViewX + world.ViewWidth, world.WidthPx));
-            if (ScreenX + (Width / 2) >= world.ViewWidth / 2)
-                world.ViewX += worldWiewScrollDist;
+            world.ScrollViewWithinMapBounds(this, viewScrollOffset);
         }
     }
 }
