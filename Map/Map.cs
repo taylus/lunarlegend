@@ -101,6 +101,13 @@ public class Map
                 {
                     SetCollisionLayer(collisionLayerName);
                 }
+
+                //if still nothing found, default to any layer starting with "wall"
+                Layer wallLayer = (from Layer l in Layers where l.Name.StartsWith("wall", StringComparison.OrdinalIgnoreCase) select l).FirstOrDefault();
+                if (wallLayer != null)
+                {
+                    SetCollisionLayer(wallLayer.Name);
+                }
             }
 
             if (!string.IsNullOrWhiteSpace(playerLayerName))
