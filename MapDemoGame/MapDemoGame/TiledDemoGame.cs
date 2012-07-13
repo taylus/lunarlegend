@@ -19,8 +19,9 @@ public class TiledDemoGame : Game
 
     private World world;
     private Player player;
+    private MessageBox msgBox;
 
-    //render everything to a temp surface for scaling
+    //render the world and player to a temp surface for scaling
     private Texture2D gameSurf;
     private static float gameScale;
     private const float DEFAULT_GAME_SCALE = 1.0f;
@@ -47,6 +48,8 @@ public class TiledDemoGame : Game
         //LoadWorld("maps/walls/walls_test.tmx");
         LoadWorld("maps/test_scroll/test_scroll.tmx");
         //LoadWorld("maps/layer_test/layers.tmx");
+
+        msgBox = new MessageBox(100, 100, 200, 100, font, "this     is a line of text that should wrap and span two lines \n\n\n\n\n skip some lines");
     }
 
     private void LoadWorld(string tmxMapFile)
@@ -66,7 +69,7 @@ public class TiledDemoGame : Game
         Rectangle scaledViewWindow = GraphicsDevice.Viewport.Bounds.Scale(1 / gameScale);
         world = new World(map, scaledViewWindow, false);
         player = new Player(world, GetPlayerSpawnPosition(), (int)world.TileWidth, (int)world.TileHeight);
-        player.Speed /= gameScale;
+        //player.Speed /= gameScale;
         world.CenterViewOnPlayer(player);
     }
 
@@ -123,6 +126,23 @@ public class TiledDemoGame : Game
         base.Update(gameTime);
     }
 
+    protected override void Draw(GameTime gameTime)
+    {
+        RenderTempSurface();
+
+        //clear the screen
+        GraphicsDevice.Clear(Color.DimGray);
+
+        //draw the scaled game surface, then any additional overlays at normal scale
+        spriteBatch.Begin();
+        spriteBatch.Draw(gameSurf, Vector2.Zero, null, Color.White, 0.0f, Vector2.Zero, gameScale, SpriteEffects.None, 0);
+        msgBox.Draw(spriteBatch);
+        if(world.Debug) DrawDebugInfo();
+        spriteBatch.End();
+
+        base.Draw(gameTime);
+    }
+
     public void TouchEntities()
     {
         //TODO: spatially index the entities so we're not checking all of them
@@ -133,7 +153,8 @@ public class TiledDemoGame : Game
             if (player.WorldRect.Intersects(e.Object.Rectangle))
             {
                 //handle special entities where the game engine needs to do something special
-                //TODO: this is a code smell... if we get a lot of these, then expose engine functionality to entities somehow (service locator?)
+                //TODO: this is a code smell... this function should really be in World, but it needs engine functionality to load new levels
+                //      if we get a lot of situations like this, then expose engine functionality to entities somehow (service locator w/ engine callbacks?)
                 if (e.GetType() == typeof(ChangeLevel))
                 {
                     bool preserveDebug = world.Debug;
@@ -149,24 +170,8 @@ public class TiledDemoGame : Game
         }
     }
 
-    protected override void Draw(GameTime gameTime)
-    {
-        RenderGameToTempSurface();
-
-        //clear the screen
-        GraphicsDevice.Clear(Color.DimGray);
-
-        //draw the scaled game surface and any additional overlays
-        spriteBatch.Begin();
-        spriteBatch.Draw(gameSurf, Vector2.Zero, null, Color.White, 0.0f, Vector2.Zero, gameScale, SpriteEffects.None, 0);
-        if(world.Debug) DrawDebugInfo();
-        spriteBatch.End();
-
-        base.Draw(gameTime);
-    }
-
     //render the world and all game objects to the temporary surface for scaling
-    private void RenderGameToTempSurface()
+    private void RenderTempSurface()
     {
         //draw the game to the temp surface at normal scale
         GraphicsDevice.SetRenderTarget((RenderTarget2D)gameSurf);

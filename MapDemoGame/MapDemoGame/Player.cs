@@ -92,6 +92,10 @@ public class Player
                 {
                     if (!movingDiagonally)
                     {
+                        //TODO: implement "blocky" diagonal movement?
+                        //offsetting the tile coords we grab here properly, then moving by playerMoveDist instead
+                        //of Min(playerMoveDist, offset) allows for it, but then the player doesn't always hug the walls
+
                         //"sidestep" to the right if there's no tile to the upper right
                         Point upperRightTileCoords = GetTileCoordinates(new Vector2(Width, -playerMoveDist));
                         if (!world.CollisionLayer.ContainsTileAt(upperRightTileCoords))
