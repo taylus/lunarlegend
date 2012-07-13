@@ -49,7 +49,8 @@ public class TiledDemoGame : Game
         LoadWorld("maps/test_scroll/test_scroll.tmx");
         //LoadWorld("maps/layer_test/layers.tmx");
 
-        msgBox = new MessageBox(100, 100, 200, 100, font, "this     is a line of text that should wrap and span two lines \n\n\n\n\n skip some lines");
+        //msgBox = new MessageBox(100, 100, 200, 50, font, "this is a very long string of text that will not fit on just one line...\n\n\nin fact, it might take three or even four");
+        msgBox = new MessageBox(100, 100, 200, 50, font, "line one\nline two\nline three\nline four");
     }
 
     private void LoadWorld(string tmxMapFile)

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Collections.Generic;
@@ -40,36 +41,25 @@ public class MessageBox
     //wraps the given text horizontally within a single MessageBox
     public void WrapText(string text)
     {
-        //replace multiple spaces with one space
-        text = Regex.Replace(text, "[ ]{2,}", " ");
-
-        //replace carriage-return + newline with just a newline
+        //remove carriage return from carriage return + newline pairs
         text = Regex.Replace(text, "\r\n", "\n");
 
-        lines = new List<string>();
-        string[] words = text.Split(' ', '\n');
         StringBuilder sb = new StringBuilder();
+        lines = new List<string>();
 
-        foreach (string word in words)
+        string[] tokens = Regex.Split(text, @"(\s)").Where(w => w != string.Empty).ToArray();
+        foreach (string token in tokens)
         {
-            if (string.IsNullOrWhiteSpace(word))
+            if (token == "\n" || font.MeasureString(sb.ToString() + token).X > Width - (Padding * 2))
             {
-                lines.Add(sb.ToString().Trim());
+                lines.Add(sb.ToString());
                 sb.Clear();
             }
-            else
-            {
-                if (font.MeasureString(sb.ToString() + word).X > Width - (Padding * 2))
-                {
-                    lines.Add(sb.ToString().Trim());
-                    sb.Clear();
-                }
 
-                sb.Append(word + ' ');
-            }
+            if(token != "\n") sb.Append(token);
         }
-
-        lines.Add(sb.ToString().Trim());
+        
+        lines.Add(sb.ToString());
     }
 
     public void Draw(SpriteBatch sb)
