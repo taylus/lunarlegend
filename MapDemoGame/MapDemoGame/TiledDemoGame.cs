@@ -19,7 +19,7 @@ public class TiledDemoGame : Game
 
     private World world;
     private Player player;
-    private MessageBox msgBox;
+    private MessageBoxSeries msgBoxes;
 
     //render the world and player to a temp surface for scaling
     private Texture2D gameSurf;
@@ -49,8 +49,13 @@ public class TiledDemoGame : Game
         LoadWorld("maps/test_scroll/test_scroll.tmx");
         //LoadWorld("maps/layer_test/layers.tmx");
 
-        //msgBox = new MessageBox(100, 100, 200, 50, font, "this is a very long string of text that will not fit on just one line...\n\n\nin fact, it might take three or even four");
-        msgBox = new MessageBox(100, 100, 200, 50, font, "line one\nline two\nline three\nline four");
+        msgBoxes = new MessageBoxSeries(100, 100, 200, 50, font, "line break!\n\nthis is a very long string of text that will not fit on just one line...\nin fact, it might even take three or even four... do you think you can handle that?");
+
+        //DEBUG: space out messageboxes so we can draw them all at once
+        for (int i = 0; i < msgBoxes.Count; i++)
+        {
+            msgBoxes[i].X += (i * (msgBoxes.TemplateMessageBox.Width + msgBoxes.TemplateMessageBox.Padding));
+        }
     }
 
     private void LoadWorld(string tmxMapFile)
@@ -137,10 +142,12 @@ public class TiledDemoGame : Game
         //draw the scaled game surface, then any additional overlays at normal scale
         spriteBatch.Begin();
         spriteBatch.Draw(gameSurf, Vector2.Zero, null, Color.White, 0.0f, Vector2.Zero, gameScale, SpriteEffects.None, 0);
-        msgBox.Draw(spriteBatch);
         if(world.Debug) DrawDebugInfo();
+        foreach (MessageBox msgBox in msgBoxes)
+        {
+            msgBox.Draw(spriteBatch);
+        }
         spriteBatch.End();
-
         base.Draw(gameTime);
     }
 
