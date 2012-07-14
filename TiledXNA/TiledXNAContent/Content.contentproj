@@ -43,6 +43,11 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="img\bullfrog.png">
+      <Name>bullfrog</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
     <Content Include="maps\desert\desert.tmx">
       <Name>desert</Name>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

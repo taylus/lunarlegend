@@ -19,7 +19,10 @@ public class TiledDemoGame : Game
 
     private World world;
     private Player player;
-    private MessageBoxSeries msgBoxes;
+    private MessageBoxSeries activeMessageBoxes;
+
+    private int GameWidth { get { return GraphicsDevice.Viewport.Width; } }
+    private int GameHeight { get { return GraphicsDevice.Viewport.Height; } }
 
     //render the world and player to a temp surface for scaling
     private Texture2D gameSurf;
@@ -27,6 +30,8 @@ public class TiledDemoGame : Game
     private const float DEFAULT_GAME_SCALE = 1.0f;
 
     private const string GAME_TITLE = "Demo Game";
+
+    private const int MSGBOX_WIDTH = 300;
 
     public TiledDemoGame()
     {
@@ -42,19 +47,20 @@ public class TiledDemoGame : Game
     protected override void LoadContent()
     {
         spriteBatch = new SpriteBatch(GraphicsDevice);
-        gameSurf = new RenderTarget2D(GraphicsDevice, GraphicsDevice.Viewport.Width, GraphicsDevice.Viewport.Height);
+        gameSurf = new RenderTarget2D(GraphicsDevice, GameWidth, GameHeight);
         font = Content.Load<SpriteFont>("font");
 
         //LoadWorld("maps/walls/walls_test.tmx");
         LoadWorld("maps/test_scroll/test_scroll.tmx");
         //LoadWorld("maps/layer_test/layers.tmx");
 
-        msgBoxes = new MessageBoxSeries(100, 100, 200, 50, font, "line break!\n\nthis is a very long string of text that will not fit on just one line...\nin fact, it might even take three or even four... do you think you can handle that?");
+        Texture2D msgBoxPortrait = Content.Load<Texture2D>("img/bullfrog");
+        activeMessageBoxes = new MessageBoxSeries((GameWidth / 2) - (MSGBOX_WIDTH / 2), 100, MSGBOX_WIDTH, 0, font, msgBoxPortrait, "...\n\nRibbit.");
 
         //DEBUG: space out messageboxes so we can draw them all at once
-        for (int i = 0; i < msgBoxes.Count; i++)
+        for (int i = 0; i < activeMessageBoxes.Count; i++)
         {
-            msgBoxes[i].X += (i * (msgBoxes.TemplateMessageBox.Width + msgBoxes.TemplateMessageBox.Padding));
+            activeMessageBoxes[i].X += (i * (activeMessageBoxes.TemplateMessageBox.Width + activeMessageBoxes.TemplateMessageBox.Padding));
         }
     }
 
@@ -123,7 +129,17 @@ public class TiledDemoGame : Game
             }
         }
 
-        //normal game logic
+        //confirm/use button
+        if (!prevKeyboard.IsKeyDown(Keys.E) && curKeyboard.IsKeyDown(Keys.E))
+        {
+            if (activeMessageBoxes != null)
+            {
+                //activeMessageBoxes.Advance();
+                activeMessageBoxes = null;
+            }
+        }
+
+        //player movement and entity activation
         player.Move(curKeyboard);
         TouchEntities();
 
@@ -143,9 +159,12 @@ public class TiledDemoGame : Game
         spriteBatch.Begin();
         spriteBatch.Draw(gameSurf, Vector2.Zero, null, Color.White, 0.0f, Vector2.Zero, gameScale, SpriteEffects.None, 0);
         if(world.Debug) DrawDebugInfo();
-        foreach (MessageBox msgBox in msgBoxes)
+        if (activeMessageBoxes != null)
         {
-            msgBox.Draw(spriteBatch);
+            foreach (MessageBox msgBox in activeMessageBoxes)
+            {
+                msgBox.Draw(spriteBatch);
+            }
         }
         spriteBatch.End();
         base.Draw(gameTime);
