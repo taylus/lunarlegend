@@ -30,6 +30,7 @@ public class MessageBox
 
     private List<string> lines = new List<string>();
     private const int PORTRAIT_PADDING = 4;
+    private const int TEXT_LEFT_PADDING = 10;
 
     public MessageBox(int x, int y, int w, int h, SpriteFont font, Texture2D portrait, ref string text)
     {
@@ -83,7 +84,7 @@ public class MessageBox
         string[] tokens = Regex.Split(text, @"(\s)").Where(w => w != string.Empty).ToArray();
         foreach (string token in tokens)
         {
-            if (token == "\n" || Font.MeasureString(sb.ToString() + token).X > Width - ((Padding + BorderWidth) * 2) - PortraitWidth)
+            if (token == "\n" || Font.MeasureString(sb.ToString() + token).X > Width - ((Padding + BorderWidth) * 2) - PortraitWidth - TEXT_LEFT_PADDING)
             {
                 lines.Add(sb.ToString());
                 sb.Clear();
@@ -118,7 +119,7 @@ public class MessageBox
 
         for (int i = 0; i < lines.Count; i++)
         {
-            sb.DrawString(Font, lines[i], new Vector2(X + PortraitWidth + Padding, Y + Padding + (Font.LineSpacing * i)), Color.White);
+            sb.DrawString(Font, lines[i], new Vector2(X + PortraitWidth + Padding + TEXT_LEFT_PADDING, Y + Padding + (Font.LineSpacing * i)), Color.White);
         }
     }
 

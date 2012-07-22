@@ -4,6 +4,7 @@ using System.Xml;
 using System.Linq;
 using System.Xml.Serialization;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
@@ -23,19 +24,19 @@ public class World
     public int WidthPx { get { return Map.WidthPx; } }
     public int HeightPx { get { return Map.HeightPx; } }
     public Layer CollisionLayer { get { return Map.CollisionLayer; } }
-
     public float ViewX { get; set; }
     public float ViewY { get; set; }
     public int ViewWidth { get; protected set; }
     public int ViewHeight { get; protected set; }
     public Rectangle ViewWindow { get { return new Rectangle((int)Math.Round(ViewX), (int)Math.Round(ViewY), ViewWidth, ViewHeight); } }
     public Vector2 ViewOffset{ get { return new Vector2(ViewX, ViewY); } }
-
     public List<Entity> Entities { get; protected set; }
-
     public bool Debug { get; set; }
 
-    public World(Map map, Rectangle viewWindow, bool debug = false)
+    //singleton, so other classes (namely WorldEntity) don't need to keep copies
+    public static World Current { get; protected set; }
+
+    private World(Map map, Rectangle viewWindow, bool debug = false)
     {
         Map = map;
         ViewX = viewWindow.X;
@@ -45,6 +46,11 @@ public class World
         Debug = debug;
 
         Entities = SpawnEntities();
+    }
+
+    public static void Load(Map map, Rectangle viewWindow, bool debug = false)
+    {
+        Current = new World(map, viewWindow, debug);
     }
 
     public void DrawBelowPlayer(SpriteBatch sb)
@@ -113,6 +119,12 @@ public class World
         return screenCoords + ViewOffset;
     }
 
+    public Rectangle ScreenToWorldRectangle(Rectangle rect)
+    {
+        rect.Offset(-(int)ViewX, -(int)ViewY);
+        return rect;
+    }
+
     private List<Entity> SpawnEntities()
     {
         List<Entity> entities = new List<Entity>();
@@ -129,7 +141,9 @@ public class World
         }
 
         //second pass: wire up properties for specific entity types
-        //TODO: move this into overriding functions?
+        //TODO: move this into overriding functions? 
+        //      can't really make separate constructors since we're instantiating the types via reflection,
+        //      but could make TeleportEntrance.Initialize(), NPC.Initialize(), etc that do all validation and etc below
         foreach (Entity e in entities)
         {
             if (e.GetType() == typeof(TeleportEntrance))
@@ -151,6 +165,44 @@ public class World
                 }
 
                 teleporter.Destination = (TeleportDestination)destEntity;
+            }
+            else if (e.GetType() == typeof(NPC))
+            {
+                NPC npc = (NPC)e;
+
+                npc.WorldX = e.Object.X;
+                npc.WorldY = e.Object.Y;
+
+                string imgFile = e.Object.Properties.GetValue("img");
+                if (string.IsNullOrWhiteSpace(imgFile))
+                {
+                    //TODO: warn that NPC has no image file specified!
+                    continue;
+                }
+
+                imgFile = Path.Combine(Map.MapFileDir, imgFile);
+                npc.Image = TiledDemoGame.LoadTexture(imgFile, true);
+                npc.Width = npc.Image.Width;
+                npc.Height = npc.Image.Height;
+
+                string portraitFile = e.Object.Properties.GetValue("portrait");
+                Texture2D msgBoxPortrait = null;
+                if (!string.IsNullOrWhiteSpace(portraitFile))
+                {
+                    portraitFile = Path.Combine(Map.MapFileDir, portraitFile);
+                    msgBoxPortrait = TiledDemoGame.LoadTexture(portraitFile, true);
+                }
+
+                string text = e.Object.Properties.GetValue("text");
+                if (!string.IsNullOrWhiteSpace(text))
+                {
+                    text = Regex.Unescape(text);
+
+                    //all of these defaults and use of TiledDemoGame static fields smell...
+                    int x = (TiledDemoGame.GameWidth / 2) - (TiledDemoGame.MSGBOX_WIDTH / 2);
+                    int y = 100;
+                    npc.MessageBoxes = new MessageBoxSeries(x, y, TiledDemoGame.MSGBOX_WIDTH, TiledDemoGame.MSGBOX_HEIGHT, TiledDemoGame.Font, msgBoxPortrait, text);
+                }
             }
         }
 

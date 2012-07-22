@@ -127,7 +127,7 @@ public class TiledMapViewer : Game
     {
         int stringPadding = 2;
         List<string> debugStrings = new List<string>();
-        debugStrings.Add("Map: " + map.Name);
+        debugStrings.Add("Map: " + map.MapFileName);
         debugStrings.Add("Layers: " + map.Layers.Count);
         debugStrings.Add("Tilesets: " + map.TileSets.Count);
         debugStrings.Add("Properties: " + map.Properties.Count);

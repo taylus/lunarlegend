@@ -4,34 +4,38 @@ using System.Linq;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
+using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 
 public class TiledDemoGame : Game
 {
+    //these are static to allow for static methods to load resources/etc
+    private static GraphicsDevice graphicsDevice;
+    private static ContentManager contentManager;
+    private static SpriteBatch spriteBatch;
+
+    //these are static because it only make sense to have one
+    private static Player player;
+
     private GraphicsDeviceManager graphics;
-    private SpriteBatch spriteBatch;
-    private SpriteFont font;
     private KeyboardState prevKeyboard;
     private KeyboardState curKeyboard;
     private MouseState prevMouse;
     private MouseState curMouse;
 
-    private World world;
-    private Player player;
-    private MessageBoxSeries activeMessageBoxes;
-
-    private int GameWidth { get { return GraphicsDevice.Viewport.Width; } }
-    private int GameHeight { get { return GraphicsDevice.Viewport.Height; } }
-
     //render the world and player to a temp surface for scaling
     private Texture2D gameSurf;
     private static float gameScale;
     private const float DEFAULT_GAME_SCALE = 1.0f;
-
     private const string GAME_TITLE = "Demo Game";
 
-    private const int MSGBOX_WIDTH = 300;
+    public const int MSGBOX_WIDTH = 300;
+    public const int MSGBOX_HEIGHT = 80;
+    public static int GameWidth { get { return graphicsDevice.Viewport.Width; } }
+    public static int GameHeight { get { return graphicsDevice.Viewport.Height; } }
+    public static Rectangle GameWindow { get { return graphicsDevice.Viewport.Bounds; } }
+    public static SpriteFont Font { get; protected set; }  //TODO: make some kind of font manager for different fonts, sizes, and settings
 
     public TiledDemoGame()
     {
@@ -46,27 +50,28 @@ public class TiledDemoGame : Game
 
     protected override void LoadContent()
     {
+        contentManager = Content;
+        graphicsDevice = GraphicsDevice;
         spriteBatch = new SpriteBatch(GraphicsDevice);
         gameSurf = new RenderTarget2D(GraphicsDevice, GameWidth, GameHeight);
-        font = Content.Load<SpriteFont>("font");
+        Font = Content.Load<SpriteFont>("font");
 
         //LoadWorld("maps/walls/walls_test.tmx");
-        LoadWorld("maps/test_scroll/test_scroll.tmx");
+        //LoadWorld("maps/test_scroll/test_scroll.tmx");
         //LoadWorld("maps/layer_test/layers.tmx");
-
-        Texture2D msgBoxPortrait = Content.Load<Texture2D>("img/bullfrog");
-        activeMessageBoxes = new MessageBoxSeries((GameWidth / 2) - (MSGBOX_WIDTH / 2), 100, MSGBOX_WIDTH, 0, font, msgBoxPortrait, "...\n\nRibbit.");
+        LoadWorld("maps/pond/pond.tmx");
 
         //DEBUG: space out messageboxes so we can draw them all at once
-        for (int i = 0; i < activeMessageBoxes.Count; i++)
-        {
-            activeMessageBoxes[i].X += (i * (activeMessageBoxes.TemplateMessageBox.Width + activeMessageBoxes.TemplateMessageBox.Padding));
-        }
+        //for (int i = 0; i < activeMessageBoxes.Count; i++)
+        //{
+        //    activeMessageBoxes[i].X += (i * (activeMessageBoxes.TemplateMessageBox.Width + activeMessageBoxes.TemplateMessageBox.Padding));
+        //}
     }
 
-    private void LoadWorld(string tmxMapFile)
+    public static void LoadWorld(string tmxMapFile)
     {
-        Map map = new Map(Path.Combine(Content.RootDirectory, tmxMapFile), GraphicsDevice, font);
+        bool preserveDebug = World.Current == null? false : World.Current.Debug;
+        Map map = new Map(Path.Combine(contentManager.RootDirectory, tmxMapFile), graphicsDevice, Font);
         string mapScaleProperty = map.Properties.GetValue("scale");
         if (!string.IsNullOrWhiteSpace(mapScaleProperty))
         {
@@ -78,21 +83,22 @@ public class TiledDemoGame : Game
             gameScale = DEFAULT_GAME_SCALE;
         }
 
-        Rectangle scaledViewWindow = GraphicsDevice.Viewport.Bounds.Scale(1 / gameScale);
-        world = new World(map, scaledViewWindow, false);
-        player = new Player(world, GetPlayerSpawnPosition(), (int)world.TileWidth, (int)world.TileHeight);
+        Rectangle scaledViewWindow = graphicsDevice.Viewport.Bounds.Scale(1 / gameScale);
+        World.Load(map, scaledViewWindow, false);
+        player = new Player(GetPlayerSpawnPosition(), (int)World.Current.TileWidth, (int)World.Current.TileHeight);
         //player.Speed /= gameScale;
-        world.CenterViewOnPlayer(player);
+        World.Current.CenterViewOnPlayer(player);
+        World.Current.Debug = preserveDebug;
     }
 
-    private Vector2 GetPlayerSpawnPosition()
+    private static Vector2 GetPlayerSpawnPosition()
     {
-        Entity spawnPoint = world.Entities.GetByType("info_player_start");
-        if (spawnPoint != null) return spawnPoint.Position;
+        PlayerSpawn spawnPoint = (PlayerSpawn)World.Current.Entities.GetByType("info_player_start");
+        if (spawnPoint != null) return spawnPoint.WorldPosition;
 
         //default to map's center
         //TODO: log a warning about the missing spawnpoint
-        return new Vector2(world.WidthPx / 2, world.HeightPx / 2);
+        return new Vector2(World.Current.WidthPx / 2, World.Current.HeightPx / 2);
     }
 
     protected override void Update(GameTime gameTime)
@@ -103,45 +109,58 @@ public class TiledDemoGame : Game
         curKeyboard = Keyboard.GetState();
         curMouse = Mouse.GetState();
 
-        //exit on esc
-        if (curKeyboard.IsKeyDown(Keys.Escape))
+        if (curKeyboard.IsKeyDown(Buttons.QUIT))
             this.Exit();
 
         //toggle debug mode
-        if (!prevKeyboard.IsKeyDown(Keys.Space) && curKeyboard.IsKeyDown(Keys.Space))
+        if (!prevKeyboard.IsKeyDown(Buttons.DEBUG) && curKeyboard.IsKeyDown(Buttons.DEBUG))
         {
-            world.Debug = !world.Debug;
-            Window.Title = !world.Debug? GAME_TITLE : string.Format("{0} - FPS: {1}", GAME_TITLE, Math.Round(1 / gameTime.ElapsedGameTime.TotalSeconds));
+            World.Current.Debug = !World.Current.Debug;
+            Window.Title = !World.Current.Debug ? GAME_TITLE : string.Format("{0} - FPS: {1}", GAME_TITLE, Math.Round(1 / gameTime.ElapsedGameTime.TotalSeconds));
         }
 
         //debug mode wall editor
-        if (world.Debug)
+        if (World.Current.Debug)
         {
-            Point mouseTileCoords = world.Map.GetTileAt(world.ScreenToWorldCoordinates(curMouse.Position() / gameScale));
+            Point mouseTileCoords = World.Current.Map.GetTileAt(World.Current.ScreenToWorldCoordinates(curMouse.Position() / gameScale));
 
-            if (curMouse.LeftButton == ButtonState.Pressed && !world.CollisionLayer.ContainsTileAt(mouseTileCoords))
+            if (curMouse.LeftButton == ButtonState.Pressed && !World.Current.CollisionLayer.ContainsTileAt(mouseTileCoords))
             {
-                world.CollisionLayer.Tiles[mouseTileCoords.X, mouseTileCoords.Y] = world.Map.GetWallTile();
+                World.Current.CollisionLayer.Tiles[mouseTileCoords.X, mouseTileCoords.Y] = World.Current.Map.GetWallTile();
             }
-            else if (curMouse.RightButton == ButtonState.Pressed && world.CollisionLayer.ContainsTileAt(mouseTileCoords))
+            else if (curMouse.RightButton == ButtonState.Pressed && World.Current.CollisionLayer.ContainsTileAt(mouseTileCoords))
             {
-                world.CollisionLayer.Tiles[mouseTileCoords.X, mouseTileCoords.Y] = new Tile();
+                World.Current.CollisionLayer.Tiles[mouseTileCoords.X, mouseTileCoords.Y] = new Tile();
             }
         }
 
         //confirm/use button
-        if (!prevKeyboard.IsKeyDown(Keys.E) && curKeyboard.IsKeyDown(Keys.E))
+        if (!prevKeyboard.IsKeyDown(Buttons.USE) && curKeyboard.IsKeyDown(Buttons.USE))
         {
-            if (activeMessageBoxes != null)
+            if (player.ActiveMessageBoxes != null)
             {
                 //activeMessageBoxes.Advance();
-                activeMessageBoxes = null;
+                player.ActiveMessageBoxes = null;
+            }
+            else
+            {
+                //TODO: spatially index NPCs so we only check those nearby
+                foreach (NPC npc in World.Current.Entities.OfType<NPC>())
+                {
+                    if (npc.InteractRect.Intersects(player.WorldRect))
+                    {
+                        npc.Use(player);
+                    }
+                }
             }
         }
 
         //player movement and entity activation
-        player.Move(curKeyboard);
-        TouchEntities();
+        if (player.ActiveMessageBoxes == null)
+        {
+            player.Move(curKeyboard);
+            player.TouchEntities();
+        }
 
         prevKeyboard = curKeyboard;
         prevMouse = curMouse;
@@ -158,43 +177,16 @@ public class TiledDemoGame : Game
         //draw the scaled game surface, then any additional overlays at normal scale
         spriteBatch.Begin();
         spriteBatch.Draw(gameSurf, Vector2.Zero, null, Color.White, 0.0f, Vector2.Zero, gameScale, SpriteEffects.None, 0);
-        if(world.Debug) DrawDebugInfo();
-        if (activeMessageBoxes != null)
+        if (World.Current.Debug) DrawDebugInfo();
+        if (player.ActiveMessageBoxes != null)
         {
-            foreach (MessageBox msgBox in activeMessageBoxes)
+            foreach (MessageBox msgBox in player.ActiveMessageBoxes)
             {
                 msgBox.Draw(spriteBatch);
             }
         }
         spriteBatch.End();
         base.Draw(gameTime);
-    }
-
-    public void TouchEntities()
-    {
-        //TODO: spatially index the entities so we're not checking all of them
-        foreach (Entity e in world.Entities)
-        {
-            if (!e.Active) continue;
-
-            if (player.WorldRect.Intersects(e.Object.Rectangle))
-            {
-                //handle special entities where the game engine needs to do something special
-                //TODO: this is a code smell... this function should really be in World, but it needs engine functionality to load new levels
-                //      if we get a lot of situations like this, then expose engine functionality to entities somehow (service locator w/ engine callbacks?)
-                if (e.GetType() == typeof(ChangeLevel))
-                {
-                    bool preserveDebug = world.Debug;
-                    LoadWorld(Path.Combine("maps", ((ChangeLevel)e).LevelName));
-                    world.Debug = preserveDebug;
-                    break;
-                }
-                else
-                {
-                    e.Touch(player);
-                }
-            }
-        }
     }
 
     //render the world and all game objects to the temporary surface for scaling
@@ -204,9 +196,13 @@ public class TiledDemoGame : Game
         GraphicsDevice.SetRenderTarget((RenderTarget2D)gameSurf);
         GraphicsDevice.Clear(Color.Transparent);
         spriteBatch.Begin();
-        world.DrawBelowPlayer(spriteBatch);
+        World.Current.DrawBelowPlayer(spriteBatch);
+        foreach (NPC npc in World.Current.Entities.OfType<NPC>())
+        {
+            npc.Draw(spriteBatch);
+        }
         player.Draw(spriteBatch);
-        world.DrawAbovePlayer(spriteBatch);
+        World.Current.DrawAbovePlayer(spriteBatch);
         spriteBatch.End();
 
         //reset drawing to the screen
@@ -217,7 +213,7 @@ public class TiledDemoGame : Game
     {
         int stringPadding = 2;
         List<string> debugStrings = new List<string>();
-        debugStrings.Add(string.Format("View: ({0}, {1})", world.ViewWindow.X, world.ViewWindow.Y));
+        debugStrings.Add(string.Format("View: ({0}, {1})", World.Current.ViewWindow.X, World.Current.ViewWindow.Y));
         debugStrings.Add(string.Format("World: ({0}, {1})", player.WorldRect.X, player.WorldRect.Y));
         debugStrings.Add(string.Format("Screen: ({0}, {1})", player.ScreenRect.X, player.ScreenRect.Y));
 
@@ -230,7 +226,17 @@ public class TiledDemoGame : Game
 
         for (int i = 0; i < debugStrings.Count; i++)
         {
-            spriteBatch.DrawString(font, debugStrings[i], new Vector2(stringPadding, font.LineSpacing * i), Color.White);
+            spriteBatch.DrawString(Font, debugStrings[i], new Vector2(stringPadding, Font.LineSpacing * i), Color.White);
+        }
+    }
+
+    public static Texture2D LoadTexture(string imgFile, bool external)
+    {
+        if (!external) return contentManager.Load<Texture2D>(imgFile);
+
+        using (FileStream fstream = new FileStream(imgFile, FileMode.Open))
+        {
+            return Texture2D.FromStream(graphicsDevice, fstream);
         }
     }
 }

@@ -110,6 +110,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Buttons.cs" />
     <Compile Include="Entity.cs" />
     <Compile Include="MessageBox.cs" />
     <Compile Include="Player.cs" />

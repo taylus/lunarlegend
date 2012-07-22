@@ -1,13 +1,12 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Graphics;
 
-public class Player
+public class Player : IWorldEntity
 {
-    private World world;
-
     //constant by which to reduce movement speed per axis when moving diagonally (1 / sqrt(2))
     //private const float DIAG_FACTOR = 0.707106781f;
     private const float DIAG_FACTOR = 0.85f;
@@ -24,16 +23,18 @@ public class Player
 
     public float ScreenX { get { return ScreenPosition.X; } }
     public float ScreenY { get { return ScreenPosition.Y; } }
-    public Vector2 ScreenPosition { get { return world.WorldToScreenCoordinates(WorldPosition); } }
+    public Vector2 ScreenPosition { get { return World.Current.WorldToScreenCoordinates(WorldPosition); } }
     public Rectangle ScreenRect { get { return new Rectangle((int)Math.Round(ScreenX), (int)Math.Round(ScreenY), Width, Height); } }
+    public bool IsOnScreen { get { return true; } }  //the player is always onscreen
+
+    public MessageBoxSeries ActiveMessageBoxes { get; set; }
 
     private const float DEFAULT_SPEED = 3.5f;
 
-    public Player(World world, Vector2 pos, int w, int h, float speed = DEFAULT_SPEED)
+    public Player(Vector2 worldPos, int w, int h, float speed = DEFAULT_SPEED)
     {
-        this.world = world;
-        WorldX = pos.X;
-        WorldY = pos.Y;
+        WorldX = worldPos.X;
+        WorldY = worldPos.Y;
         Speed = speed;
         Width = w;
         Height = h;
@@ -49,13 +50,13 @@ public class Player
     {
         WorldX = pos.X;
         WorldY = pos.Y;
-        world.CenterViewOnPlayer(this);
+        World.Current.CenterViewOnPlayer(this);
     }
 
     public Point GetTileCoordinates(Vector2? offset = null)
     {
         Vector2 v = offset != null? offset.Value : Vector2.Zero;
-        return new Point((int)((WorldX + v.X) / world.TileWidth), (int)((WorldY + v.Y) / world.TileHeight));
+        return new Point((int)((WorldX + v.X) / World.Current.TileWidth), (int)((WorldY + v.Y) / World.Current.TileHeight));
     }
 
     public void Move(KeyboardState keyboard)
@@ -67,15 +68,16 @@ public class Player
 
         //walls are currently grid-aligned, full tile blocks
         //moving into a wall prevents movement, but the player will "sidestep" if they just barely touched it
-
+        
         //move slower if going diagonally
-        bool movingDiagonally = (keyboard.IsKeyDown(Keys.W) && (keyboard.IsKeyDown(Keys.A) || keyboard.IsKeyDown(Keys.D)) ||
-                                 keyboard.IsKeyDown(Keys.A) && (keyboard.IsKeyDown(Keys.W) || keyboard.IsKeyDown(Keys.S)) ||
-                                 keyboard.IsKeyDown(Keys.S) && (keyboard.IsKeyDown(Keys.A) || keyboard.IsKeyDown(Keys.D)) ||
-                                 keyboard.IsKeyDown(Keys.D) && (keyboard.IsKeyDown(Keys.W) || keyboard.IsKeyDown(Keys.S)));
+        bool movingDiagonally = (keyboard.IsKeyDown(Buttons.MOVE_UP) && (keyboard.IsKeyDown(Buttons.MOVE_LEFT) || keyboard.IsKeyDown(Buttons.MOVE_RIGHT)) ||
+                                 keyboard.IsKeyDown(Buttons.MOVE_LEFT) && (keyboard.IsKeyDown(Buttons.MOVE_UP) || keyboard.IsKeyDown(Buttons.MOVE_DOWN)) ||
+                                 keyboard.IsKeyDown(Buttons.MOVE_DOWN) && (keyboard.IsKeyDown(Buttons.MOVE_LEFT) || keyboard.IsKeyDown(Buttons.MOVE_RIGHT)) ||
+                                 keyboard.IsKeyDown(Buttons.MOVE_RIGHT) && (keyboard.IsKeyDown(Buttons.MOVE_UP) || keyboard.IsKeyDown(Buttons.MOVE_DOWN)));
         float playerSpeed = movingDiagonally ? Speed * DIAG_FACTOR : Speed;
+        World world = World.Current;
 
-        if (keyboard.IsKeyDown(Keys.W))
+        if (keyboard.IsKeyDown(Buttons.MOVE_UP))
         {
             //move less if we can't move a full step
             float playerMoveDist = MathHelper.Min(playerSpeed, MathHelper.Distance(WorldY, 0));
@@ -121,11 +123,19 @@ public class Player
                     playerMoveDist = WorldY % world.TileHeight;
                 }
             }
+            foreach (NPC npc in world.Entities.OfType<NPC>())
+            {
+                Rectangle predictRect = new Rectangle((int)WorldX, (int)(WorldY - playerMoveDist), Width, Height);
+                if (predictRect.Intersects(npc.WorldRect))
+                {
+                    playerMoveDist = MathHelper.Max(0, WorldY - (npc.WorldY + npc.Height));
+                }
+            }
 
             WorldY -= playerMoveDist;
             world.ScrollViewWithinMapBounds(this, viewScrollOffset);
         }
-        else if (keyboard.IsKeyDown(Keys.S))
+        else if (keyboard.IsKeyDown(Buttons.MOVE_DOWN))
         {
             //move less if we can't move a full step
             float playerMoveDist = MathHelper.Min(playerSpeed, MathHelper.Distance(WorldY + Height, world.HeightPx));
@@ -166,11 +176,19 @@ public class Player
                     playerMoveDist = Util.NearestMultiple((int)WorldY, world.TileHeight) - WorldY;
                 }
             }
+            foreach (NPC npc in world.Entities.OfType<NPC>())
+            {
+                Rectangle predictRect = new Rectangle((int)WorldX, (int)(WorldY + playerMoveDist), Width, Height);
+                if (predictRect.Intersects(npc.WorldRect))
+                {
+                    playerMoveDist = MathHelper.Max(0, npc.WorldY - (WorldY + Height));
+                }
+            }
 
             WorldY += playerMoveDist;
             world.ScrollViewWithinMapBounds(this, viewScrollOffset);
         }
-        if (keyboard.IsKeyDown(Keys.A))
+        if (keyboard.IsKeyDown(Buttons.MOVE_LEFT))
         {
             //move less if we can't move a full step
             float playerMoveDist = MathHelper.Min(playerSpeed, MathHelper.Distance(WorldX, 0));
@@ -211,11 +229,19 @@ public class Player
                     playerMoveDist = WorldX % world.TileWidth;
                 }
             }
+            foreach (NPC npc in world.Entities.OfType<NPC>())
+            {
+                Rectangle predictRect = new Rectangle((int)(WorldX - playerMoveDist), (int)WorldY, Width, Height);
+                if (predictRect.Intersects(npc.WorldRect))
+                {
+                    playerMoveDist = MathHelper.Max(0, WorldX - (npc.WorldX + npc.Width));
+                }
+            }
 
             WorldX -= playerMoveDist;
             world.ScrollViewWithinMapBounds(this, viewScrollOffset);
         }
-        else if (keyboard.IsKeyDown(Keys.D))
+        else if (keyboard.IsKeyDown(Buttons.MOVE_RIGHT))
         {
             //move less if we can't move a full step
             float playerMoveDist = MathHelper.Min(playerSpeed, MathHelper.Distance(WorldX + Width, world.WidthPx));
@@ -256,9 +282,31 @@ public class Player
                     playerMoveDist = Util.NearestMultiple((int)WorldX, world.TileWidth) - WorldX;
                 }
             }
+            foreach (NPC npc in world.Entities.OfType<NPC>())
+            {
+                Rectangle predictRect = new Rectangle((int)(WorldX + playerMoveDist), (int)WorldY, Width, Height);
+                if (predictRect.Intersects(npc.WorldRect))
+                {
+                    playerMoveDist = MathHelper.Max(0, npc.WorldX - (WorldX + Width));
+                }
+            }
 
             WorldX += playerMoveDist;
             world.ScrollViewWithinMapBounds(this, viewScrollOffset);
+        }
+    }
+
+    public void TouchEntities()
+    {
+        //TODO: spatially index the entities so we're not checking all of them
+        foreach (Entity e in World.Current.Entities)
+        {
+            if (!e.Active) continue;
+
+            if (WorldRect.Intersects(e.Object.Rectangle))
+            {
+                e.Touch(this);
+            }
         }
     }
 }

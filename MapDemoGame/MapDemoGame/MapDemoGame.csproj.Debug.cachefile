@@ -1,5 +1,10 @@
 Content\font.xnb
-Content\img\bullfrog.xnb
+Content\maps\pond\frog_portrait.png
+Content\maps\pond\frog.png
+Content\maps\pond\newbeach.png
+Content\maps\pond\newsavannetempelj.png
+Content\maps\pond\newwaterground.png
+Content\maps\test_scroll\frog.png
 Content\maps\desert\desert.tmx
 Content\maps\desert\desert.tsx
 Content\maps\gid_example\gids.tmx
@@ -19,3 +24,4 @@ Content\maps\walls\lttp_map25.png
 Content\maps\walls\walls.png
 Content\maps\test_scroll\test_scroll.tmx
 Content\maps\layer_test\layers.tmx
+Content\maps\pond\pond.tmx

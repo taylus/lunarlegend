@@ -29,10 +29,9 @@ using Property = System.Collections.Generic.KeyValuePair<string, string>;
 public class Map
 {
     //tmx file path/name info
-    private string tmxDirName;
-    private string tmxFileName;
-    private string tmxPathName { get { return Path.Combine(tmxDirName, tmxFileName); } }
-    public string Name { get { return tmxFileName; } }
+    public string MapFileDir { get; protected set; }
+    public string MapFileName { get; protected set; }
+    public string MapFilePathName { get { return Path.Combine(MapFileDir, MapFileName); } }
 
     //deserialized tmx file contents
     private Tiled.map map;
@@ -75,8 +74,8 @@ public class Map
             ValidateMapAttributes();
             ValidateMapElements();
 
-            tmxDirName = Path.GetDirectoryName(tmxFile);
-            tmxFileName = Path.GetFileName(tmxFile);
+            MapFileDir = Path.GetDirectoryName(tmxFile);
+            MapFileName = Path.GetFileName(tmxFile);
             graphicsDevice = gd;
 
             Width = int.Parse(map.width);
@@ -147,7 +146,7 @@ public class Map
     private void LoadMapElements()
     {
         Properties = LoadProperties(map.properties);
-        TileSets = (from Tiled.tileset ts in map.tileset select new TileSet(tmxDirName, ts, graphicsDevice)).ToList();
+        TileSets = (from Tiled.tileset ts in map.tileset select new TileSet(MapFileDir, ts, graphicsDevice)).ToList();
         Layers = (from object o in map.Items where o.GetType() == typeof(Tiled.layer) select new Layer((Tiled.layer)o)).ToList();
         ObjectGroups = (from object o in map.Items where o.GetType() == typeof(Tiled.objectgroup) select new ObjectGroup((Tiled.objectgroup)o)).ToList();
     }

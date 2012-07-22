@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.0" orientation="orthogonal" width="30" height="25" tilewidth="32" tileheight="32">
+ <properties>
+  <property name="player_layer" value="doodads"/>
+ </properties>
+ <tileset firstgid="1" name="newbeach" tilewidth="32" tileheight="32">
+  <image source="newbeach.png" trans="548a96" width="256" height="640"/>
+ </tileset>
+ <tileset firstgid="161" name="newwaterground" tilewidth="32" tileheight="32">
+  <image source="newwaterground.png" trans="548a96" width="384" height="128"/>
+ </tileset>
+ <tileset firstgid="209" name="newsavannetempelj" tilewidth="32" tileheight="32">
+  <image source="newsavannetempelj.png" trans="548a96" width="256" height="928"/>
+ </tileset>
+ <layer name="ground" width="30" height="25">
+  <data encoding="base64" compression="gzip">
+   H4sIAAAAAAAAC9vFwMCwaxSP4lE8iocAPjZAeNEIwrcHgRtG8SgexaN4FGPHAFIpYVS4CwAA
+  </data>
+ </layer>
+ <layer name="doodads" width="30" height="25">
+  <data encoding="base64" compression="gzip">
+   H4sIAAAAAAAAC2NgoC/YxsjAsJ2RzpYigQ1Idq9jRNBbyXCTNJIZhMAOJLu2Qdnb8Ohdj0MOZOdWqBnKxDoUahdIrxoBddSKG0Ju0yTTXELuJyceQeA6qh0NxOrD5U8Z8pxBFgC69wCxapVIN5vqAFscaRGplwOLmCAQCwGxGBXLFZiZMCBAPaMxADeU5sIil0/jsrKHtsaDQS6JfriMRQwYRguo4RZsQJxWBhOwU38A7IUBbjQ+vjjKYyS+PBwIQCh9UbNcGApABIjNicQWOMwwI8EMZMxIJHbAYa8dCWaQg4eLvQAuOtY2uAsAAA==
+  </data>
+ </layer>
+ <layer name="doodads2" width="30" height="25">
+  <data encoding="base64" compression="gzip">
+   H4sIAAAAAAAAC2NgGAWjYOgARQaGhoF2wygYGaARiJuAuBlNnJ+RtvZ2AnEXEHejiYvT2N5RMAqGC6gF4jogrmegXoVBjJmtQNwGxO1A3EEle4kxsxeI+4C4H4gnoMnlQmk+RgSfj4iyBN1MmDk3kNRMBeJpQDwdiGeg6S8lwNfFwr+BxUyYvlwktXOBeB4QzwfiBUCcSsgzBOzFZiYIgMIJ3d3IQAGK0cVIsRebfmxmwMRigRgAODBE+bgLAAA=
+  </data>
+ </layer>
+ <layer name="doodads3" width="30" height="25">
+  <data encoding="base64" compression="gzip">
+   H4sIAAAAAAAAC+3OOQ6CUBCA4cdtrLiHSwPYuDQIDcIVXBqXRrFRaViOyl+YSAgQSMDCzJ98zUtm5iklSZIkSZL0n+2wxwHHH9494YwLrgPsH2tKTTDFTPu+33BHiEfPN3UY3DJhYf65O8ITL7wRtfxreXdTC+aWWGFd2BEjQYqsNFP1167ZzG3gwG25o+6vXfKY28JHUNiRA7pq3r+4CwAA
+  </data>
+ </layer>
+ <layer name="walls" width="30" height="25">
+  <data encoding="base64" compression="gzip">
+   H4sIAAAAAAAAC+NkYGDgHMWjeBSP4iGC0QE+OXIBMfbSCuCykxZuoKe/BisYiDAYDXf6gZEY1pSUp6Tqp1Y5Pmov8RgAG0dKGLgLAAA=
+  </data>
+ </layer>
+ <objectgroup name="objects" width="30" height="25">
+  <object name="frog" type="info_npc" x="416" y="384" width="32" height="32">
+   <properties>
+    <property name="img" value="frog.png"/>
+    <property name="portrait" value="frog_portrait.png"/>
+    <property name="text" value="...\n\nRibbit."/>
+   </properties>
+  </object>
+  <object name="start" type="info_player_start" x="416" y="480" width="32" height="32"/>
+ </objectgroup>
+</map>
