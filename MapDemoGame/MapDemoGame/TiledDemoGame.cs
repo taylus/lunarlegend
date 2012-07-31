@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Audio;
+using Microsoft.Xna.Framework.Media;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -56,10 +57,11 @@ public class TiledDemoGame : Game
         gameSurf = new RenderTarget2D(GraphicsDevice, GameWidth, GameHeight);
         Font = Content.Load<SpriteFont>("font");
 
-        //LoadWorld("maps/walls/walls_test.tmx");
+        //LoadWorld("maps/test/testmap.tmx");
         //LoadWorld("maps/test_scroll/test_scroll.tmx");
         //LoadWorld("maps/layer_test/layers.tmx");
-        LoadWorld("maps/pond/pond.tmx");
+        //LoadWorld("maps/pond/pond.tmx");
+        LoadWorld("maps/doors/doors.tmx");
 
         //DEBUG: space out messageboxes so we can draw them all at once
         //for (int i = 0; i < activeMessageBoxes.Count; i++)
@@ -93,7 +95,7 @@ public class TiledDemoGame : Game
 
     private static Vector2 GetPlayerSpawnPosition()
     {
-        PlayerSpawn spawnPoint = (PlayerSpawn)World.Current.Entities.GetByType("info_player_start");
+        PlayerSpawn spawnPoint = World.Current.Entities.OfType<PlayerSpawn>().FirstOrDefault();
         if (spawnPoint != null) return spawnPoint.WorldPosition;
 
         //default to map's center
@@ -144,12 +146,12 @@ public class TiledDemoGame : Game
             }
             else
             {
-                //TODO: spatially index NPCs so we only check those nearby
-                foreach (NPC npc in World.Current.Entities.OfType<NPC>())
+                //TODO: spatially index entities so we only check those nearby
+                foreach (WorldEntity wEnt in World.Current.Entities.OfType<WorldEntity>())
                 {
-                    if (npc.InteractRect.Intersects(player.WorldRect))
+                    if (wEnt.InteractRect.Intersects(player.WorldRect))
                     {
-                        npc.Use(player);
+                        wEnt.Use(player);
                     }
                 }
             }
@@ -160,6 +162,13 @@ public class TiledDemoGame : Game
         {
             player.Move(curKeyboard);
             player.TouchEntities();
+        }
+
+        //reactivate any inactive buttons that the player is no longer standing on
+        foreach(Button btn in World.Current.Entities.OfType<Button>().Where(b => !b.Active))
+        {
+            if(!btn.WorldRect.Intersects(player.WorldRect)) 
+                btn.Active = true;
         }
 
         prevKeyboard = curKeyboard;
@@ -197,9 +206,9 @@ public class TiledDemoGame : Game
         GraphicsDevice.Clear(Color.Transparent);
         spriteBatch.Begin();
         World.Current.DrawBelowPlayer(spriteBatch);
-        foreach (NPC npc in World.Current.Entities.OfType<NPC>())
+        foreach (WorldEntity wEnt in World.Current.Entities.OfType<WorldEntity>())
         {
-            npc.Draw(spriteBatch);
+            wEnt.Draw(spriteBatch);
         }
         player.Draw(spriteBatch);
         World.Current.DrawAbovePlayer(spriteBatch);
@@ -238,5 +247,21 @@ public class TiledDemoGame : Game
         {
             return Texture2D.FromStream(graphicsDevice, fstream);
         }
+    }
+
+    public static SoundEffect LoadSoundEffect(string sfxFile, bool external)
+    {
+        if (!external) return contentManager.Load<SoundEffect>(sfxFile);
+
+        using (FileStream fstream = new FileStream(sfxFile, FileMode.Open))
+        {
+            return SoundEffect.FromStream(fstream);
+        }
+    }
+
+    public static Song LoadSong(string songFile, bool external, string songName)
+    {
+        if (!external) return contentManager.Load<Song>(songFile);
+        return Song.FromUri(songName, new Uri(songFile));
     }
 }

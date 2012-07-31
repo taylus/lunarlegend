@@ -35,6 +35,12 @@ public static class Util
         return new Rectangle(rect.X, rect.Y, (int)(rect.Width * scale), (int)(rect.Height * scale));
     }
 
+    public static bool Contains(this Rectangle rect, Vector2 pos)
+    {
+        return pos.X >= rect.Left && pos.X <= rect.Right &&
+               pos.Y >= rect.Top && pos.Y <= rect.Bottom;
+    }
+
     //rounds f up to the nearest multiple of m
     public static float NearestMultiple(float f, float m)
     {

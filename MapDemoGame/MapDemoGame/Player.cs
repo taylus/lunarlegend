@@ -20,6 +20,7 @@ public class Player : IWorldEntity
     public float WorldY { get; set; }
     public Vector2 WorldPosition { get { return new Vector2(WorldX, WorldY); } }
     public Rectangle WorldRect { get { return new Rectangle((int)Math.Round(WorldX), (int)Math.Round(WorldY), Width, Height); } }
+    public List<Point> OccupyingTiles { get { return World.Current.GetOccupyingTiles(WorldRect); } }
 
     public float ScreenX { get { return ScreenPosition.X; } }
     public float ScreenY { get { return ScreenPosition.Y; } }
@@ -88,7 +89,7 @@ public class Player : IWorldEntity
             {
                 //predict collisions and adjust movement distance accordingly
                 Rectangle predictRect = new Rectangle((int)WorldX, (int)(WorldY - playerMoveDist), Width, Height);
-                List<Point> tiles = world.Map.GetOccupyingTiles(predictRect);
+                List<Point> tiles = world.GetOccupyingTiles(predictRect);
                 world.Map.HighlightedTiles = tiles;
                 if (world.CollisionLayer.TileIntersect(tiles))
                 {
@@ -100,7 +101,7 @@ public class Player : IWorldEntity
 
                         //"sidestep" to the right if there's no tile to the upper right
                         Point upperRightTileCoords = GetTileCoordinates(new Vector2(Width, -playerMoveDist));
-                        if (!world.CollisionLayer.ContainsTileAt(upperRightTileCoords))
+                        if (!world.CollisionLayer.ContainsTileAt(upperRightTileCoords) && !world.EntityCollision(upperRightTileCoords))
                         {
                             float collisionOverlap = (world.TileWidth - (WorldX % world.TileWidth)) % world.TileWidth;
                             float sideStepDist = Math.Min(playerMoveDist, collisionOverlap);
@@ -110,7 +111,7 @@ public class Player : IWorldEntity
 
                         //"sidestep" to the left if we're not already moving left, and there's no tile to the upper left
                         Point upperLeftTileCoords = GetTileCoordinates(new Vector2(0, -playerMoveDist));
-                        if (!world.CollisionLayer.ContainsTileAt(upperLeftTileCoords))
+                        if (!world.CollisionLayer.ContainsTileAt(upperLeftTileCoords) && !world.EntityCollision(upperLeftTileCoords))
                         {
                             float collisionOverlap = WorldX % world.TileWidth;
                             float sideStepDist = Math.Min(playerMoveDist, collisionOverlap);
@@ -123,12 +124,12 @@ public class Player : IWorldEntity
                     playerMoveDist = WorldY % world.TileHeight;
                 }
             }
-            foreach (NPC npc in world.Entities.OfType<NPC>())
+            foreach (WorldEntity wEnt in world.Entities.OfType<WorldEntity>().Where(w => w.Solid))
             {
                 Rectangle predictRect = new Rectangle((int)WorldX, (int)(WorldY - playerMoveDist), Width, Height);
-                if (predictRect.Intersects(npc.WorldRect))
+                if (predictRect.Intersects(wEnt.WorldRect))
                 {
-                    playerMoveDist = MathHelper.Max(0, WorldY - (npc.WorldY + npc.Height));
+                    playerMoveDist = MathHelper.Max(0, WorldY - (wEnt.WorldY + wEnt.Height));
                 }
             }
 
@@ -145,7 +146,7 @@ public class Player : IWorldEntity
             {
                 //adjust movement distance for wall collisions
                 Rectangle predictRect = new Rectangle((int)WorldX, (int)(WorldY + playerMoveDist), Width, Height);
-                List<Point> tiles = world.Map.GetOccupyingTiles(predictRect);
+                List<Point> tiles = world.GetOccupyingTiles(predictRect);
                 world.Map.HighlightedTiles = tiles;
                 if (world.CollisionLayer.TileIntersect(tiles))
                 {
@@ -153,7 +154,7 @@ public class Player : IWorldEntity
                     {
                         //"sidestep" to the right if there's no tile to the lower right
                         Point lowerRightTileCoords = GetTileCoordinates(new Vector2(Width, Height + playerMoveDist));
-                        if (!world.CollisionLayer.ContainsTileAt(lowerRightTileCoords))
+                        if (!world.CollisionLayer.ContainsTileAt(lowerRightTileCoords) && !world.EntityCollision(lowerRightTileCoords))
                         {
                             float collisionOverlap = (world.TileWidth - (WorldX % world.TileWidth)) % world.TileWidth;
                             float sideStepDist = Math.Min(playerMoveDist, collisionOverlap);
@@ -163,7 +164,7 @@ public class Player : IWorldEntity
 
                         //"sidestep" to the left if there's no tile to the lower left
                         Point lowerLeftTileCoords = GetTileCoordinates(new Vector2(0, Height + playerMoveDist));
-                        if (!world.CollisionLayer.ContainsTileAt(lowerLeftTileCoords))
+                        if (!world.CollisionLayer.ContainsTileAt(lowerLeftTileCoords) && !world.EntityCollision(lowerLeftTileCoords))
                         {
                             float collisionOverlap = WorldX % world.TileWidth;
                             float sideStepDist = Math.Min(playerMoveDist, collisionOverlap);
@@ -176,12 +177,12 @@ public class Player : IWorldEntity
                     playerMoveDist = Util.NearestMultiple((int)WorldY, world.TileHeight) - WorldY;
                 }
             }
-            foreach (NPC npc in world.Entities.OfType<NPC>())
+            foreach (WorldEntity wEnt in world.Entities.OfType<WorldEntity>().Where(w => w.Solid))
             {
                 Rectangle predictRect = new Rectangle((int)WorldX, (int)(WorldY + playerMoveDist), Width, Height);
-                if (predictRect.Intersects(npc.WorldRect))
+                if (predictRect.Intersects(wEnt.WorldRect))
                 {
-                    playerMoveDist = MathHelper.Max(0, npc.WorldY - (WorldY + Height));
+                    playerMoveDist = MathHelper.Max(0, wEnt.WorldY - (WorldY + Height));
                 }
             }
 
@@ -198,7 +199,7 @@ public class Player : IWorldEntity
             {
                 //adjust movement distance for wall collisions
                 Rectangle predictRect = new Rectangle((int)(WorldX - playerMoveDist), (int)WorldY, Width, Height);
-                List<Point> tiles = world.Map.GetOccupyingTiles(predictRect);
+                List<Point> tiles = world.GetOccupyingTiles(predictRect);
                 world.Map.HighlightedTiles = tiles;
                 if (world.CollisionLayer.TileIntersect(tiles))
                 {
@@ -206,7 +207,7 @@ public class Player : IWorldEntity
                     {
                         //"sidestep" up if there's no tile to the upper left
                         Point upperLeftTileCoords = GetTileCoordinates(new Vector2(-playerMoveDist, 0));
-                        if (!world.CollisionLayer.ContainsTileAt(upperLeftTileCoords))
+                        if (!world.CollisionLayer.ContainsTileAt(upperLeftTileCoords) && !world.EntityCollision(upperLeftTileCoords))
                         {
                             float collisionOverlap = WorldY % world.TileHeight;
                             float sideStepDist = Math.Min(playerMoveDist, collisionOverlap);
@@ -216,7 +217,7 @@ public class Player : IWorldEntity
 
                         //"sidestep" down if there's no tile to the lower left
                         Point lowerLeftTileCoords = GetTileCoordinates(new Vector2(-playerMoveDist, Height));
-                        if (!world.CollisionLayer.ContainsTileAt(lowerLeftTileCoords))
+                        if (!world.CollisionLayer.ContainsTileAt(lowerLeftTileCoords) && !world.EntityCollision(lowerLeftTileCoords))
                         {
                             float collisionOverlap = (world.TileHeight - (WorldY % world.TileHeight)) % world.TileHeight;
                             float sideStepDist = Math.Min(playerMoveDist, collisionOverlap);
@@ -229,12 +230,12 @@ public class Player : IWorldEntity
                     playerMoveDist = WorldX % world.TileWidth;
                 }
             }
-            foreach (NPC npc in world.Entities.OfType<NPC>())
+            foreach (WorldEntity wEnt in world.Entities.OfType<WorldEntity>().Where(w => w.Solid))
             {
                 Rectangle predictRect = new Rectangle((int)(WorldX - playerMoveDist), (int)WorldY, Width, Height);
-                if (predictRect.Intersects(npc.WorldRect))
+                if (predictRect.Intersects(wEnt.WorldRect))
                 {
-                    playerMoveDist = MathHelper.Max(0, WorldX - (npc.WorldX + npc.Width));
+                    playerMoveDist = MathHelper.Max(0, WorldX - (wEnt.WorldX + wEnt.Width));
                 }
             }
 
@@ -251,7 +252,7 @@ public class Player : IWorldEntity
             {
                 //adjust movement distance for wall collisions
                 Rectangle predictRect = new Rectangle((int)(WorldX + playerMoveDist), (int)WorldY, Width, Height);
-                List<Point> tiles = world.Map.GetOccupyingTiles(predictRect);
+                List<Point> tiles = world.GetOccupyingTiles(predictRect);
                 world.Map.HighlightedTiles = tiles;
                 if (world.CollisionLayer.TileIntersect(tiles))
                 {
@@ -259,7 +260,7 @@ public class Player : IWorldEntity
                     {
                         //"sidestep" up if there's no tile to the upper right
                         Point upperRightTileCoords = GetTileCoordinates(new Vector2(Width + playerMoveDist, 0));
-                        if (!world.CollisionLayer.ContainsTileAt(upperRightTileCoords))
+                        if (!world.CollisionLayer.ContainsTileAt(upperRightTileCoords) && !world.EntityCollision(upperRightTileCoords))
                         {
                             float collisionOverlap = WorldY % world.TileHeight;
                             float sideStepDist = Math.Min(playerMoveDist, collisionOverlap);
@@ -269,7 +270,7 @@ public class Player : IWorldEntity
 
                         //"sidestep" down if there's no tile to the lower right
                         Point lowerRightTileCoords = GetTileCoordinates(new Vector2(Width + playerMoveDist, Height));
-                        if (!world.CollisionLayer.ContainsTileAt(lowerRightTileCoords))
+                        if (!world.CollisionLayer.ContainsTileAt(lowerRightTileCoords) && !world.EntityCollision(lowerRightTileCoords))
                         {
                             float collisionOverlap = (world.TileHeight - (WorldY % world.TileHeight)) % world.TileHeight;
                             float sideStepDist = Math.Min(playerMoveDist, collisionOverlap);
@@ -282,12 +283,12 @@ public class Player : IWorldEntity
                     playerMoveDist = Util.NearestMultiple((int)WorldX, world.TileWidth) - WorldX;
                 }
             }
-            foreach (NPC npc in world.Entities.OfType<NPC>())
+            foreach (WorldEntity wEnt in world.Entities.OfType<WorldEntity>().Where(w => w.Solid))
             {
                 Rectangle predictRect = new Rectangle((int)(WorldX + playerMoveDist), (int)WorldY, Width, Height);
-                if (predictRect.Intersects(npc.WorldRect))
+                if (predictRect.Intersects(wEnt.WorldRect))
                 {
-                    playerMoveDist = MathHelper.Max(0, npc.WorldX - (WorldX + Width));
+                    playerMoveDist = MathHelper.Max(0, wEnt.WorldX - (WorldX + Width));
                 }
             }
 
@@ -299,13 +300,13 @@ public class Player : IWorldEntity
     public void TouchEntities()
     {
         //TODO: spatially index the entities so we're not checking all of them
-        foreach (Entity e in World.Current.Entities)
+        foreach (WorldEntity w in World.Current.Entities.OfType<WorldEntity>())
         {
-            if (!e.Active) continue;
+            if (!w.Active) continue;
 
-            if (WorldRect.Intersects(e.Object.Rectangle))
+            if (WorldRect.Intersects(w.WorldRect))
             {
-                e.Touch(this);
+                w.Touch(this);
             }
         }
     }

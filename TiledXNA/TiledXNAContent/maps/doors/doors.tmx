@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.0" orientation="orthogonal" width="29" height="29" tilewidth="32" tileheight="32">
+ <tileset firstgid="1" name="lttp_castlebasement1" tilewidth="32" tileheight="32">
+  <image source="lttp_castlebasement1.png" trans="000000" width="2368" height="2012"/>
+  <tile id="1">
+   <properties>
+    <property name="frame" value="0"/>
+    <property name="name" value="button"/>
+   </properties>
+  </tile>
+ </tileset>
+ <layer name="base" width="29" height="29">
+  <data encoding="base64" compression="gzip">
+   H4sIAAAAAAAAC+WXP1IUQRSH32IB4m7kgqaeALbKA/hyJUA0MADxDBzAdwkNWFfNRL3ES/13BwPQJfAM+vXM9tjV88dRKRKCr2ane+r7yXS/nufhQOSwB9dXRcawDnfg0VJxNe6NcWPe+nhSnq110yfzT4488+OyyCf4DF/g4fA3m8xvwWTQnMm4MW88ZzxfgcfwGV7DX3sP6ysiG3ADbsKrYZ0XeKZwBCGTq0zL8TBvOXgMn+E1/LXMfXIewwE8gbNhnW94TuFkkclVTsvxMG85eAyf4bX9hsxjct7CO3gPt0d1JiPeIWyOykyuslWOh3nLwWP4DK8dN2QK/9YBLMGVYble/wsew2d4Df+ly6RuQl3ZGmNXYRXOMxOf4BX8VZ0+YDywC/dh55wz8QlewR+yCl4yHphBrL+2TPapsk+VPekR7p1xb3o+rd9ZmVUQam4O3yGvvxzGlXm9KyXbUtw7442Zaf3il/nid6i5lLT+csJZR9brH+yDCPe34lnY8F6q+k1hzlpoy/wasriNmQdtmW2Q6yld6xMyt7O/815HZlz/SQbv13nPzvv28DusT9seiuvD31ZAvvRZf7yKX+eL3+wjD7CvnP3l047MuD4ZrevPvlV8ildnZVYB9eIB6sepI9/pyPyH+gw+xau7ZVYB50LBRZx9MespPcHPaxdz3pJj5NllyQzfljcronzHle+58l1Xvu/hTK2R1a+m9ZeewRE8js/xOn4nx+P3bI8M+hWlb1H6F6WPUfqZGrF+F+erpvXHvOfgcXyO1/H7XpI5JoO+TOnPlD5N6deUvq1GrN+jRWZaf8x7Dh7H53gdv4+TzA/LovSfSh+q9KNKX6r0pxX0rUr/qvSxSj+rnHUaMrk69864M+885zxfgcfxOV7H7+R42ps8p266oE9X+vXGTMadeee5Tv72/xZ9Mvu6fgGLxTpiJA0AAA==
+  </data>
+ </layer>
+ <layer name="walls" width="29" height="29" opacity="0.22">
+  <data encoding="base64" compression="gzip">
+   H4sIAAAAAAAACytmZWAoJhEjA1L1kotH7RxadlITjNo5audItRNb/iTVzlFAOzAQ8TkU0u2onaN2DlY7SXETtcwctXPo2gkAt/cjeiQNAAA=
+  </data>
+ </layer>
+ <objectgroup name="objects" width="29" height="29">
+  <object name="wall1" type="func_wall" x="768" y="288" width="160" height="352">
+   <properties>
+    <property name="closed_img" value="doors/right_closed.png"/>
+    <property name="open_img" value="doors/right_open.png"/>
+   </properties>
+  </object>
+  <object name="button" type="trigger_button" x="448" y="448" width="32" height="32">
+   <properties>
+    <property name="down_img" value="button_down.png"/>
+    <property name="sound" value="button.wav"/>
+    <property name="target" value="multi_doors"/>
+    <property name="up_img" value="button_up.png"/>
+   </properties>
+  </object>
+  <object name="multi_doors" type="multi_manager" x="432" y="320" width="64" height="32">
+   <properties>
+    <property name="target0" value="wall0"/>
+    <property name="target1" value="wall1"/>
+    <property name="target2" value="wall2"/>
+    <property name="target3" value="wall3"/>
+   </properties>
+  </object>
+  <object name="start" type="info_player_start" x="448" y="640" width="32" height="32"/>
+  <object name="wall0" type="func_wall" x="288" y="0" width="352" height="160">
+   <properties>
+    <property name="closed_img" value="doors/top_closed.png"/>
+    <property name="open_img" value="doors/top_open.png"/>
+   </properties>
+  </object>
+  <object name="wall3" type="func_wall" x="0" y="288" width="160" height="352">
+   <properties>
+    <property name="closed_img" value="doors/left_closed.png"/>
+    <property name="open_img" value="doors/left_open.png"/>
+   </properties>
+  </object>
+  <object name="wall2" type="func_wall" x="288" y="768" width="352" height="160">
+   <properties>
+    <property name="closed_img" value="doors/bottom_closed.png"/>
+    <property name="open_img" value="doors/bottom_open.png"/>
+   </properties>
+  </object>
+ </objectgroup>
+</map>

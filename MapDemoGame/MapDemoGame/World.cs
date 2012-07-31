@@ -4,7 +4,6 @@ using System.Xml;
 using System.Linq;
 using System.Xml.Serialization;
 using System.Collections.Generic;
-using System.Text.RegularExpressions;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
@@ -51,6 +50,7 @@ public class World
     public static void Load(Map map, Rectangle viewWindow, bool debug = false)
     {
         Current = new World(map, viewWindow, debug);
+        InitializeEntities(Current.Entities);
     }
 
     public void DrawBelowPlayer(SpriteBatch sb)
@@ -125,87 +125,64 @@ public class World
         return rect;
     }
 
+    //get all tile coordinates that the given pixel coordinate rectangle occupies
+    public List<Point> GetOccupyingTiles(Rectangle rect)
+    {
+        int tileUpperLeftX = rect.Left / TileWidth;
+        int tileUpperLeftY = rect.Top / TileHeight;
+        int tileBottomRightX = (rect.Right - 1) / TileWidth;
+        int tileBottomRightY = (rect.Bottom - 1) / TileHeight;
+        List<Point> occupiedTiles = new List<Point>();
+
+        for (int x = tileUpperLeftX; x <= tileBottomRightX; x++)
+        {
+            for (int y = tileUpperLeftY; y <= tileBottomRightY; y++)
+            {
+                occupiedTiles.Add(new Point(x, y));
+            }
+        }
+
+        return occupiedTiles;
+    }
+
+    //returns true if there is a solid WorldEntity entirely covering the given tile coords
+    public bool EntityCollision(Point tileCoords)
+    {
+        Rectangle worldTileRect = new Rectangle(tileCoords.X * TileWidth, tileCoords.Y * TileHeight, TileWidth, TileHeight);
+        foreach (WorldEntity wEnt in Entities.OfType<WorldEntity>().Where(w => w.Solid))
+        {
+            if (wEnt.WorldRect.Contains(worldTileRect))
+                return true;
+        }
+
+        return false;
+    }
+
+    //first pass: instantiate all entities by type
     private List<Entity> SpawnEntities()
     {
         List<Entity> entities = new List<Entity>();
 
-        //first pass: instantiate all entities by type
         foreach (ObjectGroup objGroup in Map.ObjectGroups)
         {
             foreach (Object obj in objGroup.Objects)
             {
                 Type t = Entity.GetEntityType(obj.Type);
-                if (t == null) throw new Exception("No Entity class found for Object type \"" + obj.Type + "\".");
+                //if (t == null) throw new Exception("No Entity class found for Object type \"" + obj.Type + "\".");
+                if (t == null) continue;
                 entities.Add((Entity)Activator.CreateInstance(t, obj));
             }
         }
 
-        //second pass: wire up properties for specific entity types
-        //TODO: move this into overriding functions? 
-        //      can't really make separate constructors since we're instantiating the types via reflection,
-        //      but could make TeleportEntrance.Initialize(), NPC.Initialize(), etc that do all validation and etc below
+        return entities;
+    }
+
+    //second pass: wire up properties for specific entity types
+    private static void InitializeEntities(List<Entity> entities)
+    {
         foreach (Entity e in entities)
         {
-            if (e.GetType() == typeof(TeleportEntrance))
-            {
-                TeleportEntrance teleporter = (TeleportEntrance)e;
-
-                string destEntityName = e.Object.Properties.GetValue("target");
-                if (string.IsNullOrWhiteSpace(destEntityName))
-                {
-                    //TODO: warn that teleport entrance has no destination specified!
-                    continue;
-                }
-
-                Entity destEntity = entities.GetByName(destEntityName);
-                if (destEntity.GetType() != typeof(TeleportDestination))
-                {
-                    //TODO: warn that teleport destination is the wrong type of entity!
-                    continue;
-                }
-
-                teleporter.Destination = (TeleportDestination)destEntity;
-            }
-            else if (e.GetType() == typeof(NPC))
-            {
-                NPC npc = (NPC)e;
-
-                npc.WorldX = e.Object.X;
-                npc.WorldY = e.Object.Y;
-
-                string imgFile = e.Object.Properties.GetValue("img");
-                if (string.IsNullOrWhiteSpace(imgFile))
-                {
-                    //TODO: warn that NPC has no image file specified!
-                    continue;
-                }
-
-                imgFile = Path.Combine(Map.MapFileDir, imgFile);
-                npc.Image = TiledDemoGame.LoadTexture(imgFile, true);
-                npc.Width = npc.Image.Width;
-                npc.Height = npc.Image.Height;
-
-                string portraitFile = e.Object.Properties.GetValue("portrait");
-                Texture2D msgBoxPortrait = null;
-                if (!string.IsNullOrWhiteSpace(portraitFile))
-                {
-                    portraitFile = Path.Combine(Map.MapFileDir, portraitFile);
-                    msgBoxPortrait = TiledDemoGame.LoadTexture(portraitFile, true);
-                }
-
-                string text = e.Object.Properties.GetValue("text");
-                if (!string.IsNullOrWhiteSpace(text))
-                {
-                    text = Regex.Unescape(text);
-
-                    //all of these defaults and use of TiledDemoGame static fields smell...
-                    int x = (TiledDemoGame.GameWidth / 2) - (TiledDemoGame.MSGBOX_WIDTH / 2);
-                    int y = 100;
-                    npc.MessageBoxes = new MessageBoxSeries(x, y, TiledDemoGame.MSGBOX_WIDTH, TiledDemoGame.MSGBOX_HEIGHT, TiledDemoGame.Font, msgBoxPortrait, text);
-                }
-            }
+            e.Initialize();
         }
-
-        return entities;
     }
 }

@@ -134,7 +134,7 @@ public class Layer
         return Name;
     }
 
-    //return true if this layer has any non-empty tiles at any of the given coords
+    //return true if this layer has any non-empty tiles at any of the given tile coords
     public bool TileIntersect(List<Point> tileCoords)
     {
         foreach (Point tileCoord in tileCoords)
@@ -146,9 +146,10 @@ public class Layer
         return false;
     }
 
-    public bool ContainsTileAt(Point point)
+    //returns true if this layer has a tile at the given tile coords
+    public bool ContainsTileAt(Point tileCoords)
     {
-        return Tiles[point.X, point.Y].GID != 0;
+        return Tiles[tileCoords.X, tileCoords.Y].GID != 0;
     }
 }
 

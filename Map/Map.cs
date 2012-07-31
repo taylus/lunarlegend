@@ -326,26 +326,6 @@ public class Map
         return (from Tile t in CollisionLayer.Tiles where t.GID != 0 select t).FirstOrDefault();
     }
 
-    //get all tile coordinates that the given pixel coordinate rectangle occupies
-    public List<Point> GetOccupyingTiles(Rectangle rect)
-    {
-        int tileUpperLeftX = rect.Left / TileWidth;
-        int tileUpperLeftY = rect.Top / TileHeight;
-        int tileBottomRightX = (rect.Right - 1) / TileWidth;
-        int tileBottomRightY = (rect.Bottom - 1) / TileHeight;
-        List<Point> occupiedTiles = new List<Point>();
-
-        for (int x = tileUpperLeftX; x <= tileBottomRightX; x++)
-        {
-            for (int y = tileUpperLeftY; y <= tileBottomRightY; y++)
-            {
-                occupiedTiles.Add(new Point(x, y));
-            }
-        }
-
-        return occupiedTiles;
-    }
-
     //gets the tile coordinate containing the given pixel coordinate
     public Point GetTileAt(Vector2 pos)
     {
