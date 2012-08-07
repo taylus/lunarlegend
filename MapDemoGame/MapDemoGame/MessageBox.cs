@@ -84,14 +84,20 @@ public class MessageBox
         string[] tokens = Regex.Split(text, @"(\s)").Where(w => w != string.Empty).ToArray();
         foreach (string token in tokens)
         {
-            if (token == "\n" || Font.MeasureString(sb.ToString() + token).X > Width - ((Padding + BorderWidth) * 2) - PortraitWidth - TEXT_LEFT_PADDING)
+            if (token == "\f")
+            {
+                //explicit page break, return what remains
+                lines.Add(sb.ToString());
+                return text.Substring(processedChars);
+            }
+            else if (token == "\n" || Font.MeasureString(sb.ToString() + token).X > Width - ((Padding + BorderWidth) * 2) - PortraitWidth - TEXT_LEFT_PADDING)
             {
                 lines.Add(sb.ToString());
                 sb.Clear();
 
                 if (((lines.Count + 1) * Font.LineSpacing) > Height - ((Padding + BorderWidth) * 2))
                 {
-                    //another line won't fit... return what remains
+                    //another line won't fit, return what remains
                     return text.Substring(processedChars);
                 }
             }
@@ -136,10 +142,13 @@ public class MessageBox
 
 public class MessageBoxSeries : IEnumerable<MessageBox>
 {
+    private int curMsgBoxIndex = 0;
+
     public MessageBox TemplateMessageBox { get; set; }
     public List<MessageBox> MessageBoxes { get; set; }
     public int Count { get { return MessageBoxes != null? MessageBoxes.Count : 0; } }
     public MessageBox this[int i] { get { return MessageBoxes[i]; } }
+    public MessageBox Active { get { return this[curMsgBoxIndex]; } }
 
     public MessageBoxSeries(int x, int y, int w, int h, SpriteFont font, Texture2D portrait, string text = null)
     {
@@ -162,6 +171,21 @@ public class MessageBoxSeries : IEnumerable<MessageBox>
         }
 
         return messageBoxes;
+    }
+
+    public void Reset()
+    {
+        curMsgBoxIndex = 0;
+    }
+
+    public void Advance()
+    {
+        if(HasNextMessageBox()) curMsgBoxIndex++;
+    }
+
+    public bool HasNextMessageBox()
+    {
+        return curMsgBoxIndex < (Count - 1);
     }
 
     public override string ToString()

@@ -60,14 +60,8 @@ public class TiledDemoGame : Game
         //LoadWorld("maps/test/testmap.tmx");
         //LoadWorld("maps/test_scroll/test_scroll.tmx");
         //LoadWorld("maps/layer_test/layers.tmx");
-        //LoadWorld("maps/pond/pond.tmx");
-        LoadWorld("maps/doors/doors.tmx");
-
-        //DEBUG: space out messageboxes so we can draw them all at once
-        //for (int i = 0; i < activeMessageBoxes.Count; i++)
-        //{
-        //    activeMessageBoxes[i].X += (i * (activeMessageBoxes.TemplateMessageBox.Width + activeMessageBoxes.TemplateMessageBox.Padding));
-        //}
+        LoadWorld("maps/pond/pond.tmx");
+        //LoadWorld("maps/doors/doors.tmx");
     }
 
     public static void LoadWorld(string tmxMapFile)
@@ -141,8 +135,15 @@ public class TiledDemoGame : Game
         {
             if (player.ActiveMessageBoxes != null)
             {
-                //activeMessageBoxes.Advance();
-                player.ActiveMessageBoxes = null;
+                if (player.ActiveMessageBoxes.HasNextMessageBox())
+                {
+                    player.ActiveMessageBoxes.Advance();
+                }
+                else
+                {
+                    player.ActiveMessageBoxes.Reset();
+                    player.ActiveMessageBoxes = null;
+                }
             }
             else
             {
@@ -189,10 +190,7 @@ public class TiledDemoGame : Game
         if (World.Current.Debug) DrawDebugInfo();
         if (player.ActiveMessageBoxes != null)
         {
-            foreach (MessageBox msgBox in player.ActiveMessageBoxes)
-            {
-                msgBox.Draw(spriteBatch);
-            }
+            player.ActiveMessageBoxes.Active.Draw(spriteBatch);
         }
         spriteBatch.End();
         base.Draw(gameTime);
