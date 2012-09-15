@@ -1,15 +1,15 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual C# Express 2010
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MapViewer", "TiledXNA\TiledXNA\MapViewer.csproj", "{ACDD2737-4B37-4250-89BF-26A91A263A5E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Map.Viewer", "TiledXNA\TiledXNA\Map.Viewer.csproj", "{ACDD2737-4B37-4250-89BF-26A91A263A5E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Content", "TiledXNA\TiledXNAContent\Content.contentproj", "{686759BB-D49A-4950-B4E5-55B0FA5FC5F7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Map.Common", "Map\Map.Common.csproj", "{233D04F6-8B0A-4DB0-A09C-160EC06D0757}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameMode.World", "MapDemoGame\MapDemoGame\GameMode.World.csproj", "{63317F1E-DD8E-4065-9B27-FC9D68517952}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MapDemoGame", "MapDemoGame\MapDemoGame\MapDemoGame.csproj", "{63317F1E-DD8E-4065-9B27-FC9D68517952}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Game.Common", "ContentShared\Game.Common.csproj", "{AFFF2D6A-6699-4485-9686-DAAECC117CED}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ContentShared", "ContentShared\ContentShared.csproj", "{AFFF2D6A-6699-4485-9686-DAAECC117CED}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameMode.Battle", "BattleDemo\BattleDemo\GameMode.Battle.csproj", "{C9C740F6-87A1-46B0-BBA1-661ADB213E2F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -37,16 +37,6 @@ Global
 		{686759BB-D49A-4950-B4E5-55B0FA5FC5F7}.Release|Any CPU.ActiveCfg = Release|x86
 		{686759BB-D49A-4950-B4E5-55B0FA5FC5F7}.Release|Mixed Platforms.ActiveCfg = Release|x86
 		{686759BB-D49A-4950-B4E5-55B0FA5FC5F7}.Release|x86.ActiveCfg = Release|x86
-		{233D04F6-8B0A-4DB0-A09C-160EC06D0757}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{233D04F6-8B0A-4DB0-A09C-160EC06D0757}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{233D04F6-8B0A-4DB0-A09C-160EC06D0757}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
-		{233D04F6-8B0A-4DB0-A09C-160EC06D0757}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
-		{233D04F6-8B0A-4DB0-A09C-160EC06D0757}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{233D04F6-8B0A-4DB0-A09C-160EC06D0757}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{233D04F6-8B0A-4DB0-A09C-160EC06D0757}.Release|Any CPU.Build.0 = Release|Any CPU
-		{233D04F6-8B0A-4DB0-A09C-160EC06D0757}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
-		{233D04F6-8B0A-4DB0-A09C-160EC06D0757}.Release|Mixed Platforms.Build.0 = Release|Any CPU
-		{233D04F6-8B0A-4DB0-A09C-160EC06D0757}.Release|x86.ActiveCfg = Release|Any CPU
 		{63317F1E-DD8E-4065-9B27-FC9D68517952}.Debug|Any CPU.ActiveCfg = Debug|x86
 		{63317F1E-DD8E-4065-9B27-FC9D68517952}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
 		{63317F1E-DD8E-4065-9B27-FC9D68517952}.Debug|Mixed Platforms.Build.0 = Debug|x86
@@ -67,6 +57,16 @@ Global
 		{AFFF2D6A-6699-4485-9686-DAAECC117CED}.Release|Mixed Platforms.Build.0 = Release|x86
 		{AFFF2D6A-6699-4485-9686-DAAECC117CED}.Release|x86.ActiveCfg = Release|x86
 		{AFFF2D6A-6699-4485-9686-DAAECC117CED}.Release|x86.Build.0 = Release|x86
+		{C9C740F6-87A1-46B0-BBA1-661ADB213E2F}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{C9C740F6-87A1-46B0-BBA1-661ADB213E2F}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
+		{C9C740F6-87A1-46B0-BBA1-661ADB213E2F}.Debug|Mixed Platforms.Build.0 = Debug|x86
+		{C9C740F6-87A1-46B0-BBA1-661ADB213E2F}.Debug|x86.ActiveCfg = Debug|x86
+		{C9C740F6-87A1-46B0-BBA1-661ADB213E2F}.Debug|x86.Build.0 = Debug|x86
+		{C9C740F6-87A1-46B0-BBA1-661ADB213E2F}.Release|Any CPU.ActiveCfg = Release|x86
+		{C9C740F6-87A1-46B0-BBA1-661ADB213E2F}.Release|Mixed Platforms.ActiveCfg = Release|x86
+		{C9C740F6-87A1-46B0-BBA1-661ADB213E2F}.Release|Mixed Platforms.Build.0 = Release|x86
+		{C9C740F6-87A1-46B0-BBA1-661ADB213E2F}.Release|x86.ActiveCfg = Release|x86
+		{C9C740F6-87A1-46B0-BBA1-661ADB213E2F}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -9,21 +9,12 @@ using Microsoft.Xna.Framework.Media;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 
-public class TiledDemoGame : Game
+public class WorldDemo : BaseGame
 {
-    //these are static to allow for static methods to load resources/etc
-    private static GraphicsDevice graphicsDevice;
-    private static ContentManager contentManager;
-    private static SpriteBatch spriteBatch;
-
     //these are static because it only make sense to have one
+    //TODO: put Player in World once battle engine is in place
     private static Player player;
-
-    private GraphicsDeviceManager graphics;
-    private KeyboardState prevKeyboard;
-    private KeyboardState curKeyboard;
-    private MouseState prevMouse;
-    private MouseState curMouse;
+    private static Overlay overlay;
 
     //render the world and player to a temp surface for scaling
     private Texture2D gameSurf;
@@ -33,17 +24,9 @@ public class TiledDemoGame : Game
 
     public const int MSGBOX_WIDTH = 300;
     public const int MSGBOX_HEIGHT = 80;
-    public static int GameWidth { get { return graphicsDevice.Viewport.Width; } }
-    public static int GameHeight { get { return graphicsDevice.Viewport.Height; } }
-    public static Rectangle GameWindow { get { return graphicsDevice.Viewport.Bounds; } }
-    public static SpriteFont Font { get; protected set; }  //TODO: make some kind of font manager for different fonts, sizes, and settings
 
-    public TiledDemoGame()
+    public WorldDemo()
     {
-        graphics = new GraphicsDeviceManager(this);
-        graphics.PreferredBackBufferWidth = 800;
-        graphics.PreferredBackBufferHeight = 600;
-        graphics.ApplyChanges();
         IsMouseVisible = true;
         Content.RootDirectory = "Content";
         Window.Title = GAME_TITLE;
@@ -51,11 +34,9 @@ public class TiledDemoGame : Game
 
     protected override void LoadContent()
     {
-        contentManager = Content;
-        graphicsDevice = GraphicsDevice;
-        spriteBatch = new SpriteBatch(GraphicsDevice);
+        base.LoadContent();
         gameSurf = new RenderTarget2D(GraphicsDevice, GameWidth, GameHeight);
-        Font = Content.Load<SpriteFont>("font");
+        overlay = new ScreenOverlay(Color.OrangeRed, 0.15f);
 
         //LoadWorld("maps/test/testmap.tmx");
         //LoadWorld("maps/test_scroll/test_scroll.tmx");
@@ -107,6 +88,9 @@ public class TiledDemoGame : Game
 
         if (curKeyboard.IsKeyDown(Buttons.QUIT))
             this.Exit();
+
+        //TODO: move most of this logic into World.Update, and call it only if the game state is in "world mode"
+        //      if the game state is in "battle mode" then the battle engine will handle input instead
 
         //toggle debug mode
         if (!prevKeyboard.IsKeyDown(Buttons.DEBUG) && curKeyboard.IsKeyDown(Buttons.DEBUG))
@@ -184,13 +168,16 @@ public class TiledDemoGame : Game
         //clear the screen
         GraphicsDevice.Clear(Color.DimGray);
 
+        //TODO: don't draw NPCs if the game state is in "battle mode"
+
         //draw the scaled game surface, then any additional overlays at normal scale
         spriteBatch.Begin();
         spriteBatch.Draw(gameSurf, Vector2.Zero, null, Color.White, 0.0f, Vector2.Zero, gameScale, SpriteEffects.None, 0);
+        overlay.Draw(spriteBatch);
         if (World.Current.Debug) DrawDebugInfo();
         if (player.ActiveMessageBoxes != null)
         {
-            player.ActiveMessageBoxes.Active.Draw(spriteBatch);
+            player.ActiveMessageBoxes.Draw(spriteBatch);
         }
         spriteBatch.End();
         base.Draw(gameTime);

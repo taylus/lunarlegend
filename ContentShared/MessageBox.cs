@@ -22,31 +22,19 @@ public class MessageBox
     public Color BackgroundColor { get; set; }
     public Color FontColor { get; set; }
     public SpriteFont Font { get; set; }
-    public Texture2D Portrait { get; set; }
-    private int PortraitWidth { get { return Portrait == null ? 0 : Portrait.Width + (2 * PORTRAIT_PADDING); } }
-    private int PortraitHeight { get { return Portrait == null ? 0 : Portrait.Height + (2 * PORTRAIT_PADDING); } }
-    //TODO: gradient backgrounds
-    //TODO: timed text rendering/fading
+    //TODO: gradient backgrounds?
+    //TODO: timed text rendering/fading?
 
     private List<string> lines = new List<string>();
-    private const int PORTRAIT_PADDING = 4;
-    private const int TEXT_LEFT_PADDING = 10;
+    private const int TEXT_LEFT_PADDING = 4;
 
-    public MessageBox(int x, int y, int w, int h, SpriteFont font, Texture2D portrait, ref string text)
+    public MessageBox(int x, int y, int w, int h, SpriteFont font, ref string text)
     {
         X = x;
         Y = y;
         Width = w;
         Height = h;
         Font = font;
-        Portrait = portrait;
-
-        //resize to fit the portrait if necessary
-        if (Portrait != null)
-        {
-            Width = Math.Max(Width, (Portrait.Width) + (PORTRAIT_PADDING * 2));
-            Height = Math.Max(Height, Portrait.Height + (PORTRAIT_PADDING * 2));
-        }
 
         Padding = 4;
         BorderWidth = 2;
@@ -60,15 +48,15 @@ public class MessageBox
     }
 
     public MessageBox(MessageBox template, ref string text) : 
-        this(template.X, template.Y, template.Width, template.Height, template.Font, template.Portrait, ref text)
+        this(template.X, template.Y, template.Width, template.Height, template.Font, ref text)
     {
 
     }
 
-    public static MessageBox CreateTemplate(int x, int y, int w, int h, SpriteFont font, Texture2D portrait)
+    public static MessageBox CreateTemplate(int x, int y, int w, int h, SpriteFont font)
     {
         string s = null;
-        return new MessageBox(x, y, w, h, font, portrait, ref s);
+        return new MessageBox(x, y, w, h, font, ref s);
     }
 
     //wraps the given text horizontally within a single MessageBox
@@ -90,7 +78,7 @@ public class MessageBox
                 lines.Add(sb.ToString());
                 return text.Substring(processedChars);
             }
-            else if (token == "\n" || Font.MeasureString(sb.ToString() + token).X > Width - ((Padding + BorderWidth) * 2) - PortraitWidth - TEXT_LEFT_PADDING)
+            else if (token == "\n" || Font.MeasureString(sb.ToString() + token).X > Width - ((Padding + BorderWidth) * 2) - TEXT_LEFT_PADDING)
             {
                 lines.Add(sb.ToString());
                 sb.Clear();
@@ -118,20 +106,10 @@ public class MessageBox
         Util.DrawLine(sb, BorderWidth, new Vector2(X + Width, Y + Height), new Vector2(X, Y + Height), BorderColor);
         Util.DrawLine(sb, BorderWidth, new Vector2(X, Y + Height), new Vector2(X, Y), BorderColor);
 
-        if (Portrait != null)
-        {
-            sb.Draw(Portrait, new Vector2(X + PORTRAIT_PADDING, GetVertCenteredPortraitTop() + PORTRAIT_PADDING), Color.White);
-        }
-
         for (int i = 0; i < lines.Count; i++)
         {
-            sb.DrawString(Font, lines[i], new Vector2(X + PortraitWidth + Padding + TEXT_LEFT_PADDING, Y + Padding + (Font.LineSpacing * i)), Color.White);
+            sb.DrawString(Font, lines[i], new Vector2(X + Padding + TEXT_LEFT_PADDING, Y + Padding + (Font.LineSpacing * i)), Color.White);
         }
-    }
-
-    private int GetVertCenteredPortraitTop()
-    {
-        return (Y + (Height / 2)) - (PortraitHeight / 2);
     }
 
     public override string ToString()
@@ -150,15 +128,29 @@ public class MessageBoxSeries : IEnumerable<MessageBox>
     public MessageBox this[int i] { get { return MessageBoxes[i]; } }
     public MessageBox Active { get { return this[curMsgBoxIndex]; } }
 
-    public MessageBoxSeries(int x, int y, int w, int h, SpriteFont font, Texture2D portrait, string text = null)
+    public MessageBoxSeries(int x, int y, int w, int h, SpriteFont font, string text = null)
     {
         //store all the settings in the template so we don't need to keep copies
-        TemplateMessageBox = MessageBox.CreateTemplate(x, y, w, h, font, portrait);
+        TemplateMessageBox = MessageBox.CreateTemplate(x, y, w, h, font);
 
         if (text == null)
             MessageBoxes = new List<MessageBox>();
         else
             MessageBoxes = WrapText(text);
+    }
+
+    //center the box horizontally within the bounds rect
+    public MessageBoxSeries(Rectangle bounds, int y, int w, int h, SpriteFont font, string text = null)
+        : this(bounds.Center.X - w/2, y, w, h, font, text)
+    {
+        
+    }
+
+    //center the box horizontally and vertically within the bounds rect
+    public MessageBoxSeries(Rectangle bounds, int w, int h, SpriteFont font, string text = null)
+        : this(bounds.Center.X - (w / 2), bounds.Center.Y - (h / 2), w, h, font, text)
+    {
+
     }
 
     public List<MessageBox> WrapText(string text)
@@ -171,6 +163,12 @@ public class MessageBoxSeries : IEnumerable<MessageBox>
         }
 
         return messageBoxes;
+    }
+
+    public void Draw(SpriteBatch sb)
+    {
+        if (Active != null)
+            Active.Draw(sb);
     }
 
     public void Reset()

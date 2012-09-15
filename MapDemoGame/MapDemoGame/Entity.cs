@@ -67,7 +67,7 @@ public abstract class Entity
         string imgFile = Object.Properties.GetValue(propertyName);
         if (string.IsNullOrWhiteSpace(imgFile)) return null;
         imgFile = Path.Combine(World.Current.Map.MapFileDir, imgFile);
-        return TiledDemoGame.LoadTexture(imgFile, true);
+        return WorldDemo.LoadTexture(imgFile, true);
     }
 
     protected SoundEffect LoadSoundEffectFromProperty(string propertyName)
@@ -75,7 +75,7 @@ public abstract class Entity
         string soundFile = Object.Properties.GetValue(propertyName);
         if (string.IsNullOrWhiteSpace(soundFile)) return null;
         soundFile = Path.Combine(World.Current.Map.MapFileDir, soundFile);
-        return TiledDemoGame.LoadSoundEffect(soundFile, true);
+        return WorldDemo.LoadSoundEffect(soundFile, true);
     }
 }
 
@@ -128,7 +128,7 @@ public abstract class WorldEntity : Entity, IWorldEntity
     public float ScreenY { get { return ScreenPosition.Y; } }
     public Vector2 ScreenPosition { get { return World.Current.WorldToScreenCoordinates(WorldPosition); } }
     public Rectangle ScreenRect { get { return new Rectangle((int)Math.Round(ScreenX), (int)Math.Round(ScreenY), Width, Height); } }
-    public bool IsOnScreen { get { return TiledDemoGame.GameWindow.Contains((int)ScreenX, (int)ScreenY); } }
+    public bool IsOnScreen { get { return WorldDemo.GameWindow.Contains((int)ScreenX, (int)ScreenY); } }
 
     public WorldEntity(Object obj) : base(obj) 
     {
@@ -228,7 +228,7 @@ public class ChangeLevel : WorldEntity
 
     public override void Touch(Player p)
     {
-        TiledDemoGame.LoadWorld(Path.Combine("maps", LevelName));
+        WorldDemo.LoadWorld(Path.Combine("maps", LevelName));
     }
 }
 
@@ -257,16 +257,15 @@ public class NPC : WorldEntity
         Width = Image.Width;
         Height = Image.Height;
 
-        Texture2D msgBoxPortrait = LoadTextureFromProperty("portrait");
         string text = Object.Properties.GetValue("text");
         if (!string.IsNullOrWhiteSpace(text))
         {
             text = Regex.Unescape(text);
 
-            //all of these defaults and use of TiledDemoGame static fields smell...
-            int x = (TiledDemoGame.GameWidth / 2) - (TiledDemoGame.MSGBOX_WIDTH / 2);
+            //all of these defaults and use of static fields smell...
+            int x = (WorldDemo.GameWidth / 2) - (WorldDemo.MSGBOX_WIDTH / 2);
             int y = 100;
-            MessageBoxes = new MessageBoxSeries(x, y, TiledDemoGame.MSGBOX_WIDTH, TiledDemoGame.MSGBOX_HEIGHT, TiledDemoGame.Font, msgBoxPortrait, text);
+            MessageBoxes = new MessageBoxSeries(x, y, WorldDemo.MSGBOX_WIDTH, WorldDemo.MSGBOX_HEIGHT, WorldDemo.Font, text);
         }
     }
 

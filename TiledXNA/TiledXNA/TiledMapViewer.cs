@@ -107,7 +107,7 @@ public class TiledMapViewer : Game
         GraphicsDevice.SetRenderTarget(mapSurf);
         GraphicsDevice.Clear(Color.Transparent);
         spriteBatch.Begin();
-        map.Draw(spriteBatch, true);
+        map.Draw(spriteBatch);
         spriteBatch.End();
 
         //reset to screen, and clear it
