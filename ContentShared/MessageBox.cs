@@ -7,9 +7,17 @@ using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-//TODO: nest this class inside MessageBoxSeries?
+public struct MessageBoxChoice
+{
+    string Text;
+    MessageBox Next;
+}
+
 public class MessageBox
 {
+    //TODO: gradient backgrounds?
+    //TODO: timed text rendering/fading?
+
     public int X { get; set; }
     public int Y { get; set; }
     public int Width { get; set; }
@@ -22,8 +30,7 @@ public class MessageBox
     public Color BackgroundColor { get; set; }
     public Color FontColor { get; set; }
     public SpriteFont Font { get; set; }
-    //TODO: gradient backgrounds?
-    //TODO: timed text rendering/fading?
+    public List<MessageBoxChoice> Choices { get; set; }
 
     private List<string> lines = new List<string>();
     private const int TEXT_LEFT_PADDING = 4;
