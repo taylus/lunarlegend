@@ -149,7 +149,7 @@ public class Layer
     //returns true if this layer has a tile at the given tile coords
     public bool ContainsTileAt(Point tileCoords)
     {
-        return Tiles[tileCoords.X, tileCoords.Y].GID != 0;
+        return tileCoords.X < Width && tileCoords.Y < Height && Tiles[tileCoords.X, tileCoords.Y].GID != 0;
     }
 }
 
