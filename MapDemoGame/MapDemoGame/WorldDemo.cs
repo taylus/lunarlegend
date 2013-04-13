@@ -20,7 +20,7 @@ public class WorldDemo : BaseGame
     private Texture2D gameSurf;
     private static float gameScale;
     private const float DEFAULT_GAME_SCALE = 1.0f;
-    private const string GAME_TITLE = "Demo Game";
+    private const string GAME_TITLE = "Vidya Gaem";
 
     public const int MSGBOX_WIDTH = 300;
     public const int MSGBOX_HEIGHT = 80;
@@ -41,8 +41,9 @@ public class WorldDemo : BaseGame
         //LoadWorld("maps/test/testmap.tmx");
         //LoadWorld("maps/test_scroll/test_scroll.tmx");
         //LoadWorld("maps/layer_test/layers.tmx");
-        LoadWorld("maps/pond/pond.tmx");
+        //LoadWorld("maps/pond/pond.tmx");
         //LoadWorld("maps/doors/doors.tmx");
+        LoadWorld("maps/castle/castle.tmx");
     }
 
     public static void LoadWorld(string tmxMapFile)
@@ -173,7 +174,7 @@ public class WorldDemo : BaseGame
         //draw the scaled game surface, then any additional overlays at normal scale
         spriteBatch.Begin();
         spriteBatch.Draw(gameSurf, Vector2.Zero, null, Color.White, 0.0f, Vector2.Zero, gameScale, SpriteEffects.None, 0);
-        overlay.Draw(spriteBatch);
+        //overlay.Draw(spriteBatch);
         if (World.Current.Debug) DrawDebugInfo();
         if (player.ActiveMessageBoxes != null)
         {

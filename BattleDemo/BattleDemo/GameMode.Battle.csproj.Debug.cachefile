@@ -1,4 +1,9 @@
 Content\font.xnb
+Content\maps\castle\kefka_back.xnb
+Content\maps\castle\king.png
+Content\maps\castle\palace2.png
+Content\maps\castle\TEMP-castle.png
+Content\maps\castle\throne.png
 Content\maps\doors\button.wav
 Content\maps\doors\button_down.png
 Content\maps\doors\button_up.png
@@ -30,4 +35,6 @@ Content\maps\test\lttp_castlebasement1.png
 Content\maps\test_scroll\test_scroll.tmx
 Content\maps\layer_test\layers.tmx
 Content\maps\pond\pond.tmx
+Content\maps\castle\castle.tmx
 Content\maps\doors\doors.tmx
+Content\maps\castle\kefka_back.png

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.0" orientation="orthogonal" width="25" height="20" tilewidth="32" tileheight="32">
+ <properties>
+  <property name="player_layer" value="doodads_below_player"/>
+ </properties>
+ <tileset firstgid="1" name="palace2" tilewidth="32" tileheight="32">
+  <image source="palace2.png" trans="ff00ff" width="416" height="640"/>
+ </tileset>
+ <tileset firstgid="261" name="TEMP-castle" tilewidth="32" tileheight="32">
+  <image source="TEMP-castle.png" trans="ff00ff" width="256" height="192"/>
+ </tileset>
+ <tileset firstgid="309" name="throne" tilewidth="32" tileheight="32">
+  <image source="throne.png" trans="ff00ff" width="32" height="64"/>
+ </tileset>
+ <layer name="floor" width="25" height="20">
+  <data encoding="base64" compression="gzip">
+   H4sIAAAAAAAAC+2VSw6CMBCGpxvZGB8LEliY6E6W3oCjeJQ5kUS3KvEoHsVfaO1I+gANiQsXX4ZJfuYrIW1TRXQmopqayin6HnAIPY/1vCf7kR33IY4DMhU1NZj7xjEw53TUep0+agtHchxy9IT78IuOC7jqZ1S+/B2j/Y8T0a2KcATSg76sImBuaRwT7JvEw1Ig9yD6F4mHibLfMcP7cweLng7keO5gJhy+MyFDJkc1SEeuLFn4nGwcK2RcrJHZoBqkY6Ms6zbPLoxjioyLLTIFqkE6CmXZtnl2EXPsOkgH+jc+dXSRDt9MnyN2r3XutyH35ZP7A8tpz5nQBwAA
+  </data>
+ </layer>
+ <layer name="doodads_below_player" width="25" height="20">
+  <data encoding="base64" compression="gzip">
+   H4sIAAAAAAAAC2NgGAW0AqaMtLfDjA52jIJRMApGwSgY/AAAX7H9hdAHAAA=
+  </data>
+ </layer>
+ <layer name="above player" width="25" height="20">
+  <data encoding="base64" compression="gzip">
+   H4sIAAAAAAAAC2NgGAWjYBSMgqEPWBmJVtdAU4eMglEwQAAAIW0at9AHAAA=
+  </data>
+ </layer>
+ <layer name="walls" width="25" height="20" visible="0">
+  <data encoding="base64" compression="gzip">
+   H4sIAAAAAAAAC/vBgAp+UAFjM2/UDvLsoDYYtWPUjlE7CNtBbJ6lxBx62IFPL7F2ELJ/IO2gBhgs6YpQvUAMBgCyt7fO0AcAAA==
+  </data>
+ </layer>
+ <objectgroup name="objects" width="25" height="20">
+  <object name="king reeves" type="info_npc" x="384" y="256" width="32" height="32">
+   <properties>
+    <property name="img" value="king.png"/>
+   </properties>
+  </object>
+  <object name="varo" type="info_npc" x="384" y="544" width="32" height="32">
+   <properties>
+    <property name="img" value="kefka_back.png"/>
+    <property name="text" value="REEVES: Ah, Varo, you've come.\nI have news of dire import.\fREEVES: Spencer Jones likes men.\fVARO: lol"/>
+   </properties>
+  </object>
+ </objectgroup>
+</map>
