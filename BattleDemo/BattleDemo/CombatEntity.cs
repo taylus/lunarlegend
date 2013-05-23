@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-//represents anything that can participate in a battle and its statistics
+//represents anything that can participate in a battle (player, monster)
 public abstract class CombatEntity
 {
     public Measure Health;
-    public Measure Resource;
+    public Measure Resource;    //mana, energy, etc
     public bool Alive { get { return Health.Current > 0; } }
     public string Name { get; set; }
     public int Speed { get; set; }

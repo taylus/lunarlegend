@@ -9,8 +9,14 @@ using Microsoft.Xna.Framework.Graphics;
 
 public struct MessageBoxChoice
 {
-    string Text;
-    MessageBox Next;
+    public string Text;
+    public MessageBox Next;
+
+    public MessageBoxChoice(string text, MessageBox next)
+    {
+        Text = text;
+        Next = next;
+    }
 }
 
 public class MessageBox
@@ -43,7 +49,7 @@ public class MessageBox
         Height = h;
         Font = font;
 
-        Padding = 4;
+        Padding = 8;
         BorderWidth = 2;
         Opacity = 0.65f;
         BackgroundColor = Color.Lerp(Color.Transparent, Color.DarkBlue, MathHelper.Clamp(Opacity, 0, 1));
@@ -51,7 +57,14 @@ public class MessageBox
         BorderColor = Color.LightSteelBlue;
         FontColor = Color.White;
 
+        Choices = new List<MessageBoxChoice>();
         if (text != null) text = WrapText(text);
+    }
+
+    public MessageBox(int x, int y, int w, int h, SpriteFont font, string text = null) :
+        this(x, y, w, h, font, ref text)
+    {
+
     }
 
     public MessageBox(MessageBox template, ref string text) : 
@@ -60,10 +73,10 @@ public class MessageBox
 
     }
 
-    public static MessageBox CreateTemplate(int x, int y, int w, int h, SpriteFont font)
+    public MessageBox(MessageBox template, string text = null) :
+        this(template, ref text)
     {
-        string s = null;
-        return new MessageBox(x, y, w, h, font, ref s);
+
     }
 
     //wraps the given text horizontally within a single MessageBox
@@ -133,17 +146,35 @@ public class MessageBoxSeries : IEnumerable<MessageBox>
     public List<MessageBox> MessageBoxes { get; set; }
     public int Count { get { return MessageBoxes != null? MessageBoxes.Count : 0; } }
     public MessageBox this[int i] { get { return MessageBoxes[i]; } }
-    public MessageBox Active { get { return this[curMsgBoxIndex]; } }
+    public MessageBox Active 
+    { 
+        get 
+        {
+            if (curMsgBoxIndex >= MessageBoxes.Count) return null;
+            return this[curMsgBoxIndex]; 
+        } 
+    }
 
-    public MessageBoxSeries(int x, int y, int w, int h, SpriteFont font, string text = null)
+    public MessageBoxSeries(MessageBox template, string text = null)
     {
-        //store all the settings in the template so we don't need to keep copies
-        TemplateMessageBox = MessageBox.CreateTemplate(x, y, w, h, font);
+        TemplateMessageBox = template;
 
         if (text == null)
-            MessageBoxes = new List<MessageBox>();
+            MessageBoxes = new List<MessageBox>(new[] { TemplateMessageBox });
         else
             MessageBoxes = WrapText(text);
+    }
+
+    public MessageBoxSeries(int x, int y, int w, int h, SpriteFont font, string text = null) :
+        this(new MessageBox(x, y, w, h, font), text)
+    {
+
+    }
+
+    public MessageBoxSeries(Rectangle bounds, SpriteFont font, string text = null)
+        : this(bounds.X, bounds.Y, bounds.Width, bounds.Height, font, text)
+    {
+
     }
 
     //center the box horizontally within the bounds rect
@@ -160,6 +191,9 @@ public class MessageBoxSeries : IEnumerable<MessageBox>
 
     }
 
+    //factory-like method to wrap a block of text into possibly several MessageBoxes, all using this one's style template
+    //useful for adding a dynamic number of message boxes from a block of text at runtime, e.g.
+    //mbs.MessageBoxes.AddRange(mbs.WrapText("Long enough string to span more than one MessageBox..."))
     public List<MessageBox> WrapText(string text)
     {
         List<MessageBox> messageBoxes = new List<MessageBox>();
@@ -172,22 +206,26 @@ public class MessageBoxSeries : IEnumerable<MessageBox>
         return messageBoxes;
     }
 
+    //draw the currently active MessageBox
     public void Draw(SpriteBatch sb)
     {
         if (Active != null)
             Active.Draw(sb);
     }
 
+    //reset the currently active MessageBox to the first one in this series
     public void Reset()
     {
         curMsgBoxIndex = 0;
     }
 
+    //advance to the next MessageBox (if one exists)
     public void Advance()
     {
         if(HasNextMessageBox()) curMsgBoxIndex++;
     }
 
+    //is there a next MessageBox in this series?
     public bool HasNextMessageBox()
     {
         return curMsgBoxIndex < (Count - 1);
@@ -203,6 +241,7 @@ public class MessageBoxSeries : IEnumerable<MessageBox>
         return MessageBoxes.GetEnumerator();
     }
 
+    //allows this class to be foreach'd over
     IEnumerator IEnumerable.GetEnumerator()
     {
         foreach (MessageBox msgBox in MessageBoxes)

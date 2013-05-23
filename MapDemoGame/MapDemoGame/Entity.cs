@@ -4,7 +4,6 @@ using System.Linq;
 using System.Reflection;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
-using Property = System.Collections.Generic.KeyValuePair<string, string>;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Media;
@@ -237,6 +236,12 @@ public class NPC : WorldEntity
     new public static string GetEntityTypeName() { return "info_npc"; }
     public Texture2D Image { get; set; }
     public MessageBoxSeries MessageBoxes { get; set; }
+
+    //FIXME? this class being aware about MessageBoxes means it needs to know how to position them,
+    //which is a graphics thing that isn't exposed here... so the Game class is asked for a template
+    //should this class instead only store the text for its MessageBoxes?
+    //but then what about decisions (MessageBoxChoice)? still need to decide how to implement/store these in maps
+
     //TODO: spritesheets/animations
     //TODO: behavior enum (stationary, random movement, predefined path)
     //TODO: opacity
@@ -261,11 +266,7 @@ public class NPC : WorldEntity
         if (!string.IsNullOrWhiteSpace(text))
         {
             text = Regex.Unescape(text);
-
-            //all of these defaults and use of static fields smell...
-            int x = (WorldDemo.GameWidth / 2) - (WorldDemo.MSGBOX_WIDTH / 2);
-            int y = 100;
-            MessageBoxes = new MessageBoxSeries(x, y, WorldDemo.MSGBOX_WIDTH, WorldDemo.MSGBOX_HEIGHT, WorldDemo.Font, text);
+            MessageBoxes = new MessageBoxSeries(WorldDemo.CreateMessageBoxTemplate(), text);  //coupling smell
         }
     }
 

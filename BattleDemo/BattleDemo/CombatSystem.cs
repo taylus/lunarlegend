@@ -5,8 +5,8 @@ using System.Text;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
 
-//represents a turn-based battle
-//handles adding/removing CombatEntities from the fight
+//represents a turn-based battle via a state machine
+//handles adding/removing CombatEntities from the fight (e.g. a monster summons allies)
 //detects victory or defeat conditions for transition to appropriate game state
 public abstract class CombatSystem
 {
@@ -15,7 +15,7 @@ public abstract class CombatSystem
 
     public void Fight()
     {
-        //while both sides are still standing:
+        //while both sides still have active participants:
         //all players select actions via UI
         //all enemies select actions via AI
         //sort actions by source's speed and execute in that order

@@ -4,9 +4,6 @@ using System.Linq;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
-using Microsoft.Xna.Framework.Audio;
-using Microsoft.Xna.Framework.Media;
-using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 
 public class WorldDemo : BaseGame
@@ -21,9 +18,6 @@ public class WorldDemo : BaseGame
     private static float gameScale;
     private const float DEFAULT_GAME_SCALE = 1.0f;
     private const string GAME_TITLE = "Vidya Gaem";
-
-    public const int MSGBOX_WIDTH = 300;
-    public const int MSGBOX_HEIGHT = 80;
 
     public WorldDemo()
     {
@@ -225,29 +219,13 @@ public class WorldDemo : BaseGame
         }
     }
 
-    public static Texture2D LoadTexture(string imgFile, bool external)
+    //create the MessageBox whose style, position, etc will be used by all MessageBoxes loaded for this game
+    public static MessageBox CreateMessageBoxTemplate()
     {
-        if (!external) return contentManager.Load<Texture2D>(imgFile);
-
-        using (FileStream fstream = new FileStream(imgFile, FileMode.Open))
-        {
-            return Texture2D.FromStream(graphicsDevice, fstream);
-        }
-    }
-
-    public static SoundEffect LoadSoundEffect(string sfxFile, bool external)
-    {
-        if (!external) return contentManager.Load<SoundEffect>(sfxFile);
-
-        using (FileStream fstream = new FileStream(sfxFile, FileMode.Open))
-        {
-            return SoundEffect.FromStream(fstream);
-        }
-    }
-
-    public static Song LoadSong(string songFile, bool external, string songName)
-    {
-        if (!external) return contentManager.Load<Song>(songFile);
-        return Song.FromUri(songName, new Uri(songFile));
+        int w = 300;
+        int h = 80;
+        int x = (GameWidth / 2) - (w / 2);
+        int y = 100;
+        return new MessageBox(x, y, w, h, Font);
     }
 }

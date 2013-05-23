@@ -1,5 +1,9 @@
-﻿using Microsoft.Xna.Framework;
+﻿using System;
+using System.IO;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
+using Microsoft.Xna.Framework.Audio;
+using Microsoft.Xna.Framework.Media;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -43,5 +47,31 @@ public class BaseGame : Game
         graphicsDevice = GraphicsDevice;
         spriteBatch = new SpriteBatch(GraphicsDevice);
         Font = Content.Load<SpriteFont>("font");
+    }
+
+    public static Texture2D LoadTexture(string imgFile, bool external)
+    {
+        if (!external) return contentManager.Load<Texture2D>(imgFile);
+
+        using (FileStream fstream = new FileStream(imgFile, FileMode.Open))
+        {
+            return Texture2D.FromStream(graphicsDevice, fstream);
+        }
+    }
+
+    public static SoundEffect LoadSoundEffect(string sfxFile, bool external)
+    {
+        if (!external) return contentManager.Load<SoundEffect>(sfxFile);
+
+        using (FileStream fstream = new FileStream(sfxFile, FileMode.Open))
+        {
+            return SoundEffect.FromStream(fstream);
+        }
+    }
+
+    public static Song LoadSong(string songFile, bool external, string songName)
+    {
+        if (!external) return contentManager.Load<Song>(songFile);
+        return Song.FromUri(songName, new Uri(songFile));
     }
 }
