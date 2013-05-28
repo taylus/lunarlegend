@@ -7,13 +7,20 @@ using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-public struct MessageBoxChoice
+public class MessageBoxChoice
 {
     public string Text;
     public MessageBox Next;
+    public int X;
+    public int Y;
 
-    public MessageBoxChoice(string text, MessageBox next)
+    public MessageBoxChoice(string text, MessageBox next, int x, int y)
     {
+        if (string.IsNullOrWhiteSpace(text)) throw new ArgumentException("MessageBoxChoice text cannot be empty.");
+        if (next == null) throw new ArgumentException("MessageBoxChoice target cannot be null.");
+
+        X = x;
+        Y = y;
         Text = text;
         Next = next;
     }
@@ -39,6 +46,7 @@ public class MessageBox
     public List<MessageBoxChoice> Choices { get; set; }
 
     private List<string> lines = new List<string>();
+    private int selectedChoiceIndex = 0;
     private const int TEXT_LEFT_PADDING = 4;
 
     public MessageBox(int x, int y, int w, int h, SpriteFont font, ref string text)
@@ -105,12 +113,13 @@ public class MessageBox
 
                 if (((lines.Count + 1) * Font.LineSpacing) > Height - ((Padding + BorderWidth) * 2))
                 {
-                    //another line won't fit, return what remains
+                    //another line won't fit... return what remains so it can be placed into another MessageBox
                     return text.Substring(processedChars);
                 }
             }
 
-            if(token != "\n") sb.Append(token);
+            //don't append leading whitespace onto the next line
+            if(token != "\n" && !(sb.Length == 0 && token == " ")) sb.Append(token);
             processedChars += token.Length;
         }
         
@@ -130,6 +139,35 @@ public class MessageBox
         {
             sb.DrawString(Font, lines[i], new Vector2(X + Padding + TEXT_LEFT_PADDING, Y + Padding + (Font.LineSpacing * i)), Color.White);
         }
+
+        foreach (MessageBoxChoice choice in Choices)
+        {
+            if(choice == SelectedChoice)
+                sb.DrawString(Font, choice.Text, new Vector2(X + Padding + TEXT_LEFT_PADDING + choice.X, Y + Padding + choice.Y), Color.Yellow);
+            else
+                sb.DrawString(Font, choice.Text, new Vector2(X + Padding + TEXT_LEFT_PADDING + choice.X, Y + Padding + choice.Y), Color.White);
+        }
+    }
+
+    public MessageBoxChoice SelectedChoice
+    {
+        get
+        {
+            if (selectedChoiceIndex >= Choices.Count) return null;
+            return Choices[selectedChoiceIndex];
+        }
+    }
+
+    public void SelectNextChoice()
+    {
+        selectedChoiceIndex++;
+        if (selectedChoiceIndex >= Choices.Count) selectedChoiceIndex = Choices.Count - 1;
+    }
+
+    public void SelectPreviousChoice()
+    {
+        selectedChoiceIndex--;
+        if (selectedChoiceIndex <= 0) selectedChoiceIndex = 0;
     }
 
     public override string ToString()
@@ -138,7 +176,7 @@ public class MessageBox
     }
 }
 
-public class MessageBoxSeries : IEnumerable<MessageBox>
+public class MessageBoxSeries
 {
     private int curMsgBoxIndex = 0;
 
@@ -152,17 +190,23 @@ public class MessageBoxSeries : IEnumerable<MessageBox>
         {
             if (curMsgBoxIndex >= MessageBoxes.Count) return null;
             return this[curMsgBoxIndex]; 
-        } 
+        }
+        set
+        {
+            curMsgBoxIndex = MessageBoxes.IndexOf(value);
+        }
     }
 
     public MessageBoxSeries(MessageBox template, string text = null)
     {
         TemplateMessageBox = template;
 
-        if (text == null)
-            MessageBoxes = new List<MessageBox>(new[] { TemplateMessageBox });
-        else
-            MessageBoxes = WrapText(text);
+        //if (string.IsNullOrWhiteSpace(text))
+        //    MessageBoxes = new List<MessageBox>(new[] { TemplateMessageBox });
+        //else
+        //    MessageBoxes = WrapText(text);
+
+        MessageBoxes = WrapTextIntoMessageBoxes(text);
     }
 
     public MessageBoxSeries(int x, int y, int w, int h, SpriteFont font, string text = null) :
@@ -194,11 +238,11 @@ public class MessageBoxSeries : IEnumerable<MessageBox>
     //factory-like method to wrap a block of text into possibly several MessageBoxes, all using this one's style template
     //useful for adding a dynamic number of message boxes from a block of text at runtime, e.g.
     //mbs.MessageBoxes.AddRange(mbs.WrapText("Long enough string to span more than one MessageBox..."))
-    public List<MessageBox> WrapText(string text)
+    public List<MessageBox> WrapTextIntoMessageBoxes(string text)
     {
         List<MessageBox> messageBoxes = new List<MessageBox>();
 
-        while (text.Length > 0)
+        while (text != null && text.Length > 0)
         {
             messageBoxes.Add(new MessageBox(TemplateMessageBox, ref text));
         }
@@ -219,10 +263,14 @@ public class MessageBoxSeries : IEnumerable<MessageBox>
         curMsgBoxIndex = 0;
     }
 
-    //advance to the next MessageBox (if one exists)
+    //if the current MessageBox has choices, jump to the target of the selected one
+    //otherwise, advance to the next MessageBox (if one exists)
     public void Advance()
     {
-        if(HasNextMessageBox()) curMsgBoxIndex++;
+        if (Active.Choices.Count > 0) 
+            Active = Active.SelectedChoice.Next;
+        else if(HasNextMessageBox()) 
+            curMsgBoxIndex++;
     }
 
     //is there a next MessageBox in this series?
@@ -236,17 +284,13 @@ public class MessageBoxSeries : IEnumerable<MessageBox>
         return "Count = " + MessageBoxes.Count;
     }
 
-    public IEnumerator<MessageBox> GetEnumerator()
+    //wrap the given text into possibly multiple MessageBoxes, add them to this series, and return the LAST one added
+    //this distinction only matters if the text is long enough to be wrapped
+    //the reference returned is usually for adding choices, which would be at the end, so that's why the last MessageBox
+    public MessageBox Add(string messageBoxText)
     {
-        return MessageBoxes.GetEnumerator();
-    }
-
-    //allows this class to be foreach'd over
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        foreach (MessageBox msgBox in MessageBoxes)
-        {
-            yield return msgBox;
-        }
+        List<MessageBox> mbs = WrapTextIntoMessageBoxes(messageBoxText);
+        MessageBoxes.AddRange(mbs);
+        return mbs.LastOrDefault();
     }
 }

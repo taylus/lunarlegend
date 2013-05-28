@@ -49,6 +49,11 @@ public class BaseGame : Game
         Font = Content.Load<SpriteFont>("font");
     }
 
+    public bool KeyPressedThisFrame(Keys key)
+    {
+        return !prevKeyboard.IsKeyDown(key) && curKeyboard.IsKeyDown(key);
+    }
+
     public static Texture2D LoadTexture(string imgFile, bool external)
     {
         if (!external) return contentManager.Load<Texture2D>(imgFile);
