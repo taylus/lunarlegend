@@ -223,7 +223,7 @@ public class WorldDemo : BaseGame
     public static MessageBox CreateMessageBoxTemplate()
     {
         int w = 300;
-        int h = 80;
+        int h = 4;
         int x = (GameWidth / 2) - (w / 2);
         int y = 100;
         return new MessageBox(x, y, w, h, Font);

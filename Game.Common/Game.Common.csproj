@@ -97,6 +97,7 @@
     <Compile Include="contract\map.cs">
       <DependentUpon>map.xsd</DependentUpon>
     </Compile>
+    <Compile Include="MessageBoxSeries.cs" />
     <Compile Include="Grid.cs" />
     <Compile Include="Layer.cs" />
     <Compile Include="Map.cs" />

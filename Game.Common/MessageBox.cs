@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using System.Text;
-using System.Collections;
 using System.Text.RegularExpressions;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
@@ -11,16 +10,12 @@ public class MessageBoxChoice
 {
     public string Text;
     public MessageBox Next;
-    public int X;
-    public int Y;
 
-    public MessageBoxChoice(string text, MessageBox next, int x, int y)
+    public MessageBoxChoice(string text, MessageBox next)
     {
         if (string.IsNullOrWhiteSpace(text)) throw new ArgumentException("MessageBoxChoice text cannot be empty.");
         if (next == null) throw new ArgumentException("MessageBoxChoice target cannot be null.");
 
-        X = x;
-        Y = y;
         Text = text;
         Next = next;
     }
@@ -34,7 +29,8 @@ public class MessageBox
     public int X { get; set; }
     public int Y { get; set; }
     public int Width { get; set; }
-    public int Height { get; set; }
+    public int HeightInLines { get; set; }
+    public int Height { get { return HeightInLines * Font.LineSpacing + (Padding * 2); } }
     public Rectangle Rectangle { get { return new Rectangle(X, Y, Width, Height); } }
     public int Padding { get; set; }
     public int BorderWidth { get; set; }
@@ -43,32 +39,45 @@ public class MessageBox
     public Color BackgroundColor { get; set; }
     public Color FontColor { get; set; }
     public SpriteFont Font { get; set; }
-    public List<MessageBoxChoice> Choices { get; set; }
+    public IList<MessageBoxChoice> Choices { get { return choices.AsReadOnly(); } }
+    public bool HasMoreLinesToDisplay 
+    { 
+        get 
+        {
+            return (firstDisplayedLineIndex + HeightInLines) < (lines.Count + Choices.Count); 
+        } 
+    }
 
+    private int firstDisplayedLineIndex = 0;
     private List<string> lines = new List<string>();
+    private List<MessageBoxChoice> choices { get; set; }
     private int selectedChoiceIndex = 0;
     private const int TEXT_LEFT_PADDING = 4;
+    private const int DEFAULT_PADDING = 8;
+    private const int DEFAULT_BORDER_WIDTH = 2;
+    private static readonly Color DEFAULT_BORDER_COLOR = Color.LightSteelBlue;
+    private static readonly Color DEFAULT_FONT_COLOR = Color.White;
+    private const float DEFAULT_OPACITY = 0.65f;
 
     public MessageBox(int x, int y, int w, int h, SpriteFont font, ref string text)
     {
+        Padding = DEFAULT_PADDING;
+        BorderWidth = DEFAULT_BORDER_WIDTH;
+        BorderColor = DEFAULT_BORDER_COLOR;
+        FontColor = DEFAULT_FONT_COLOR;
+        Opacity = DEFAULT_OPACITY;
+        BackgroundColor = Color.Lerp(Color.Transparent, Color.DarkBlue, MathHelper.Clamp(Opacity, 0, 1));
+        choices = new List<MessageBoxChoice>();
+
         X = x;
         Y = y;
         Width = w;
-        Height = h;
+        HeightInLines = h;
         Font = font;
-
-        Padding = 8;
-        BorderWidth = 2;
-        Opacity = 0.65f;
-        BackgroundColor = Color.Lerp(Color.Transparent, Color.DarkBlue, MathHelper.Clamp(Opacity, 0, 1));
-        //BorderColor = Color.Lerp(Color.Transparent, Color.LightSteelBlue, MathHelper.Clamp(Opacity, 0, 1));
-        BorderColor = Color.LightSteelBlue;
-        FontColor = Color.White;
-
-        Choices = new List<MessageBoxChoice>();
-        if (text != null) text = WrapText(text);
+        text = WrapText(text);
     }
 
+    //this ctor is just to allow a literal string to be passed in the ref param
     public MessageBox(int x, int y, int w, int h, SpriteFont font, string text = null) :
         this(x, y, w, h, font, ref text)
     {
@@ -76,11 +85,12 @@ public class MessageBox
     }
 
     public MessageBox(MessageBox template, ref string text) : 
-        this(template.X, template.Y, template.Width, template.Height, template.Font, ref text)
+        this(template.X, template.Y, template.Width, template.HeightInLines, template.Font, ref text)
     {
 
     }
 
+    //this ctor is just to allow a literal string to be passed in the ref param
     public MessageBox(MessageBox template, string text = null) :
         this(template, ref text)
     {
@@ -90,6 +100,8 @@ public class MessageBox
     //wraps the given text horizontally within a single MessageBox
     public string WrapText(string text)
     {
+        if (string.IsNullOrWhiteSpace(text)) return string.Empty;
+
         //remove carriage return from carriage return + newline pairs
         text = Regex.Replace(text, "\r\n", "\n").Trim();
 
@@ -102,7 +114,7 @@ public class MessageBox
         {
             if (token == "\f")
             {
-                //explicit page break, return what remains
+                //explicit page break; return what remains, to be loaded into another MessageBox
                 lines.Add(sb.ToString());
                 return text.Substring(processedChars);
             }
@@ -110,12 +122,6 @@ public class MessageBox
             {
                 lines.Add(sb.ToString());
                 sb.Clear();
-
-                if (((lines.Count + 1) * Font.LineSpacing) > Height - ((Padding + BorderWidth) * 2))
-                {
-                    //another line won't fit... return what remains so it can be placed into another MessageBox
-                    return text.Substring(processedChars);
-                }
             }
 
             //don't append leading whitespace onto the next line
@@ -127,6 +133,25 @@ public class MessageBox
         return string.Empty;
     }
 
+    public void AdvanceLines()
+    {
+        if (firstDisplayedLineIndex + HeightInLines < lines.Count)
+        {
+            firstDisplayedLineIndex++;
+        }
+        else
+        {
+            //no more text, but maybe choices; scroll enough to display them all
+            //TODO: how to handle when there are too many choices to fit in the box?
+            firstDisplayedLineIndex += Choices.Count;
+        }
+    }
+
+    public void ResetLines()
+    {
+        firstDisplayedLineIndex = 0;
+    }
+
     public void Draw(SpriteBatch sb)
     {
         Util.DrawRectangle(sb, Rectangle, BackgroundColor);
@@ -135,18 +160,47 @@ public class MessageBox
         Util.DrawLine(sb, BorderWidth, new Vector2(X + Width, Y + Height), new Vector2(X, Y + Height), BorderColor);
         Util.DrawLine(sb, BorderWidth, new Vector2(X, Y + Height), new Vector2(X, Y), BorderColor);
 
-        for (int i = 0; i < lines.Count; i++)
+        for (int i = firstDisplayedLineIndex; i < lines.Count; i++)
         {
-            sb.DrawString(Font, lines[i], new Vector2(X + Padding + TEXT_LEFT_PADDING, Y + Padding + (Font.LineSpacing * i)), Color.White);
+            int localLineNumber = i - firstDisplayedLineIndex;
+            int y = Y + Padding + (Font.LineSpacing * localLineNumber);
+            if ((y + Font.LineSpacing) > (Y + Height)) break;
+            int x = X + Padding + TEXT_LEFT_PADDING;
+            sb.DrawString(Font, lines[i], new Vector2(x, y), Color.White);
         }
 
-        foreach (MessageBoxChoice choice in Choices)
+        if (!HasMoreLinesToDisplay)
         {
-            if(choice == SelectedChoice)
-                sb.DrawString(Font, choice.Text, new Vector2(X + Padding + TEXT_LEFT_PADDING + choice.X, Y + Padding + choice.Y), Color.Yellow);
-            else
-                sb.DrawString(Font, choice.Text, new Vector2(X + Padding + TEXT_LEFT_PADDING + choice.X, Y + Padding + choice.Y), Color.White);
+            //based on how many lines of text we're displaying, what local line number are the choices starting on?
+            int choiceStartingLine = lines.Count - firstDisplayedLineIndex;
+
+            //only draw the choices if we can fit *all* of them in the box from this line
+            if (Choices.Count * Font.LineSpacing < Y + Height - (choiceStartingLine * Font.LineSpacing))
+            {
+                for (int i = 0; i < Choices.Count; i++)
+                {
+                    int x = X + Padding + (TEXT_LEFT_PADDING * 3);  //indent choices a little bit
+                    int y = Y + Padding + ((choiceStartingLine + i) * Font.LineSpacing);
+
+                    Color choiceColor = Choices[i] == SelectedChoice ? Color.Yellow : Color.White;
+                    sb.DrawString(Font, Choices[i].Text, new Vector2(x, y), choiceColor);
+                }
+            }
         }
+    }
+
+    //restricts access to Choices so the box's height can grow if needed
+    //should make boxes big enough so this doesn't happen, but a box's size 
+    //suddenly changing will point out the problem since it may not be obvious
+    public void AddChoice(MessageBoxChoice mbc)
+    {
+        choices.Add(mbc);
+        if(choices.Count > HeightInLines) HeightInLines = choices.Count;
+    }
+
+    public void AddChoice(string text, MessageBox next)
+    {
+        AddChoice(new MessageBoxChoice(text, next));
     }
 
     public MessageBoxChoice SelectedChoice
@@ -161,136 +215,17 @@ public class MessageBox
     public void SelectNextChoice()
     {
         selectedChoiceIndex++;
-        if (selectedChoiceIndex >= Choices.Count) selectedChoiceIndex = Choices.Count - 1;
+        if (selectedChoiceIndex >= Choices.Count) selectedChoiceIndex = 0;  //wraparound
     }
 
     public void SelectPreviousChoice()
     {
         selectedChoiceIndex--;
-        if (selectedChoiceIndex <= 0) selectedChoiceIndex = 0;
+        if (selectedChoiceIndex < 0) selectedChoiceIndex = Choices.Count - 1;  //wraparound
     }
 
     public override string ToString()
     {
         return string.Join("\n", lines);
-    }
-}
-
-public class MessageBoxSeries
-{
-    private int curMsgBoxIndex = 0;
-
-    public MessageBox TemplateMessageBox { get; set; }
-    public List<MessageBox> MessageBoxes { get; set; }
-    public int Count { get { return MessageBoxes != null? MessageBoxes.Count : 0; } }
-    public MessageBox this[int i] { get { return MessageBoxes[i]; } }
-    public MessageBox Active 
-    { 
-        get 
-        {
-            if (curMsgBoxIndex >= MessageBoxes.Count) return null;
-            return this[curMsgBoxIndex]; 
-        }
-        set
-        {
-            curMsgBoxIndex = MessageBoxes.IndexOf(value);
-        }
-    }
-
-    public MessageBoxSeries(MessageBox template, string text = null)
-    {
-        TemplateMessageBox = template;
-
-        //if (string.IsNullOrWhiteSpace(text))
-        //    MessageBoxes = new List<MessageBox>(new[] { TemplateMessageBox });
-        //else
-        //    MessageBoxes = WrapText(text);
-
-        MessageBoxes = WrapTextIntoMessageBoxes(text);
-    }
-
-    public MessageBoxSeries(int x, int y, int w, int h, SpriteFont font, string text = null) :
-        this(new MessageBox(x, y, w, h, font), text)
-    {
-
-    }
-
-    public MessageBoxSeries(Rectangle bounds, SpriteFont font, string text = null)
-        : this(bounds.X, bounds.Y, bounds.Width, bounds.Height, font, text)
-    {
-
-    }
-
-    //center the box horizontally within the bounds rect
-    public MessageBoxSeries(Rectangle bounds, int y, int w, int h, SpriteFont font, string text = null)
-        : this(bounds.Center.X - w/2, y, w, h, font, text)
-    {
-        
-    }
-
-    //center the box horizontally and vertically within the bounds rect
-    public MessageBoxSeries(Rectangle bounds, int w, int h, SpriteFont font, string text = null)
-        : this(bounds.Center.X - (w / 2), bounds.Center.Y - (h / 2), w, h, font, text)
-    {
-
-    }
-
-    //factory-like method to wrap a block of text into possibly several MessageBoxes, all using this one's style template
-    //useful for adding a dynamic number of message boxes from a block of text at runtime, e.g.
-    //mbs.MessageBoxes.AddRange(mbs.WrapText("Long enough string to span more than one MessageBox..."))
-    public List<MessageBox> WrapTextIntoMessageBoxes(string text)
-    {
-        List<MessageBox> messageBoxes = new List<MessageBox>();
-
-        while (text != null && text.Length > 0)
-        {
-            messageBoxes.Add(new MessageBox(TemplateMessageBox, ref text));
-        }
-
-        return messageBoxes;
-    }
-
-    //draw the currently active MessageBox
-    public void Draw(SpriteBatch sb)
-    {
-        if (Active != null)
-            Active.Draw(sb);
-    }
-
-    //reset the currently active MessageBox to the first one in this series
-    public void Reset()
-    {
-        curMsgBoxIndex = 0;
-    }
-
-    //if the current MessageBox has choices, jump to the target of the selected one
-    //otherwise, advance to the next MessageBox (if one exists)
-    public void Advance()
-    {
-        if (Active.Choices.Count > 0) 
-            Active = Active.SelectedChoice.Next;
-        else if(HasNextMessageBox()) 
-            curMsgBoxIndex++;
-    }
-
-    //is there a next MessageBox in this series?
-    public bool HasNextMessageBox()
-    {
-        return curMsgBoxIndex < (Count - 1);
-    }
-
-    public override string ToString()
-    {
-        return "Count = " + MessageBoxes.Count;
-    }
-
-    //wrap the given text into possibly multiple MessageBoxes, add them to this series, and return the LAST one added
-    //this distinction only matters if the text is long enough to be wrapped
-    //the reference returned is usually for adding choices, which would be at the end, so that's why the last MessageBox
-    public MessageBox Add(string messageBoxText)
-    {
-        List<MessageBox> mbs = WrapTextIntoMessageBoxes(messageBoxText);
-        MessageBoxes.AddRange(mbs);
-        return mbs.LastOrDefault();
     }
 }

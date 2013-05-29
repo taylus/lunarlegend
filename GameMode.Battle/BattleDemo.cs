@@ -22,23 +22,27 @@ public class BattleDemo : BaseGame
     protected override void LoadContent()
     {
         base.LoadContent();
-        //dialogue = new MessageBoxSeries(GraphicsDevice.Viewport.Bounds, 10, GameWidth - 20, 80, Font, "MessageBox #1");
-        //dialogue.MessageBoxes[0].Choices.Add(new MessageBoxChoice("Forward", null));
-        //dialogue.MessageBoxes.AddRange(dialogue.WrapText("Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."));
-        dialogue = BuildMessageBoxSeries();
+        dialogue = BuildMessageBoxSeriesManually();
     }
 
     //build a sample MessageBoxSeries with choices
     //TODO: make a generic GraphML file loader so all the dialogue in the game doesn't have to be built like this
-    private MessageBoxSeries BuildMessageBoxSeries()
+    private MessageBoxSeries BuildMessageBoxSeriesManually()
     {
-        MessageBoxSeries mbs = new MessageBoxSeries(GraphicsDevice.Viewport.Bounds, 10, GameWidth - 20, 80, Font);
-        MessageBox beginning = mbs.Add("I'm going to ask you a question...");
-        MessageBox choiceBox = mbs.Add("Do you want to go backwards, or forwards?");
-        MessageBox end = mbs.Add("That's all I had to say.");
+        MessageBoxSeries mbs = new MessageBoxSeries(GraphicsDevice.Viewport.Bounds, 10, GameWidth - 600, 5, Font);
+        MessageBox beginning = mbs.Add("I'm going to ask you a question...\nbut you should know that this message box is pretty small.\n It won't be able to hold all of the text that I'm trying to fit inside it.");
+        MessageBox choiceBox = mbs.Add("This box is also a bit cramped, but there's not much we can do about that. I suppose I'll ask you that question now. Where do you see this conversation headed?");
+        MessageBox end = mbs.Add("This concludes your message box experience. Be kind, please rewind.");
 
-        choiceBox.Choices.Add(new MessageBoxChoice("Backwards", beginning, 20, 24));
-        choiceBox.Choices.Add(new MessageBoxChoice("Forwards", end, 120, 24));
+        choiceBox.AddChoice("Backwards", beginning);
+        choiceBox.AddChoice("Forwards", end);
+        choiceBox.AddChoice("I don't know", end);
+        choiceBox.AddChoice("An abrupt end", end);
+        choiceBox.AddChoice("No seriously, stop", end);
+        choiceBox.AddChoice("This only fits because the box height scales. Width doesn't, though...", end);
+
+        end.AddChoice("Okay", beginning);
+        end.AddChoice("No", end);
 
         return mbs;
     }
@@ -57,9 +61,9 @@ public class BattleDemo : BaseGame
 
         if (KeyPressedThisFrame(Buttons.CONFIRM))
             dialogue.Advance();
-        if (KeyPressedThisFrame(Buttons.MOVE_LEFT))
+        if (KeyPressedThisFrame(Buttons.MOVE_LEFT) || KeyPressedThisFrame(Buttons.MOVE_UP))
             dialogue.Active.SelectPreviousChoice();
-        if (KeyPressedThisFrame(Buttons.MOVE_RIGHT))
+        if (KeyPressedThisFrame(Buttons.MOVE_RIGHT) || KeyPressedThisFrame(Buttons.MOVE_DOWN))
             dialogue.Active.SelectNextChoice();
 
         prevKeyboard = curKeyboard;
