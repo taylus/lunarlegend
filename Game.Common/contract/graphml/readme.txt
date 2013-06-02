@@ -1,0 +1,1 @@
+xsd.exe /classes /namespace:YGraphML yfeatures.xsd ygraphics.xsd yprocessors.xsd portconstraints.xsd graphml.xsd graphml-structure.xsd xlink.xsd ygraphml.xsd

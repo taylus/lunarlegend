@@ -22,11 +22,19 @@ public class BattleDemo : BaseGame
     protected override void LoadContent()
     {
         base.LoadContent();
-        dialogue = BuildMessageBoxSeriesManually();
+        //dialogue = BuildMessageBoxSeriesManually();
+        dialogue = BuildMessageBoxSeriesFromGraph("dlg/sample_dialogue.graphml");
+    }
+
+    private MessageBoxSeries BuildMessageBoxSeriesFromGraph(string graphMLFile)
+    {
+        MessageBoxSeries mbs = new MessageBoxSeries(GraphicsDevice.Viewport.Bounds, 10, GameWidth - 600, 5, Font);
+        mbs.MessageBoxes.AddRange(mbs.LoadFromGraphFile(Path.Combine(contentManager.RootDirectory, graphMLFile)));
+
+        return mbs;
     }
 
     //build a sample MessageBoxSeries with choices
-    //TODO: make a generic GraphML file loader so all the dialogue in the game doesn't have to be built like this
     private MessageBoxSeries BuildMessageBoxSeriesManually()
     {
         MessageBoxSeries mbs = new MessageBoxSeries(GraphicsDevice.Viewport.Bounds, 10, GameWidth - 600, 5, Font);

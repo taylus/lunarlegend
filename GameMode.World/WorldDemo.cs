@@ -110,7 +110,7 @@ public class WorldDemo : BaseGame
         }
 
         //confirm/use button
-        if (!prevKeyboard.IsKeyDown(Buttons.USE) && curKeyboard.IsKeyDown(Buttons.USE))
+        if (KeyPressedThisFrame(Buttons.CONFIRM))
         {
             if (player.ActiveMessageBoxes != null)
             {
@@ -135,6 +135,14 @@ public class WorldDemo : BaseGame
                     }
                 }
             }
+        }
+
+        if (player.ActiveMessageBoxes != null)
+        {
+            if (KeyPressedThisFrame(Buttons.MOVE_LEFT) || KeyPressedThisFrame(Buttons.MOVE_UP))
+                player.ActiveMessageBoxes.Active.SelectPreviousChoice();
+            if (KeyPressedThisFrame(Buttons.MOVE_RIGHT) || KeyPressedThisFrame(Buttons.MOVE_DOWN))
+                player.ActiveMessageBoxes.Active.SelectNextChoice();
         }
 
         //player movement and entity activation

@@ -265,8 +265,16 @@ public class NPC : WorldEntity
         string text = Object.Properties.GetValue("text");
         if (!string.IsNullOrWhiteSpace(text))
         {
-            text = Regex.Unescape(text);
-            MessageBoxes = new MessageBoxSeries(WorldDemo.CreateMessageBoxTemplate(), text);  //coupling smell
+            if (text.EndsWith(".graphml", StringComparison.OrdinalIgnoreCase))
+            {
+                MessageBoxes = new MessageBoxSeries(WorldDemo.CreateMessageBoxTemplate());
+                MessageBoxes.MessageBoxes.AddRange((MessageBoxes.LoadFromGraphFile(Path.Combine(World.Current.Map.MapFileDir, text))));
+            }
+            else
+            {
+                text = Regex.Unescape(text);
+                MessageBoxes = new MessageBoxSeries(WorldDemo.CreateMessageBoxTemplate(), text);  //coupling smell
+            }
         }
     }
 

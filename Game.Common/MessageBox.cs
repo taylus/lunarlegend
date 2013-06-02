@@ -40,6 +40,7 @@ public class MessageBox
     public Color FontColor { get; set; }
     public SpriteFont Font { get; set; }
     public IList<MessageBoxChoice> Choices { get { return choices.AsReadOnly(); } }
+    public MessageBox Next { get; set; }
     public bool HasMoreLinesToDisplay 
     { 
         get 
@@ -142,7 +143,6 @@ public class MessageBox
         else
         {
             //no more text, but maybe choices; scroll enough to display them all
-            //TODO: how to handle when there are too many choices to fit in the box?
             firstDisplayedLineIndex += Choices.Count;
         }
     }
@@ -150,6 +150,7 @@ public class MessageBox
     public void ResetLines()
     {
         firstDisplayedLineIndex = 0;
+        selectedChoiceIndex = 0;
     }
 
     public void Draw(SpriteBatch sb)
