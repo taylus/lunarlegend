@@ -9,50 +9,20 @@ using Microsoft.Xna.Framework.Graphics;
 
 public class BattleDemo : BaseGame
 {
-    private MessageBoxSeries dialogue;
-    //private Texture2D enemy;
+    private CombatSystem combatSystem;
 
     public BattleDemo()
     {
         IsMouseVisible = true;
         Content.RootDirectory = "Content";
-        Window.Title = "Battle Demo";
+        Window.Title = "Vidya Gaem";
     }
 
     protected override void LoadContent()
     {
         base.LoadContent();
-        //dialogue = BuildMessageBoxSeriesManually();
-        dialogue = BuildMessageBoxSeriesFromGraph("dlg/sample_dialogue.graphml");
-    }
-
-    private MessageBoxSeries BuildMessageBoxSeriesFromGraph(string graphMLFile)
-    {
-        MessageBoxSeries mbs = new MessageBoxSeries(GraphicsDevice.Viewport.Bounds, 10, GameWidth - 600, 5, Font);
-        mbs.MessageBoxes.AddRange(mbs.LoadFromGraphFile(Path.Combine(contentManager.RootDirectory, graphMLFile)));
-
-        return mbs;
-    }
-
-    //build a sample MessageBoxSeries with choices
-    private MessageBoxSeries BuildMessageBoxSeriesManually()
-    {
-        MessageBoxSeries mbs = new MessageBoxSeries(GraphicsDevice.Viewport.Bounds, 10, GameWidth - 600, 5, Font);
-        MessageBox beginning = mbs.Add("I'm going to ask you a question...\nbut you should know that this message box is pretty small.\n It won't be able to hold all of the text that I'm trying to fit inside it.");
-        MessageBox choiceBox = mbs.Add("This box is also a bit cramped, but there's not much we can do about that. I suppose I'll ask you that question now. Where do you see this conversation headed?");
-        MessageBox end = mbs.Add("This concludes your message box experience. Be kind, please rewind.");
-
-        choiceBox.AddChoice("Backwards", beginning);
-        choiceBox.AddChoice("Forwards", end);
-        choiceBox.AddChoice("I don't know", end);
-        choiceBox.AddChoice("An abrupt end", end);
-        choiceBox.AddChoice("No seriously, stop", end);
-        choiceBox.AddChoice("This only fits because the box height scales. Width doesn't, though...", end);
-
-        end.AddChoice("Okay", beginning);
-        end.AddChoice("No", end);
-
-        return mbs;
+        combatSystem = new CombatSystem(CreateSamplePlayerParty());
+        combatSystem.Engage("classy_bg.jpg", CreateSampleEnemyParty());
     }
 
     protected override void Update(GameTime gameTime)
@@ -64,15 +34,15 @@ public class BattleDemo : BaseGame
         curMouse = Mouse.GetState();
 
         //exit on esc
-        if (curKeyboard.IsKeyDown(Buttons.QUIT))
-            this.Exit();
+        if (curKeyboard.IsKeyDown(Buttons.QUIT)) this.Exit();
 
+        combatSystem.Update();
         if (KeyPressedThisFrame(Buttons.CONFIRM))
-            dialogue.Advance();
+            combatSystem.Messages.AdvanceLines();
         if (KeyPressedThisFrame(Buttons.MOVE_LEFT) || KeyPressedThisFrame(Buttons.MOVE_UP))
-            dialogue.Active.SelectPreviousChoice();
+            combatSystem.Messages.SelectPreviousChoice();
         if (KeyPressedThisFrame(Buttons.MOVE_RIGHT) || KeyPressedThisFrame(Buttons.MOVE_DOWN))
-            dialogue.Active.SelectNextChoice();
+            combatSystem.Messages.SelectNextChoice();
 
         prevKeyboard = curKeyboard;
         prevMouse = curMouse;
@@ -81,12 +51,37 @@ public class BattleDemo : BaseGame
 
     protected override void Draw(GameTime gameTime)
     {
-        GraphicsDevice.Clear(Color.DarkGray);
+        //GraphicsDevice.Clear(Color.DarkGray);
 
         spriteBatch.Begin();
-        dialogue.Draw(spriteBatch);
+        combatSystem.Draw(spriteBatch);
         spriteBatch.End();
 
         base.Draw(gameTime);
+    }
+
+    private List<PlayerCombatEntity> CreateSamplePlayerParty()
+    {
+        List<PlayerCombatEntity> playerParty = new List<PlayerCombatEntity>();
+        playerParty.Add(new PlayerCombatEntity("Brandon", 50, 10, null));
+        playerParty.Add(new PlayerCombatEntity("Spencer", 50, 10, null));
+        return playerParty;
+    }
+
+    private List<EnemyCombatEntity> CreateSampleEnemyParty()
+    {
+        List<EnemyCombatEntity> enemyParty = new List<EnemyCombatEntity>();
+        enemyParty.Add(new EnemyCombatEntity("Equine Esquire", 25, null, "horsemask_esquire.png", new Point(0, 40)));
+        return enemyParty;
+    }
+
+    //create the MessageBox whose style, position, etc will be used by all MessageBoxes loaded for this game
+    public static MessageBox CreateMessageBoxTemplate()
+    {
+        int w = 780;
+        int h = 1;
+        int x = (GameWidth / 2) - (w / 2);
+        int y = 10;
+        return new MessageBox(x, y, w, h, Font);
     }
 }

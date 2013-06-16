@@ -3,9 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-//represents any special attack or spell (offensive, defensive, or support)
-//different types of spells and abilities are subclasses
+//represents any special attack or spell
+//different types of spells and abilities are subclasses (e.g. offensive, defensive, buff/debuff)
 //variants/ranks of those spells and abilities are just differently-configured instances of those subclasses
+//TODO: this would be a good candidate, along with specific monster types, to persist using SQLite
 public abstract class Technique
 {
     public uint ResourceCost { get; private set; }

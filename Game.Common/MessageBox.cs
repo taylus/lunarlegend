@@ -21,24 +21,16 @@ public class MessageBoxChoice
     }
 }
 
-public class MessageBox
+public class MessageBox : Box
 {
-    //TODO: gradient backgrounds?
     //TODO: timed text rendering/fading?
+    //TODO: pixel-perfect line scrolling (render all text to offscreen surface, scroll a sliding window of that surface)
 
-    public int X { get; set; }
-    public int Y { get; set; }
-    public int Width { get; set; }
+    //a MessageBox's height is set in terms of lines
+    //its width is calculated based on font height and box padding
     public int HeightInLines { get; set; }
-    public int Height { get { return HeightInLines * Font.LineSpacing + (Padding * 2); } }
-    public Rectangle Rectangle { get { return new Rectangle(X, Y, Width, Height); } }
-    public int Padding { get; set; }
-    public int BorderWidth { get; set; }
-    public float Opacity { get; set; }
-    public Color BorderColor { get; set; }
-    public Color BackgroundColor { get; set; }
-    public Color FontColor { get; set; }
     public SpriteFont Font { get; set; }
+    public Color FontColor { get; set; }
     public IList<MessageBoxChoice> Choices { get { return choices.AsReadOnly(); } }
     public MessageBox Next { get; set; }
     public bool HasMoreLinesToDisplay 
@@ -53,28 +45,16 @@ public class MessageBox
     private List<string> lines = new List<string>();
     private List<MessageBoxChoice> choices { get; set; }
     private int selectedChoiceIndex = 0;
-    private const int TEXT_LEFT_PADDING = 4;
-    private const int DEFAULT_PADDING = 8;
-    private const int DEFAULT_BORDER_WIDTH = 2;
-    private static readonly Color DEFAULT_BORDER_COLOR = Color.LightSteelBlue;
     private static readonly Color DEFAULT_FONT_COLOR = Color.White;
-    private const float DEFAULT_OPACITY = 0.65f;
 
-    public MessageBox(int x, int y, int w, int h, SpriteFont font, ref string text)
+    public MessageBox(int x, int y, int w, int h, SpriteFont font, ref string text) : base(x, y, w, h)
     {
-        Padding = DEFAULT_PADDING;
-        BorderWidth = DEFAULT_BORDER_WIDTH;
-        BorderColor = DEFAULT_BORDER_COLOR;
+        Font = font;
         FontColor = DEFAULT_FONT_COLOR;
-        Opacity = DEFAULT_OPACITY;
-        BackgroundColor = Color.Lerp(Color.Transparent, Color.DarkBlue, MathHelper.Clamp(Opacity, 0, 1));
         choices = new List<MessageBoxChoice>();
 
-        X = x;
-        Y = y;
-        Width = w;
         HeightInLines = h;
-        Font = font;
+        Height = HeightInLines * font.LineSpacing + (Padding * 2);
         text = WrapText(text);
     }
 
@@ -119,7 +99,7 @@ public class MessageBox
                 lines.Add(sb.ToString());
                 return text.Substring(processedChars);
             }
-            else if (token == "\n" || Font.MeasureString(sb.ToString() + token).X > Width - ((Padding + BorderWidth) * 2) - TEXT_LEFT_PADDING)
+            else if (token == "\n" || Font.MeasureString(sb.ToString() + token).X > Width - (Padding + BorderWidth) * 2)
             {
                 lines.Add(sb.ToString());
                 sb.Clear();
@@ -136,6 +116,8 @@ public class MessageBox
 
     public void AdvanceLines()
     {
+        if (!HasMoreLinesToDisplay) return;
+
         if (firstDisplayedLineIndex + HeightInLines < lines.Count)
         {
             firstDisplayedLineIndex++;
@@ -153,20 +135,16 @@ public class MessageBox
         selectedChoiceIndex = 0;
     }
 
-    public void Draw(SpriteBatch sb)
+    public override void Draw(SpriteBatch sb)
     {
-        Util.DrawRectangle(sb, Rectangle, BackgroundColor);
-        Util.DrawLine(sb, BorderWidth, new Vector2(X, Y), new Vector2(X + Width, Y), BorderColor);
-        Util.DrawLine(sb, BorderWidth, new Vector2(X + Width, Y), new Vector2(X + Width, Y + Height), BorderColor);
-        Util.DrawLine(sb, BorderWidth, new Vector2(X + Width, Y + Height), new Vector2(X, Y + Height), BorderColor);
-        Util.DrawLine(sb, BorderWidth, new Vector2(X, Y + Height), new Vector2(X, Y), BorderColor);
+        base.Draw(sb);
 
         for (int i = firstDisplayedLineIndex; i < lines.Count; i++)
         {
             int localLineNumber = i - firstDisplayedLineIndex;
             int y = Y + Padding + (Font.LineSpacing * localLineNumber);
             if ((y + Font.LineSpacing) > (Y + Height)) break;
-            int x = X + Padding + TEXT_LEFT_PADDING;
+            int x = X + Padding;
             sb.DrawString(Font, lines[i], new Vector2(x, y), Color.White);
         }
 
@@ -180,13 +158,17 @@ public class MessageBox
             {
                 for (int i = 0; i < Choices.Count; i++)
                 {
-                    int x = X + Padding + (TEXT_LEFT_PADDING * 3);  //indent choices a little bit
+                    int x = X + Padding + (Padding * 3);  //indent choices a little bit
                     int y = Y + Padding + ((choiceStartingLine + i) * Font.LineSpacing);
 
                     Color choiceColor = Choices[i] == SelectedChoice ? Color.Yellow : Color.White;
                     sb.DrawString(Font, Choices[i].Text, new Vector2(x, y), choiceColor);
                 }
             }
+        }
+        else
+        {
+            //TODO: draw a little down triangle in the bottom right corner to indicate there's more text
         }
     }
 

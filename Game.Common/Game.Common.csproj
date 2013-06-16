@@ -101,6 +101,8 @@
     <Compile Include="contract\tmx\map.cs">
       <DependentUpon>map.xsd</DependentUpon>
     </Compile>
+    <Compile Include="Box.cs" />
+    <Compile Include="MenuBox.cs" />
     <Compile Include="Graph.cs" />
     <Compile Include="MessageBoxSeries.cs" />
     <Compile Include="Grid.cs" />
