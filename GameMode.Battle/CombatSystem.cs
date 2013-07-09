@@ -12,7 +12,7 @@ using Microsoft.Xna.Framework.Graphics;
 public class CombatSystem
 {
     public Texture2D Background;
-    public MessageBox Messages;
+    public MessageBox Dialogue;
     public List<PlayerCombatEntity> PlayerParty = new List<PlayerCombatEntity>();
     public List<EnemyCombatEntity> EnemyParty = new List<EnemyCombatEntity>();
 
@@ -33,8 +33,7 @@ public class CombatSystem
 
         EnemyParty = enemyParty;
         AlignEnemies(EnemyParty);
-        //Messages = new MessageBoxSeries(BattleDemo.CreateMessageBoxTemplate(), GetEngagementText());
-        Messages = new MessageBox(BattleDemo.CreateMessageBoxTemplate(), GetEngagementText());
+        Dialogue = new MessageBox(BattleDemo.CreateMessageBoxTemplate(), GetEngagementText());
     }
 
     public bool PlayerVictory()
@@ -73,7 +72,7 @@ public class CombatSystem
             player.Draw(sb);
         }
 
-        Messages.Draw(sb);
+        Dialogue.Draw(sb);
     }
 
     public void Update()

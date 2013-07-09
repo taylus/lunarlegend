@@ -37,12 +37,12 @@ public class BattleDemo : BaseGame
         if (curKeyboard.IsKeyDown(Buttons.QUIT)) this.Exit();
 
         combatSystem.Update();
-        if (KeyPressedThisFrame(Buttons.CONFIRM))
-            combatSystem.Messages.AdvanceLines();
-        if (KeyPressedThisFrame(Buttons.MOVE_LEFT) || KeyPressedThisFrame(Buttons.MOVE_UP))
-            combatSystem.Messages.SelectPreviousChoice();
-        if (KeyPressedThisFrame(Buttons.MOVE_RIGHT) || KeyPressedThisFrame(Buttons.MOVE_DOWN))
-            combatSystem.Messages.SelectNextChoice();
+        //if (KeyPressedThisFrame(Buttons.CONFIRM))
+        //    combatSystem.Dialogue.AdvanceLines();
+        //if (KeyPressedThisFrame(Buttons.MOVE_LEFT) || KeyPressedThisFrame(Buttons.MOVE_UP))
+        //    combatSystem.Dialogue.SelectPreviousChoice();
+        //if (KeyPressedThisFrame(Buttons.MOVE_RIGHT) || KeyPressedThisFrame(Buttons.MOVE_DOWN))
+        //    combatSystem.Dialogue.SelectNextChoice();
 
         prevKeyboard = curKeyboard;
         prevMouse = curMouse;

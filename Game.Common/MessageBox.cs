@@ -6,21 +6,6 @@ using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-public class MessageBoxChoice
-{
-    public string Text;
-    public MessageBox Next;
-
-    public MessageBoxChoice(string text, MessageBox next)
-    {
-        if (string.IsNullOrWhiteSpace(text)) throw new ArgumentException("MessageBoxChoice text cannot be empty.");
-        if (next == null) throw new ArgumentException("MessageBoxChoice target cannot be null.");
-
-        Text = text;
-        Next = next;
-    }
-}
-
 public class MessageBox : Box
 {
     //TODO: timed text rendering/fading?
@@ -47,7 +32,8 @@ public class MessageBox : Box
     private int selectedChoiceIndex = 0;
     private static readonly Color DEFAULT_FONT_COLOR = Color.White;
 
-    public MessageBox(int x, int y, int w, int h, SpriteFont font, ref string text) : base(x, y, w, h)
+    public MessageBox(int x, int y, int w, int h, SpriteFont font)
+        : base(x, y, w, h)
     {
         Font = font;
         FontColor = DEFAULT_FONT_COLOR;
@@ -55,31 +41,29 @@ public class MessageBox : Box
 
         HeightInLines = h;
         Height = HeightInLines * font.LineSpacing + (Padding * 2);
+    }
+
+    public MessageBox(int x, int y, int w, int h, SpriteFont font, string text) : 
+        this(x, y, w, h, font)
+    {
+        //fit the given text into this MessageBox
         text = WrapText(text);
+        //if any remains, load it into the next MessageBox
+        //this will continue until the text is depleted
+        if (!string.IsNullOrWhiteSpace(text))
+        {
+            Next = new MessageBox(this, text);
+        }
     }
 
-    //this ctor is just to allow a literal string to be passed in the ref param
-    public MessageBox(int x, int y, int w, int h, SpriteFont font, string text = null) :
-        this(x, y, w, h, font, ref text)
-    {
-
-    }
-
-    public MessageBox(MessageBox template, ref string text) : 
-        this(template.X, template.Y, template.Width, template.HeightInLines, template.Font, ref text)
-    {
-
-    }
-
-    //this ctor is just to allow a literal string to be passed in the ref param
-    public MessageBox(MessageBox template, string text = null) :
-        this(template, ref text)
+    public MessageBox(MessageBox template, string text = null) : 
+        this(template.X, template.Y, template.Width, template.HeightInLines, template.Font, text)
     {
 
     }
 
     //wraps the given text horizontally within a single MessageBox
-    public string WrapText(string text)
+    private string WrapText(string text)
     {
         if (string.IsNullOrWhiteSpace(text)) return string.Empty;
 
@@ -95,7 +79,7 @@ public class MessageBox : Box
         {
             if (token == "\f")
             {
-                //explicit page break; return what remains, to be loaded into another MessageBox
+                //line feed character -> explicit page break; return what remains, to be loaded into another MessageBox
                 lines.Add(sb.ToString());
                 return text.Substring(processedChars);
             }
@@ -114,25 +98,37 @@ public class MessageBox : Box
         return string.Empty;
     }
 
-    public void AdvanceLines()
+    //factory method for loading MessageBoxes and links between them from a graphML file
+    public static MessageBox LoadFromGraphFile(MessageBox template, string graphMLFile)
     {
-        if (!HasMoreLinesToDisplay) return;
+        List<MessageBox> messageBoxes = new List<MessageBox>();
+        Graph graph = new Graph(graphMLFile);
+        Dictionary<string, MessageBox> nodesById = new Dictionary<string, MessageBox>();
 
-        if (firstDisplayedLineIndex + HeightInLines < lines.Count)
+        //create a MessageBox for each node
+        foreach (YGraphML.nodetype node in graph.Nodes)
         {
-            firstDisplayedLineIndex++;
+            MessageBox mb = new MessageBox(template, node.GetLabelText().Replace("\n", ""));
+            messageBoxes.Add(mb);
+            nodesById.Add(node.id, mb);
         }
-        else
-        {
-            //no more text, but maybe choices; scroll enough to display them all
-            firstDisplayedLineIndex += Choices.Count;
-        }
-    }
 
-    public void ResetLines()
-    {
-        firstDisplayedLineIndex = 0;
-        selectedChoiceIndex = 0;
+        //hook up links and choices between MessageBoxes based on edges
+        foreach (YGraphML.edgetype edge in graph.Edges)
+        {
+            MessageBox source = nodesById[edge.source];
+            MessageBox target = nodesById[edge.target];
+            string edgeText = edge.GetLabelText();
+
+            //an edge with no label is a MessageBox's default successor (expecting one)
+            //an edge with a label is a choice selectable by the user (expecting multiple)
+            if (string.IsNullOrWhiteSpace(edgeText))
+                source.Next = target;
+            else
+                source.AddChoice(edge.GetLabelText(), target);
+        }
+
+        return messageBoxes.FirstOrDefault();
     }
 
     public override void Draw(SpriteBatch sb)
@@ -195,20 +191,56 @@ public class MessageBox : Box
         }
     }
 
+    public void AdvanceLines()
+    {
+        if (!HasMoreLinesToDisplay) return;
+
+        if (firstDisplayedLineIndex + HeightInLines < lines.Count)
+        {
+            firstDisplayedLineIndex++;
+        }
+        else
+        {
+            //no more text, but maybe choices; scroll enough to display them all
+            firstDisplayedLineIndex += Choices.Count;
+        }
+    }
+
+    public void ResetLines()
+    {
+        firstDisplayedLineIndex = 0;
+        selectedChoiceIndex = 0;
+    }
+
     public void SelectNextChoice()
     {
         selectedChoiceIndex++;
-        if (selectedChoiceIndex >= Choices.Count) selectedChoiceIndex = 0;  //wraparound
+        if (selectedChoiceIndex >= Choices.Count) selectedChoiceIndex = 0;  //wrap around
     }
 
     public void SelectPreviousChoice()
     {
         selectedChoiceIndex--;
-        if (selectedChoiceIndex < 0) selectedChoiceIndex = Choices.Count - 1;  //wraparound
+        if (selectedChoiceIndex < 0) selectedChoiceIndex = Choices.Count - 1;  //wrap around
     }
 
     public override string ToString()
     {
-        return string.Join("\n", lines);
+        return string.Join(" ", lines);
+    }
+}
+
+public class MessageBoxChoice
+{
+    public string Text;
+    public MessageBox Next;
+
+    public MessageBoxChoice(string text, MessageBox next)
+    {
+        if (string.IsNullOrWhiteSpace(text)) throw new ArgumentException("MessageBoxChoice text cannot be empty.");
+        if (next == null) throw new ArgumentException("MessageBoxChoice target cannot be null.");
+
+        Text = text;
+        Next = next;
     }
 }

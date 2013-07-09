@@ -28,8 +28,6 @@ public class Player : IWorldEntity
     public Rectangle ScreenRect { get { return new Rectangle((int)Math.Round(ScreenX), (int)Math.Round(ScreenY), Width, Height); } }
     public bool IsOnScreen { get { return true; } }  //the player is always onscreen
 
-    public MessageBoxSeries ActiveMessageBoxes { get; set; }
-
     private const float DEFAULT_SPEED = 3.5f;
 
     public Player(Vector2 worldPos, int w, int h, float speed = DEFAULT_SPEED)

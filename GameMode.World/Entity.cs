@@ -235,7 +235,7 @@ public class NPC : WorldEntity
 {
     new public static string GetEntityTypeName() { return "info_npc"; }
     public Texture2D Image { get; set; }
-    public MessageBoxSeries MessageBoxes { get; set; }
+    public MessageBox Dialogue { get; set; }
 
     //FIXME? this class being aware about MessageBoxes means it needs to know how to position them,
     //which is a graphics thing that isn't exposed here... so the Game class is asked for a template
@@ -265,22 +265,18 @@ public class NPC : WorldEntity
         string text = Object.Properties.GetValue("text");
         if (!string.IsNullOrWhiteSpace(text))
         {
+            //TODO: fix coupling between this and WorldDemo
             if (text.EndsWith(".graphml", StringComparison.OrdinalIgnoreCase))
             {
-                MessageBoxes = new MessageBoxSeries(WorldDemo.CreateMessageBoxTemplate());
-                MessageBoxes.MessageBoxes.AddRange((MessageBoxes.LoadFromGraphFile(Path.Combine(World.Current.Map.MapFileDir, text))));
+                string graphMLFile = Path.Combine(World.Current.Map.MapFileDir, text);
+                Dialogue = MessageBox.LoadFromGraphFile(WorldDemo.CreateMessageBoxTemplate(), graphMLFile);
             }
             else
             {
                 text = Regex.Unescape(text);
-                MessageBoxes = new MessageBoxSeries(WorldDemo.CreateMessageBoxTemplate(), text);  //coupling smell
+                Dialogue = new MessageBox(WorldDemo.CreateMessageBoxTemplate(), text);
             }
         }
-    }
-
-    public override void Use(Player p)
-    {
-        p.ActiveMessageBoxes = MessageBoxes;
     }
 
     public override void Draw(SpriteBatch sb)

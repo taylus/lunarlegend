@@ -35,6 +35,10 @@ public class BaseGame : Game
 
     public BaseGame()
     {
+        IsMouseVisible = true;
+        Window.Title = "Vidya Gaem";
+        Content.RootDirectory = "Content";
+
         graphics = new GraphicsDeviceManager(this);
         graphics.PreferredBackBufferWidth = 800;
         graphics.PreferredBackBufferHeight = 600;

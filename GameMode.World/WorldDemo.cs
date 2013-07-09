@@ -12,6 +12,7 @@ public class WorldDemo : BaseGame
     //TODO: put Player in World once battle engine is in place
     private static Player player;
     private static Overlay overlay;
+    private static MessageBox dialogue;
 
     //render the world and player to a temp surface for scaling
     private Texture2D gameSurf;
@@ -81,20 +82,19 @@ public class WorldDemo : BaseGame
         curKeyboard = Keyboard.GetState();
         curMouse = Mouse.GetState();
 
-        if (curKeyboard.IsKeyDown(Buttons.QUIT))
-            this.Exit();
+        if (curKeyboard.IsKeyDown(Buttons.QUIT)) this.Exit();
 
         //TODO: move most of this logic into World.Update, and call it only if the game state is in "world mode"
         //      if the game state is in "battle mode" then the battle engine will handle input instead
 
         //toggle debug mode
-        if (!prevKeyboard.IsKeyDown(Buttons.DEBUG) && curKeyboard.IsKeyDown(Buttons.DEBUG))
+        if (KeyPressedThisFrame(Buttons.DEBUG))
         {
             World.Current.Debug = !World.Current.Debug;
             Window.Title = !World.Current.Debug ? GAME_TITLE : string.Format("{0} - FPS: {1}", GAME_TITLE, Math.Round(1 / gameTime.ElapsedGameTime.TotalSeconds));
         }
 
-        //debug mode wall editor
+        //debug mode wall editor - add/remove walls via mouse click
         if (World.Current.Debug)
         {
             Point mouseTileCoords = World.Current.Map.GetTileAt(World.Current.ScreenToWorldCoordinates(curMouse.Position() / gameScale));
@@ -112,16 +112,28 @@ public class WorldDemo : BaseGame
         //confirm/use button
         if (KeyPressedThisFrame(Buttons.CONFIRM))
         {
-            if (player.ActiveMessageBoxes != null)
+            if (dialogue != null)
             {
-                if (player.ActiveMessageBoxes.HasNextMessageBox())
+                //scroll down in the current MessageBox if it has more lines to display
+                if (dialogue.HasMoreLinesToDisplay)
                 {
-                    player.ActiveMessageBoxes.Advance();
+                    dialogue.AdvanceLines();
+                }
+                //if it doesn't, jump to the target of its selected choice
+                else if (dialogue.Choices.Count > 0)
+                {
+                    dialogue = dialogue.SelectedChoice.Next;
+                    dialogue.ResetLines();
+                }
+                //if it has no choices, go to its preferred next MessageBox
+                else if (dialogue.Next != null)
+                {
+                    dialogue = dialogue.Next;
+                    dialogue.ResetLines();
                 }
                 else
                 {
-                    player.ActiveMessageBoxes.Reset();
-                    player.ActiveMessageBoxes = null;
+                    dialogue = null;
                 }
             }
             else
@@ -132,21 +144,26 @@ public class WorldDemo : BaseGame
                     if (wEnt.InteractRect.Intersects(player.WorldRect))
                     {
                         wEnt.Use(player);
+                        if (wEnt.GetType() == typeof(NPC))
+                        {
+                            NPC npc = (NPC)wEnt;
+                            if (npc.Dialogue != null) dialogue = npc.Dialogue;
+                        }
                     }
                 }
             }
         }
 
-        if (player.ActiveMessageBoxes != null)
+        if (dialogue != null)
         {
             if (KeyPressedThisFrame(Buttons.MOVE_LEFT) || KeyPressedThisFrame(Buttons.MOVE_UP))
-                player.ActiveMessageBoxes.Active.SelectPreviousChoice();
+                dialogue.SelectPreviousChoice();
             if (KeyPressedThisFrame(Buttons.MOVE_RIGHT) || KeyPressedThisFrame(Buttons.MOVE_DOWN))
-                player.ActiveMessageBoxes.Active.SelectNextChoice();
+                dialogue.SelectNextChoice();
         }
 
         //player movement and entity activation
-        if (player.ActiveMessageBoxes == null)
+        if (dialogue == null)
         {
             player.Move(curKeyboard);
             player.TouchEntities();
@@ -178,9 +195,9 @@ public class WorldDemo : BaseGame
         spriteBatch.Draw(gameSurf, Vector2.Zero, null, Color.White, 0.0f, Vector2.Zero, gameScale, SpriteEffects.None, 0);
         //overlay.Draw(spriteBatch);
         if (World.Current.Debug) DrawDebugInfo();
-        if (player.ActiveMessageBoxes != null)
+        if (dialogue != null)
         {
-            player.ActiveMessageBoxes.Draw(spriteBatch);
+            dialogue.Draw(spriteBatch);
         }
         spriteBatch.End();
         base.Draw(gameTime);

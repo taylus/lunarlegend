@@ -7,15 +7,9 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
 //a colored rectangle with a border
-public class Box
+public class Box : UIElement
 {
     //TODO: gradient backgrounds?
-
-    public int X { get; set; }
-    public int Y { get; set; }
-    public int Width { get; set; }
-    public int Height { get; set; }
-    public Rectangle Rectangle { get { return new Rectangle(X, Y, Width, Height); } }
     public int BorderWidth { get; set; }
     public int Margin { get; set; }
     public int Padding { get; set; }
@@ -44,38 +38,13 @@ public class Box
         Height = h;
     }
 
-    public virtual void Draw(SpriteBatch sb)
+    public override void Draw(SpriteBatch sb)
     {
+        if (!Visible) return;
         Util.DrawRectangle(sb, Rectangle, BackgroundColor);
         Util.DrawLine(sb, BorderWidth, new Vector2(X, Y), new Vector2(X + Width, Y), BorderColor);
         Util.DrawLine(sb, BorderWidth, new Vector2(X + Width, Y), new Vector2(X + Width, Y + Height), BorderColor);
         Util.DrawLine(sb, BorderWidth, new Vector2(X + Width, Y + Height), new Vector2(X, Y + Height), BorderColor);
         Util.DrawLine(sb, BorderWidth, new Vector2(X, Y + Height), new Vector2(X, Y), BorderColor);
-    }
-
-    public virtual void Update()
-    {
-
-    }
-
-    public void MoveTo(int x, int y)
-    {
-        X = x;
-        Y = y;
-    }
-
-    public void MoveTo(Point p)
-    {
-        MoveTo(p.X, p.Y);
-    }
-
-    public void CenterOn(int x, int y)
-    {
-        MoveTo(x - (Width / 2), y - (Height / 2));
-    }
-
-    public void CenterOn(Point p)
-    {
-        CenterOn(p.X, p.Y);
     }
 }
