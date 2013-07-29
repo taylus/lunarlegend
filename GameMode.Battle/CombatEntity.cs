@@ -15,13 +15,17 @@ public abstract class CombatEntity
     public Measure Health;
     public Measure Resource;    //mana, energy, etc
     public bool IsAlive { get { return Health.Current > 0; } }
+    public bool IsDead { get { return !IsAlive; } }
     public int Speed { get; set; }
     public int X { get; set; }
     public int Y { get; set; }
+    //base combat stats, before crits, buffs, or any other damage modifiers
     public Dictionary<DamageType, CombatRating> CombatRatings { get; set; }
+    public float CriticalModifier { get; set; }
 
     public const int DEFAULT_ATTACK = 5;
     public const int DEFAULT_DEFENSE = 0;
+    public const float DEFAULT_CRIT_MODIFIER = 1.5f;
 
     public abstract CombatAction DecideAction(List<CombatEntity> allies, List<CombatEntity> enemies);
 
@@ -31,6 +35,7 @@ public abstract class CombatEntity
         Health.Current = Health.Maximum = hp;
         Resource.Current = Resource.Maximum = resource;
         CombatRatings = new CombatRatings();
+        CriticalModifier = DEFAULT_CRIT_MODIFIER;
 
         //default all combat ratings except those overridden by the given params
         foreach (DamageType type in Enum.GetValues(typeof(DamageType)))
@@ -43,9 +48,13 @@ public abstract class CombatEntity
         }
     }
 
-    public void Attack(CombatEntity target)
+    public uint Attack(CombatEntity target)
     {
-        target.TakeDamage(CombatRatings[DamageType.Physical].Attack, DamageType.Physical);
+        //add a small amount of random damage to normal atttacks
+        uint damage = CombatRatings[DamageType.Physical].Attack;
+        if (damage > 1) damage += (uint)Util.RandomRange(0, ((int)damage / 2) + 1);
+
+        return target.TakeDamage(damage, DamageType.Physical);
     }
 
     public void Attack(CombatEntity target, Technique tech)
@@ -57,10 +66,22 @@ public abstract class CombatEntity
         }
     }
 
-    public void TakeDamage(uint damage, DamageType type)
+    public uint TakeDamage(uint damage, DamageType type)
     {
+        uint defense = CombatRatings[type].Defense;
+        if (defense >= damage) return 0;
+
         damage -= CombatRatings[type].Defense;
-        if (damage > 0) Health.Current -= damage;
+        if (damage > Health.Current)
+        {
+            Health.Current = 0; //dead
+        }
+        else
+        {
+            Health.Current -= damage; //tis but a scratch!
+        }
+
+        return damage;
     }
 
     public void Heal(uint health)
@@ -68,20 +89,40 @@ public abstract class CombatEntity
         Health.Current += health;
     }
 
-    public abstract void Draw(SpriteBatch sb);
+    private uint CriticalDamage(uint damage)
+    {
+        return (uint)(damage * CriticalModifier);
+    }
+
+    public abstract void Draw(SpriteBatch sb, bool grayedOut);
 }
 
 public class EnemyCombatEntity : CombatEntity
 {
+    //used to differentiate if there's multiple of the same named enemy; e.g. Slime A, Slime B
+    public char? ID { get; set; }
     public Texture2D Image { get; set; }
+    public float Scale { get; set; }
     public Point CenterOffset { get; set; }
 
-    //TODO: loading a map will load all monsters it contains from a persistent store (SQLLite?)
+    //an enemy's name plus its unique identifier
+    public string FullName
+    {
+        get
+        {
+            if (ID == null) return Name;
+            return string.Format("{0} {1}", Name, ID);
+        }
+    }
 
-    public EnemyCombatEntity(string name, uint hp, CombatRatings cr, string imgFile, Point? centerOffset = null) : 
+    //TODO: loading a map will load all monsters it contains from a persistent store (SQLite?)
+
+    public EnemyCombatEntity(string name, uint hp, CombatRatings cr, string imgFile, float scale = 1.0f, Point? centerOffset = null, char? id = null) : 
         base(name, hp, 0, cr)
     {
+        ID = id;
         Image = BaseGame.LoadTexture(imgFile, true);
+        Scale = scale;
         if (centerOffset == null)
             CenterOffset = Point.Zero;
         else
@@ -96,16 +137,23 @@ public class EnemyCombatEntity : CombatEntity
         throw new NotImplementedException();
     }
 
-    public override void Draw(SpriteBatch sb)
+    public override void Draw(SpriteBatch sb, bool grayedOut = false)
     {
-        sb.Draw(Image, new Vector2(X, Y), Color.White);
+        if (grayedOut)
+        {
+            sb.Draw(Image, new Vector2(X, Y), null, Color.Gray, 0, Vector2.Zero, Scale, SpriteEffects.None, 0);
+        }
+        else
+        {
+            sb.Draw(Image, new Vector2(X, Y), null, Color.White, 0, Vector2.Zero, Scale, SpriteEffects.None, 0);
+        }
     }
 
     public void CenterOn(int x, int y)
     {
         if (Image == null) return;
-        X = x - (Image.Width / 2) + CenterOffset.X;
-        Y = y - (Image.Height / 2) + CenterOffset.Y;
+        X = x - (int)(Image.Width * Scale / 2) + CenterOffset.X;
+        Y = y - (int)(Image.Height * Scale / 2) + CenterOffset.Y;
     }
 
     public void CenterOn(Point p)
@@ -136,7 +184,7 @@ public class PlayerCombatEntity : CombatEntity
     }
 
     //TODO: bake all this into a PlayerStatusBox or something?
-    public override void Draw(SpriteBatch sb)
+    public override void Draw(SpriteBatch sb, bool grayedOut = false)
     {
         StatusBox.Draw(sb);
 

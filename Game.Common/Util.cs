@@ -13,7 +13,20 @@ using Microsoft.Xna.Framework.Graphics;
 /// </summary>
 public static class Util
 {
+    private static Random rng = new Random();
     private static Texture2D dummyTexture;
+
+    public static float Random()
+    {
+        return (float)rng.NextDouble();
+    }
+
+    //returns a random int within the given range
+    //min is inclusive, max is exclusive
+    public static int RandomRange(int min, int max)
+    {
+        return rng.Next(min, max);
+    }
 
     public static Vector2 ToVector2(this Point p)
     {

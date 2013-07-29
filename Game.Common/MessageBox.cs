@@ -25,6 +25,17 @@ public class MessageBox : Box
             return (firstDisplayedLineIndex + HeightInLines) < (lines.Count + Choices.Count); 
         } 
     }
+    public string Text
+    {
+        get
+        {
+           return string.Join(" ", lines);
+        }
+        set
+        {
+            WrapText(value);
+        }
+    }
 
     private int firstDisplayedLineIndex = 0;
     private List<string> lines = new List<string>();
@@ -46,14 +57,7 @@ public class MessageBox : Box
     public MessageBox(int x, int y, int w, int h, SpriteFont font, string text) : 
         this(x, y, w, h, font)
     {
-        //fit the given text into this MessageBox
-        text = WrapText(text);
-        //if any remains, load it into the next MessageBox
-        //this will continue until the text is depleted
-        if (!string.IsNullOrWhiteSpace(text))
-        {
-            Next = new MessageBox(this, text);
-        }
+        WrapText(text);
     }
 
     public MessageBox(MessageBox template, string text = null) : 
@@ -62,26 +66,32 @@ public class MessageBox : Box
 
     }
 
-    //wraps the given text horizontally within a single MessageBox
-    private string WrapText(string text)
+    //wraps the given text into lines within a single MessageBox
+    //places any leftover text into a new, next MessageBox
+    private void WrapText(string text)
     {
-        if (string.IsNullOrWhiteSpace(text)) return string.Empty;
+        lines = new List<string>();
+        if (string.IsNullOrWhiteSpace(text)) return;
+
+        StringBuilder sb = new StringBuilder();
+        int processedChars = 0;
+        string remainingText;
 
         //remove carriage return from carriage return + newline pairs
         text = Regex.Replace(text, "\r\n", "\n").Trim();
-
-        StringBuilder sb = new StringBuilder();
-        lines = new List<string>();
-        int processedChars = 0;
 
         string[] tokens = Regex.Split(text, @"(\s)").Where(w => w != string.Empty).ToArray();
         foreach (string token in tokens)
         {
             if (token == "\f")
             {
-                //line feed character -> explicit page break; return what remains, to be loaded into another MessageBox
+                //line feed character -> explicit page break; load any remainder into next MessageBox
                 lines.Add(sb.ToString());
-                return text.Substring(processedChars);
+                remainingText = text.Substring(processedChars);
+                if (!string.IsNullOrWhiteSpace(remainingText))
+                {
+                    Next = new MessageBox(this, remainingText);
+                }
             }
             else if (token == "\n" || Font.MeasureString(sb.ToString() + token).X > Width - (Padding + BorderWidth) * 2)
             {
@@ -95,7 +105,11 @@ public class MessageBox : Box
         }
         
         lines.Add(sb.ToString());
-        return string.Empty;
+        remainingText = text.Substring(processedChars);
+        if (!string.IsNullOrWhiteSpace(remainingText))
+        {
+            Next = new MessageBox(this, remainingText);
+        }
     }
 
     //factory method for loading MessageBoxes and links between them from a graphML file
@@ -133,6 +147,7 @@ public class MessageBox : Box
 
     public override void Draw(SpriteBatch sb)
     {
+        if (!Visible) return;
         base.Draw(sb);
 
         for (int i = firstDisplayedLineIndex; i < lines.Count; i++)
@@ -226,7 +241,7 @@ public class MessageBox : Box
 
     public override string ToString()
     {
-        return string.Join(" ", lines);
+        return Text;
     }
 }
 

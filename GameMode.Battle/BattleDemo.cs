@@ -10,6 +10,7 @@ using Microsoft.Xna.Framework.Graphics;
 public class BattleDemo : BaseGame
 {
     private CombatSystem combatSystem;
+    private const int BOX_SCREEN_MARGIN = 8;
 
     public BattleDemo()
     {
@@ -22,7 +23,7 @@ public class BattleDemo : BaseGame
     {
         base.LoadContent();
         combatSystem = new CombatSystem(CreateSamplePlayerParty());
-        combatSystem.Engage("classy_bg.jpg", CreateSampleEnemyParty());
+        combatSystem.Engage("cave_bg.jpg", CreateSampleEnemyParty());
     }
 
     protected override void Update(GameTime gameTime)
@@ -37,12 +38,30 @@ public class BattleDemo : BaseGame
         if (curKeyboard.IsKeyDown(Buttons.QUIT)) this.Exit();
 
         combatSystem.Update();
-        //if (KeyPressedThisFrame(Buttons.CONFIRM))
-        //    combatSystem.Dialogue.AdvanceLines();
-        //if (KeyPressedThisFrame(Buttons.MOVE_LEFT) || KeyPressedThisFrame(Buttons.MOVE_UP))
-        //    combatSystem.Dialogue.SelectPreviousChoice();
-        //if (KeyPressedThisFrame(Buttons.MOVE_RIGHT) || KeyPressedThisFrame(Buttons.MOVE_DOWN))
-        //    combatSystem.Dialogue.SelectNextChoice();
+        if (KeyPressedThisFrame(Buttons.CONFIRM))
+        {
+            combatSystem.ConfirmKeyPressed();
+        }
+        if (KeyPressedThisFrame(Buttons.CANCEL))
+        {
+            combatSystem.CancelKeyPressed();
+        }
+        if (KeyPressedThisFrame(Buttons.MOVE_LEFT))
+        {
+            combatSystem.LeftKeyPressed();
+        }
+        if (KeyPressedThisFrame(Buttons.MOVE_RIGHT))
+        {
+            combatSystem.RightKeyPressed();
+        }
+        if (KeyPressedThisFrame(Buttons.MOVE_UP))
+        {
+            combatSystem.UpKeyPressed();
+        }
+        if (KeyPressedThisFrame(Buttons.MOVE_DOWN))
+        {
+            combatSystem.DownKeyPressed();
+        }
 
         prevKeyboard = curKeyboard;
         prevMouse = curMouse;
@@ -71,17 +90,37 @@ public class BattleDemo : BaseGame
     private List<EnemyCombatEntity> CreateSampleEnemyParty()
     {
         List<EnemyCombatEntity> enemyParty = new List<EnemyCombatEntity>();
-        enemyParty.Add(new EnemyCombatEntity("Equine Esquire", 25, null, "horsemask_esquire.png", new Point(0, 40)));
+        //enemyParty.Add(new EnemyCombatEntity("Equine Esquire", 25, null, "horsemask_esquire.png", new Point(0, 40)));
+        for (int i = 0; i < 3; i++)
+        {
+            enemyParty.Add(new EnemyCombatEntity("Lime Slime", 10, null, "slime.png", 3.0f, null, GetLetterByNumber(i)));
+        }
         return enemyParty;
+    }
+
+    private char GetLetterByNumber(int i)
+    {
+        return (char)Enumerable.Range('A', 'Z' - 'A').ElementAt(i);
     }
 
     //create the MessageBox whose style, position, etc will be used by all MessageBoxes loaded for this game
     public static MessageBox CreateMessageBoxTemplate()
     {
-        int w = 780;
-        int h = 1;
-        int x = (GameWidth / 2) - (w / 2);
-        int y = 10;
+        MenuBox mainMenu = CreateMainMenuBoxTemplate();
+        int w = GameWidth - mainMenu.Width - (2 * BOX_SCREEN_MARGIN);
+        int h = 4;
+        int x = mainMenu.X + mainMenu.Width - mainMenu.BorderWidth;
+        int y = mainMenu.Y;
         return new MessageBox(x, y, w, h, Font);
+    }
+
+    public static MenuBox CreateMainMenuBoxTemplate()
+    {
+        int w = 75;
+        int h = 4;
+        int cols = 1;
+        int x = BOX_SCREEN_MARGIN;
+        int y = BOX_SCREEN_MARGIN;
+        return new MenuBox(x, y, w, h, cols, Font);
     }
 }
