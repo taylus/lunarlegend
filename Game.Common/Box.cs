@@ -10,6 +10,8 @@ using Microsoft.Xna.Framework.Graphics;
 public class Box : UIElement
 {
     //TODO: gradient backgrounds?
+    //TODO: Texture2D backgrounds?
+
     public int BorderWidth { get; set; }
     public int Margin { get; set; }
     public int Padding { get; set; }
@@ -41,7 +43,19 @@ public class Box : UIElement
     public override void Draw(SpriteBatch sb)
     {
         if (!Visible) return;
+        DrawBackground(sb);
+        DrawBorders(sb);
+    }
+
+    //in case deriving classes want these on separate layers
+    protected void DrawBackground(SpriteBatch sb)
+    {
         Util.DrawRectangle(sb, Rectangle, BackgroundColor);
+    }
+
+    //in case deriving classes want these on separate layers
+    protected void DrawBorders(SpriteBatch sb)
+    {
         Util.DrawLine(sb, BorderWidth, new Vector2(X, Y), new Vector2(X + Width, Y), BorderColor);
         Util.DrawLine(sb, BorderWidth, new Vector2(X + Width, Y), new Vector2(X + Width, Y + Height), BorderColor);
         Util.DrawLine(sb, BorderWidth, new Vector2(X + Width, Y + Height), new Vector2(X, Y + Height), BorderColor);

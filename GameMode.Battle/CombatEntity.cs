@@ -21,13 +21,10 @@ public abstract class CombatEntity
     public int Y { get; set; }
     //base combat stats, before crits, buffs, or any other damage modifiers
     public Dictionary<DamageType, CombatRating> CombatRatings { get; set; }
-    public float CriticalModifier { get; set; }
+    public float CriticalDamageModifier = 1.0f;
 
     public const int DEFAULT_ATTACK = 5;
     public const int DEFAULT_DEFENSE = 0;
-    public const float DEFAULT_CRIT_MODIFIER = 1.5f;
-
-    public abstract CombatAction DecideAction(List<CombatEntity> allies, List<CombatEntity> enemies);
 
     public CombatEntity(string name, uint hp, uint resource, CombatRatings cr)
     {
@@ -35,7 +32,6 @@ public abstract class CombatEntity
         Health.Current = Health.Maximum = hp;
         Resource.Current = Resource.Maximum = resource;
         CombatRatings = new CombatRatings();
-        CriticalModifier = DEFAULT_CRIT_MODIFIER;
 
         //default all combat ratings except those overridden by the given params
         foreach (DamageType type in Enum.GetValues(typeof(DamageType)))
@@ -48,30 +44,8 @@ public abstract class CombatEntity
         }
     }
 
-    public uint Attack(CombatEntity target)
+    public uint TakeDamage(uint damage)
     {
-        //add a small amount of random damage to normal atttacks
-        uint damage = CombatRatings[DamageType.Physical].Attack;
-        if (damage > 1) damage += (uint)Util.RandomRange(0, ((int)damage / 2) + 1);
-
-        return target.TakeDamage(damage, DamageType.Physical);
-    }
-
-    public void Attack(CombatEntity target, Technique tech)
-    {
-        if (tech != null && tech.ResourceCost <= Resource.Current)
-        {
-            tech.ActUpon(target);
-            Resource.Current -= tech.ResourceCost;
-        }
-    }
-
-    public uint TakeDamage(uint damage, DamageType type)
-    {
-        uint defense = CombatRatings[type].Defense;
-        if (defense >= damage) return 0;
-
-        damage -= CombatRatings[type].Defense;
         if (damage > Health.Current)
         {
             Health.Current = 0; //dead
@@ -84,17 +58,12 @@ public abstract class CombatEntity
         return damage;
     }
 
-    public void Heal(uint health)
+    public uint Heal(uint health)
     {
+        uint amountHealed = Math.Max(health, Health.Maximum - Health.Current);
         Health.Current += health;
+        return amountHealed;
     }
-
-    private uint CriticalDamage(uint damage)
-    {
-        return (uint)(damage * CriticalModifier);
-    }
-
-    public abstract void Draw(SpriteBatch sb, bool grayedOut);
 }
 
 public class EnemyCombatEntity : CombatEntity
@@ -129,15 +98,15 @@ public class EnemyCombatEntity : CombatEntity
             CenterOffset = centerOffset.Value;
     }
 
-    public override CombatAction DecideAction(List<CombatEntity> allies, List<CombatEntity> enemies)
+    public CombatAction DecideAction(List<EnemyCombatEntity> allies, List<PlayerCombatEntity> enemies)
     {
-        //AI to select what to do...
-        //TODO: implement scriptability via Javascript (Jint)
-        //return new CombatAction(this, enemies.SelectRandom());
-        throw new NotImplementedException();
+        //TODO: implement scriptable AI via Javascript (Jint)
+
+        //basic attack a random enemy
+        return new CombatAction(this, enemies.OrderBy(e => Guid.NewGuid()).First());
     }
 
-    public override void Draw(SpriteBatch sb, bool grayedOut = false)
+    public void Draw(SpriteBatch sb, bool grayedOut = false)
     {
         if (grayedOut)
         {
@@ -177,14 +146,8 @@ public class PlayerCombatEntity : CombatEntity
         ResourceType = ResourceType.Mana;
     }
 
-    public override CombatAction DecideAction(List<CombatEntity> allies, List<CombatEntity> enemies)
-    {
-        //select action via menus...
-        throw new NotImplementedException();
-    }
-
     //TODO: bake all this into a PlayerStatusBox or something?
-    public override void Draw(SpriteBatch sb, bool grayedOut = false)
+    public void Draw(SpriteBatch sb, bool grayedOut = false, bool currentPlayer = false)
     {
         StatusBox.Draw(sb);
 
@@ -262,7 +225,7 @@ public enum DamageType
 }
 
 //different player classes have different types of resources, with different behavior
-//Energy = melee/ranger types: start at zero; build up as fight goes on
+//Energy = physical types: start at zero; build up as fight goes on
 //Mana = caster/healer types: start at full; healers can regen with skills, casters need to normal attack
 public enum ResourceType
 {

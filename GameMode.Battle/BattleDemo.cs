@@ -93,7 +93,7 @@ public class BattleDemo : BaseGame
         //enemyParty.Add(new EnemyCombatEntity("Equine Esquire", 25, null, "horsemask_esquire.png", new Point(0, 40)));
         for (int i = 0; i < 3; i++)
         {
-            enemyParty.Add(new EnemyCombatEntity("Lime Slime", 10, null, "slime.png", 3.0f, null, GetLetterByNumber(i)));
+            enemyParty.Add(new EnemyCombatEntity("Lime Slime", 12, null, "slime.png", 3.0f, null, GetLetterByNumber(i)));
         }
         return enemyParty;
     }
@@ -122,5 +122,18 @@ public class BattleDemo : BaseGame
         int x = BOX_SCREEN_MARGIN;
         int y = BOX_SCREEN_MARGIN;
         return new MenuBox(x, y, w, h, cols, Font);
+    }
+
+    public static PowerMeter CreatePowerMeter()
+    {
+        int w = 350;
+        int h = 40;
+        int x = 225;
+        int y = 420;
+        PowerMeter pm = new PowerMeter(x, y, w, h);
+        pm.Profiles.Add(new PowerMeterProfile("========XX", 6.0f));
+        //pm.Profiles.Add(new PowerMeterProfile("===-XX-===", 6.0f));
+        pm.IsActive = pm.Visible = false;
+        return pm;
     }
 }

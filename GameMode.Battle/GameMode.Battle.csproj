@@ -107,6 +107,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CombatAction.cs" />
     <Compile Include="CombatEntity.cs" />
     <Compile Include="CombatSystem.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

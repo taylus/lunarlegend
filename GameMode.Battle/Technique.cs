@@ -9,28 +9,29 @@ using System.Text;
 //TODO: this would be a good candidate, along with specific monster types, to persist using SQLite
 public abstract class Technique
 {
+    public CombatAction OwningAction { get; private set; }
     public uint ResourceCost { get; private set; }
     public uint Power { get; private set; }
     public string Name { get; private set; }
 
-    public abstract void ActUpon(CombatEntity target);
+    public abstract uint ActUpon(CombatEntity target);
 }
 
 public class DamageTechnique : Technique
 {
     public DamageType Type { get; private set; }
 
-    public override void ActUpon(CombatEntity target)
+    public override uint ActUpon(CombatEntity target)
     {
-        target.TakeDamage(Power, Type);
+        return target.TakeDamage(OwningAction.CalculateDamage());
     }
 }
 
 public class HealTechnique : Technique
 {
-    public override void ActUpon(CombatEntity target)
+    public override uint ActUpon(CombatEntity target)
     {
-        target.Heal(Power);
+        return target.Heal(Power);
     }
 }
 
@@ -38,7 +39,7 @@ public class SupportTechnique : Technique
 {
     public int TurnDuration { get; private set; }
 
-    public override void ActUpon(CombatEntity target)
+    public override uint ActUpon(CombatEntity target)
     {
         //TODO: act differently based on type and effect:
         //which stat, and whether it's a buff or debuff

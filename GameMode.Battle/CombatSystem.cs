@@ -19,6 +19,7 @@ public class CombatSystem
         SELECT_PLAYER_TARGET,   //selecting a player as the target of an action
         SELECT_ENEMY_TARGET,    //selecting an enemy as the target of an action
         POWER_METER,            //performing a power meter to determine action strength
+        ENEMY_ACT,              //enemy is deciding what to do
         BATTLE_OVER             //battle is finished (either victory or defeat)
     }
 
@@ -28,38 +29,53 @@ public class CombatSystem
     private MenuBox mainMenu;
     private MenuBox skills;
     private MenuBox inventory;
+    private PowerMeter powerMeter;
     private Texture2D background;
 
     private List<PlayerCombatEntity> playerParty = new List<PlayerCombatEntity>();
     private List<EnemyCombatEntity> enemyParty = new List<EnemyCombatEntity>();
-    private int playerTargetIndex;
-    private int enemyTargetIndex;
+
+    //the player party member who is currently issuing commands
+    private int currentPlayerIndex = -1;
+    private PlayerCombatEntity currentPlayer { get { return playerParty[currentPlayerIndex]; } }
+
+    //the enemy party member who is currently issuing commands
+    private int currentEnemyIndex = 0;
+    private EnemyCombatEntity currentEnemy { get { return enemyParty[currentEnemyIndex]; } }
+
+    //vertical offset (in pixels) to push the current player's status box up
+    private const int CURRENT_PLAYER_OFFSET = 20;
+
+    //the player party member that the player is currently targeting
+    private int playerTargetIndex = -1;
     private PlayerCombatEntity playerTarget { get { return playerParty[playerTargetIndex]; } }
+
+    //the enemy party member that the player is currently targeting
+    private int enemyTargetIndex = 0;
     private EnemyCombatEntity enemyTarget { get { return enemyParty[enemyTargetIndex]; } }
 
-    private PlayerCombatEntity currentPlayer;
-    private Technique selectedTechnique;
+    private Technique selectedTechnique = null;
 
     public CombatSystem(List<PlayerCombatEntity> players)
     {
+        if (players == null || players.Count <= 0)
+            throw new ArgumentException("Attempted to initialize combat system with empty player party.");
+
         playerParty = players;
         AlignPlayers(playerParty);
-
     }
 
     public void Engage(string bgFile, List<EnemyCombatEntity> enemies)
     {
-        background = BaseGame.LoadTexture(bgFile, true);
-
         if (enemies == null || enemies.Count <= 0)
             throw new ArgumentException("Attempted to enter combat with empty enemy party.");
 
-        currentPlayer = playerParty.First();
+        background = BaseGame.LoadTexture(bgFile, true);
         enemyParty = enemies;
-        enemyTargetIndex = 0;
         AlignEnemies(enemyParty);
         mainMenu = new MenuBox(BattleDemo.CreateMainMenuBoxTemplate(), "Attack", "Defend", "Magic", "Items");
         dialogue = new MessageBox(BattleDemo.CreateMessageBoxTemplate(), GetEngagementText());
+        powerMeter = BattleDemo.CreatePowerMeter();
         SetState(CombatSystemState.TEXT);
     }
 
@@ -90,23 +106,27 @@ public class CombatSystem
     {
         sb.Draw(background, BaseGame.GameWindow, Color.White);
 
-        foreach (CombatEntity enemy in enemyParty)
+        foreach (EnemyCombatEntity enemy in enemyParty)
         {
-            enemy.Draw(sb, currentState == CombatSystemState.SELECT_ENEMY_TARGET && enemyTarget != enemy);
+            bool grayedOut = (currentState == CombatSystemState.SELECT_ENEMY_TARGET && enemyTarget != enemy);
+            enemy.Draw(sb, grayedOut);
         }
 
-        foreach (CombatEntity player in playerParty)
+        foreach (PlayerCombatEntity player in playerParty)
         {
-            player.Draw(sb, currentState == CombatSystemState.SELECT_PLAYER_TARGET && playerTarget != player);
+            bool grayedOut = (currentState == CombatSystemState.SELECT_PLAYER_TARGET && playerTarget != player);
+            bool current = (currentPlayerIndex > 0 && currentPlayerIndex < playerParty.Count - 1 && currentPlayer == player);
+            player.Draw(sb, grayedOut, current);
         }
 
         dialogue.Draw(sb);
         mainMenu.Draw(sb);
+        powerMeter.Draw(sb);
     }
 
     public void Update()
     {
-
+        powerMeter.Update();
     }
 
     public void ConfirmKeyPressed()
@@ -114,9 +134,12 @@ public class CombatSystem
         switch(currentState)
         {
             case CombatSystemState.BATTLE_OVER:
+            {
                 Environment.Exit(0);
                 break;
+            }
             case CombatSystemState.TEXT:
+            {
                 if (dialogue.HasMoreLinesToDisplay)
                 {
                     dialogue.AdvanceLines();
@@ -128,55 +151,118 @@ public class CombatSystem
                 else
                 {
                     //main menu transition
-                    dialogue.Text = "";
+                    SetCurrentPlayer(0);
                     SetState(CombatSystemState.MENU_SELECT);
                 }
                 break;
+            }
             case CombatSystemState.MENU_SELECT:
+            {
                 if (mainMenu.SelectedText == "Attack")
                 {
                     SetState(CombatSystemState.SELECT_ENEMY_TARGET);
                     dialogue.Text = GetEnemyTargetText(enemyTarget);
                 }
                 break;
+            }
             case CombatSystemState.SELECT_ENEMY_TARGET:
+            {
                 if (selectedTechnique == null)
                 {
-                    //normal attack the enemy
-                    SetState(CombatSystemState.MENU_SELECT);
-                    uint damageDone = currentPlayer.Attack(enemyTarget);
+                    //normal attack
+                    SetState(CombatSystemState.POWER_METER);
+                    powerMeter.IsActive = powerMeter.Visible = true;
+                }
+                else
+                {
+                    //special technique
+                    //TODO: load technique's PowerMeterProfile(s)
+                }
+                break;
+            }
+            case CombatSystemState.POWER_METER:
+            {
+                PowerMeterResult result = powerMeter.ConfirmCursor();
+                if (!powerMeter.Advance())
+                {
+                    //at the end of the meter's levels; stop the meter and deal the damage
+                    powerMeter.IsActive = false;
+                    powerMeter.Visible = false;
+
+                    currentPlayer.CriticalDamageModifier = powerMeter.DamageModifier;
+                    CombatAction action = new CombatAction(currentPlayer, enemyTarget);
+                    uint damageDone = action.Execute();
 
                     if (enemyTarget.IsDead)
                     {
-                        //TODO: draw damage numbers directly on the target, instead of displaying it in the dialogue box?
-                        dialogue.Text = string.Format("{0} attacks {1} for {2} damage!\n{1} is defeated!", currentPlayer.Name, enemyTarget.Name, damageDone);
+                        //TODO: draw damage numbers directly on the target, instead of displaying it as dialogue
+                        dialogue.Text = string.Format("{0} attacks {1} for {2} damage!\n{1} is defeated!", currentPlayer.Name, enemyTarget.FullName, damageDone);
                         enemyParty.Remove(enemyTarget);
                         enemyTargetIndex = 0;
                     }
                     else
                     {
-                        //TODO: draw damage numbers directly on the target, instead of displaying it in the dialogue box?
-                        dialogue.Text = string.Format("{0} attacks {1} for {2} damage!", currentPlayer.Name, enemyTarget.Name, damageDone);
+                        //TODO: draw damage numbers directly on the target, instead of displaying it as dialogue
+                        dialogue.Text = string.Format("{0} attacks {1} for {2} damage!", currentPlayer.Name, enemyTarget.FullName, damageDone);
                     }
+                    powerMeter.Reset();
+
+                    if (currentPlayerIndex < playerParty.Count - 1)
+                    {
+                        //advance to the next player
+                        SetCurrentPlayer(currentPlayerIndex + 1);
+                        SetState(CombatSystemState.MENU_SELECT);
+                    }
+                    else
+                    {
+                        //enemy turn
+                        SetCurrentPlayer(-1);
+                        SetState(CombatSystemState.ENEMY_ACT);
+                    }
+                }
+                break;
+            }
+            case CombatSystemState.ENEMY_ACT:
+            {
+                CombatAction enemyAction = currentEnemy.DecideAction(enemyParty, playerParty);
+                CombatEntity target = enemyAction.Target;
+                uint damageDone = enemyAction.Execute();
+
+                if (target.IsDead)
+                {
+                    dialogue.Text = string.Format("{0} attacks {1} for {2} damage!\n{1} is defeated!", currentEnemy.FullName, target.Name, damageDone);
                 }
                 else
                 {
-                    //use technique on the enemy
+                    dialogue.Text = string.Format("{0} attacks {1} for {2} damage!", currentEnemy.FullName, target.Name, damageDone);
+                }
+
+                if (currentEnemyIndex < enemyParty.Count - 1)
+                {
+                    //advance to the next enemy
+                    currentEnemyIndex++;
+                }
+                else
+                {
+                    //player turn
+                    currentEnemyIndex = 0;
+                    SetState(CombatSystemState.TEXT);
                 }
                 break;
+            }
         }
 
         //check victory or defeat conditions in every state
         if (PlayerVictory())
         {
             //victory: get exp, items, then go back to overworld
-            dialogue.Text = string.Format("A winner is you!");
+            dialogue.Text += "\nA winner is you!";
             SetState(CombatSystemState.BATTLE_OVER);
         }
         else if (PlayerDefeat())
         {
             //defeat: restart at last save...
-            dialogue.Text = string.Format("Your party has perished...");
+            dialogue.Text += "\nYour party has perished...!";
             SetState(CombatSystemState.BATTLE_OVER);
         }
     }
@@ -259,14 +345,21 @@ public class CombatSystem
     {
         //current and previous states should only be directly set here
         //wrap them in a class or something to enforce this?
+        //TODO: maintain stack of states? (pushdown automata)
         previousState = currentState;
         currentState = state;
 
         mainMenu.IsActive = (currentState == CombatSystemState.MENU_SELECT);
     }
 
-    //TODO: generalize these two functions into one that aligns any number of CombatEntities
-    //within a given rectangle, that will be determined differently for enemies and players
+    //utility method to advance to the a new current player
+    //restores the last player's status box position, and moves the new one
+    private void SetCurrentPlayer(int index)
+    {
+        if(currentPlayerIndex >= 0) currentPlayer.StatusBox.Y += CURRENT_PLAYER_OFFSET;
+        currentPlayerIndex = index;
+        if (currentPlayerIndex >= 0) currentPlayer.StatusBox.Y -= CURRENT_PLAYER_OFFSET;
+    }
 
     private void AlignEnemies(List<EnemyCombatEntity> enemies)
     {
@@ -294,39 +387,5 @@ public class CombatSystem
         //}
         players[0].StatusBox.MoveTo(220, 492);
         players[1].StatusBox.MoveTo(420, 492);
-    }
-}
-
-//represents a player or enemy's action for one turn
-public class CombatAction
-{
-    public string Description;
-    public SoundEffect Sound;
-    public Color? ScreenFlash;
-    public CombatEntity Source;
-    public CombatEntity Target;
-    public Technique Technique;
-
-    public void Perform()
-    {
-        if (Technique != null)
-        {
-            Source.Attack(Target, Technique);
-        }
-        else
-        {
-            Source.Attack(Target);
-        }
-    }
-
-    public CombatAction(CombatEntity source, CombatEntity target)
-    {
-        Source = source;
-        Target = target;
-
-        if (Technique == null) 
-            Description = string.Format("{0} attacks {1}!", source.Name, target.Name);
-        else 
-            Description = string.Format("{0} casts {1} on {2}!", source.Name, Technique.Name, target.Name);
     }
 }

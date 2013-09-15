@@ -29,7 +29,7 @@ public class MessageBox : Box
     {
         get
         {
-           return string.Join(" ", lines);
+           return string.Join("\n", lines);
         }
         set
         {
