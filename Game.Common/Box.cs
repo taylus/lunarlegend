@@ -22,8 +22,9 @@ public class Box : UIElement
     private const int DEFAULT_MARGIN = 8;
     private const int DEFAULT_PADDING = 8;
     private const int DEFAULT_BORDER_WIDTH = 2;
-    private static readonly Color DEFAULT_BORDER_COLOR = Color.LightSteelBlue;
-    private const float DEFAULT_OPACITY = 0.65f;
+    public static readonly Color DEFAULT_BORDER_COLOR = Color.LightSteelBlue;
+    public static readonly Color DEFAULT_BACKGROUND_COLOR = Color.Lerp(Color.Transparent, Color.DarkBlue, MathHelper.Clamp(DEFAULT_OPACITY, 0, 1));
+    public const float DEFAULT_OPACITY = 0.65f;
 
     public Box(int x, int y, int w, int h)
     {
@@ -32,7 +33,7 @@ public class Box : UIElement
         BorderWidth = DEFAULT_BORDER_WIDTH;
         BorderColor = DEFAULT_BORDER_COLOR;
         Opacity = DEFAULT_OPACITY;
-        BackgroundColor = Color.Lerp(Color.Transparent, Color.DarkBlue, MathHelper.Clamp(Opacity, 0, 1));
+        BackgroundColor = DEFAULT_BACKGROUND_COLOR;
 
         X = x;
         Y = y;

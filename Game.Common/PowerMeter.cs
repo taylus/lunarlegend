@@ -7,8 +7,8 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
 //the UI element that implements the power meter used for determining action strength
-//stores an arbitrary number of slices and a cursor that moves across them
-//the slice under the cursor can be inspected to determine if an action should miss, hit, or crit
+//stores an arbitrary number of "profiles" comprised of "slices," and a cursor that moves across them
+//the slice under the cursor is be inspected to determine if an action should miss, hit, or crit
 public class PowerMeter : Box
 {
     //power meter bar layouts; parse from strings
@@ -36,8 +36,7 @@ public class PowerMeter : Box
 
     public PowerMeter(int x, int y, int w, int h) : base(x, y, w, h)
     {
-        BackgroundColor = Color.Black;
-        BorderColor = HitColor = Color.White;
+        HitColor = BorderColor;
         CritColor = Color.Red;
         IsActive = true;
         LineWidth = 3.0f;
@@ -45,6 +44,7 @@ public class PowerMeter : Box
         cursorPosition = 0;
         DamageModifier = 1.0f;
         Profiles = new List<PowerMeterProfile>();
+        Reset();
     }
 
     public override void Draw(SpriteBatch sb)
@@ -130,10 +130,15 @@ public class PowerMeter : Box
     public void Reset()
     {
         curProfileIndex = 0;
-        cursorPosition = 0;
         DamageModifier = 1.0f;
+
+        //randomize the starting position?
+        //cursorPosition = Util.RandomRange(0, Width);
+        cursorPosition = 0;
     }
 
+    //determines if the cursor's current position is above a hit, miss, or crit
+    //and multiplies the current damage modifier accordingly
     public PowerMeterResult ConfirmCursor()
     {
         int sliceWidth = Width / CurrentProfile.Slices.Count;

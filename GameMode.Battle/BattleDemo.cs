@@ -23,7 +23,7 @@ public class BattleDemo : BaseGame
     {
         base.LoadContent();
         combatSystem = new CombatSystem(CreateSamplePlayerParty());
-        combatSystem.Engage("cave_bg.jpg", CreateSampleEnemyParty());
+        combatSystem.Engage("img/cave_bg.jpg", CreateSampleEnemyParty());
     }
 
     protected override void Update(GameTime gameTime)
@@ -37,7 +37,7 @@ public class BattleDemo : BaseGame
         //exit on esc
         if (curKeyboard.IsKeyDown(Buttons.QUIT)) this.Exit();
 
-        combatSystem.Update();
+        combatSystem.Update(gameTime);
         if (KeyPressedThisFrame(Buttons.CONFIRM))
         {
             combatSystem.ConfirmKeyPressed();
@@ -93,7 +93,9 @@ public class BattleDemo : BaseGame
         //enemyParty.Add(new EnemyCombatEntity("Equine Esquire", 25, null, "horsemask_esquire.png", new Point(0, 40)));
         for (int i = 0; i < 3; i++)
         {
-            enemyParty.Add(new EnemyCombatEntity("Lime Slime", 12, null, "slime.png", 3.0f, null, GetLetterByNumber(i)));
+            Dictionary<DamageType, CombatRating> stats = new Dictionary<DamageType, CombatRating>();
+            stats.Add(DamageType.Physical, new CombatRating(25, 5));
+            enemyParty.Add(new EnemyCombatEntity("Lime Slime", 12, stats, "img/slime.png", 3.0f, null, GetLetterByNumber(i)));
         }
         return enemyParty;
     }
@@ -131,7 +133,7 @@ public class BattleDemo : BaseGame
         int x = 225;
         int y = 420;
         PowerMeter pm = new PowerMeter(x, y, w, h);
-        pm.Profiles.Add(new PowerMeterProfile("========XX", 6.0f));
+        pm.Profiles.Add(new PowerMeterProfile("XX======XX", 6.0f));
         //pm.Profiles.Add(new PowerMeterProfile("===-XX-===", 6.0f));
         pm.IsActive = pm.Visible = false;
         return pm;

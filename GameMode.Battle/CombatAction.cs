@@ -62,7 +62,9 @@ public class CombatAction
         //apply crit and defenses to determine final damage
         float damage = baseDamage * Source.CriticalDamageModifier;
         uint defense = Target.CombatRatings[type].Defense;
-        if (defense > damage) return 0;
+
+        //always do at least 1 damage
+        if (defense >= damage) return 1;
         return (uint)(damage - defense);
     }
 }

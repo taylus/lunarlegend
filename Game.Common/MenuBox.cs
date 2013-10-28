@@ -15,7 +15,7 @@ public class MenuBox : Box
     public bool IsActive { get; set; }
     public IList<MenuBoxChoice> Choices { get { return choices.AsReadOnly(); } }
     private List<MenuBoxChoice> choices { get; set; }
-    private int selectedChoiceIndex = 0;
+    private int selectedChoiceIndex = -1;
     private static readonly Color DEFAULT_FONT_COLOR = Color.White;
 
     private MenuBoxChoice SelectedChoice
@@ -79,7 +79,7 @@ public class MenuBox : Box
 
         foreach (MenuBoxChoice choice in choices)
         {
-            Color choiceColor = choice == SelectedChoice && IsActive ? Color.Yellow : Color.White;
+            Color choiceColor = choice == SelectedChoice ? Color.Yellow : Color.White;
             sb.DrawString(Font, choice.Text, new Vector2(choice.X, choice.Y), choiceColor);
         }
     }

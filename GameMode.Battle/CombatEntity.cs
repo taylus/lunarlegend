@@ -64,6 +64,11 @@ public abstract class CombatEntity
         Health.Current += health;
         return amountHealed;
     }
+
+    public virtual void Update(GameTime currentGameTime)
+    {
+
+    }
 }
 
 public class EnemyCombatEntity : CombatEntity
@@ -71,6 +76,8 @@ public class EnemyCombatEntity : CombatEntity
     //used to differentiate if there's multiple of the same named enemy; e.g. Slime A, Slime B
     public char? ID { get; set; }
     public Texture2D Image { get; set; }
+    public BlinkingSpriteOverlay Overlay { get; set; }
+    public bool DrawOverlay { get; set; }
     public float Scale { get; set; }
     public Point CenterOffset { get; set; }
 
@@ -85,12 +92,14 @@ public class EnemyCombatEntity : CombatEntity
     }
 
     //TODO: loading a map will load all monsters it contains from a persistent store (SQLite?)
+    //monsters will appear on the map like the player or NPCS, and can be avoided
 
     public EnemyCombatEntity(string name, uint hp, CombatRatings cr, string imgFile, float scale = 1.0f, Point? centerOffset = null, char? id = null) : 
         base(name, hp, 0, cr)
     {
         ID = id;
         Image = BaseGame.LoadTexture(imgFile, true);
+        Overlay = new BlinkingSpriteOverlay(Image, Color.Black, 0.5f, TimeSpan.FromSeconds(0.25)) { BlinkEnabled = false };
         Scale = scale;
         if (centerOffset == null)
             CenterOffset = Point.Zero;
@@ -103,19 +112,13 @@ public class EnemyCombatEntity : CombatEntity
         //TODO: implement scriptable AI via Javascript (Jint)
 
         //basic attack a random enemy
-        return new CombatAction(this, enemies.OrderBy(e => Guid.NewGuid()).First());
+        return new CombatAction(this, enemies.Where(e => e.IsAlive).OrderBy(e => Guid.NewGuid()).First());
     }
 
-    public void Draw(SpriteBatch sb, bool grayedOut = false)
+    public void Draw(SpriteBatch sb)
     {
-        if (grayedOut)
-        {
-            sb.Draw(Image, new Vector2(X, Y), null, Color.Gray, 0, Vector2.Zero, Scale, SpriteEffects.None, 0);
-        }
-        else
-        {
-            sb.Draw(Image, new Vector2(X, Y), null, Color.White, 0, Vector2.Zero, Scale, SpriteEffects.None, 0);
-        }
+        sb.Draw(Image, new Vector2(X, Y), null, Color.White, 0, Vector2.Zero, Scale, SpriteEffects.None, 0);
+        if (DrawOverlay && Overlay != null) Overlay.Draw(sb, X, Y, Scale);
     }
 
     public void CenterOn(int x, int y)
@@ -129,6 +132,11 @@ public class EnemyCombatEntity : CombatEntity
     {
         CenterOn(p.X, p.Y);
     }
+
+    public override void Update(GameTime currentGameTime)
+    {
+        if(DrawOverlay) Overlay.Update(currentGameTime);
+    }
 }
 
 public class PlayerCombatEntity : CombatEntity
@@ -138,6 +146,9 @@ public class PlayerCombatEntity : CombatEntity
 
     private const int DEFAULT_STATUSBOX_WIDTH = 160;
     private const int DEFAULT_STATUSBOX_HEIGHT = 100;
+
+    private static readonly Color ALIVE_COLOR = Box.DEFAULT_BACKGROUND_COLOR;
+    private static readonly Color DEAD_COLOR = Color.Lerp(Color.Transparent, Color.DarkRed, MathHelper.Clamp(Box.DEFAULT_OPACITY, 0, 1));
 
     public PlayerCombatEntity(string name, uint hp, uint resource, CombatRatings cr) : 
         base(name, hp, resource, cr)
@@ -149,6 +160,7 @@ public class PlayerCombatEntity : CombatEntity
     //TODO: bake all this into a PlayerStatusBox or something?
     public void Draw(SpriteBatch sb, bool grayedOut = false, bool currentPlayer = false)
     {
+        StatusBox.BackgroundColor = IsDead ? DEAD_COLOR : ALIVE_COLOR;
         StatusBox.Draw(sb);
 
         //draw name at the top, centered horizontally
@@ -173,11 +185,6 @@ public class PlayerCombatEntity : CombatEntity
             sb.DrawString(BaseGame.Font, String.Format("{0}    {1}/{2}", resourceLabel, Resource.Current, Resource.Maximum), resourceLabelPosition, Color.White);
         }
     }
-
-    //public void Update()
-    //{
-    //    StatusBox.Update();
-    //}
 }
 
 //TODO: friendly but AI controlled allies?

@@ -35,22 +35,27 @@ public class CombatSystem
     private List<PlayerCombatEntity> playerParty = new List<PlayerCombatEntity>();
     private List<EnemyCombatEntity> enemyParty = new List<EnemyCombatEntity>();
 
+    private PlayerCombatEntity firstLivingPlayer { get { return playerParty.Where(p => p.IsAlive).First(); } }
+    private int firstLivingPlayerIndex { get { return playerParty.IndexOf(firstLivingPlayer); } }
+    private PlayerCombatEntity lastLivingPlayer { get { return playerParty.Where(p => p.IsAlive).Last(); } }
+    private int lastLivingPlayerIndex { get { return playerParty.IndexOf(lastLivingPlayer); } }
+
     //the player party member who is currently issuing commands
     private int currentPlayerIndex = -1;
     private PlayerCombatEntity currentPlayer { get { return playerParty[currentPlayerIndex]; } }
 
-    //the enemy party member who is currently issuing commands
+    //the enemy that is currently issuing commands
     private int currentEnemyIndex = 0;
     private EnemyCombatEntity currentEnemy { get { return enemyParty[currentEnemyIndex]; } }
 
-    //vertical offset (in pixels) to push the current player's status box up
+    //vertical offset (in pixels) to push the current player's status box up when it's their turn
     private const int CURRENT_PLAYER_OFFSET = 20;
 
     //the player party member that the player is currently targeting
     private int playerTargetIndex = -1;
     private PlayerCombatEntity playerTarget { get { return playerParty[playerTargetIndex]; } }
 
-    //the enemy party member that the player is currently targeting
+    //the enemy that the player is currently targeting
     private int enemyTargetIndex = 0;
     private EnemyCombatEntity enemyTarget { get { return enemyParty[enemyTargetIndex]; } }
 
@@ -108,8 +113,27 @@ public class CombatSystem
 
         foreach (EnemyCombatEntity enemy in enemyParty)
         {
-            bool grayedOut = (currentState == CombatSystemState.SELECT_ENEMY_TARGET && enemyTarget != enemy);
-            enemy.Draw(sb, grayedOut);
+            //player is selecting an enemy target:
+            //draw a solid overlay on the target(s) he is NOT selecting
+            //draw a blinking overlay on the target he is selecting
+            if (currentState == CombatSystemState.SELECT_ENEMY_TARGET)
+            {
+                enemy.DrawOverlay = true;
+                enemy.Overlay.Color = Color.Black;
+                enemy.Overlay.BlinkEnabled = (enemyTarget == enemy);
+            }
+            else if (currentState == CombatSystemState.ENEMY_ACT && enemy == currentEnemy)
+            {
+                enemy.DrawOverlay = true;
+                enemy.Overlay.Color = Color.Gray;
+                enemy.Overlay.BlinkEnabled = true;
+            }
+            else
+            {
+                enemy.DrawOverlay = false;
+            }
+
+            enemy.Draw(sb);
         }
 
         foreach (PlayerCombatEntity player in playerParty)
@@ -119,14 +143,19 @@ public class CombatSystem
             player.Draw(sb, grayedOut, current);
         }
 
-        dialogue.Draw(sb);
+        if(!string.IsNullOrWhiteSpace(dialogue.Text)) dialogue.Draw(sb);
         mainMenu.Draw(sb);
         powerMeter.Draw(sb);
     }
 
-    public void Update()
+    public void Update(GameTime currentGameTime)
     {
         powerMeter.Update();
+
+        foreach (EnemyCombatEntity enemy in enemyParty)
+        {
+            enemy.Update(currentGameTime);
+        }
     }
 
     public void ConfirmKeyPressed()
@@ -151,7 +180,10 @@ public class CombatSystem
                 else
                 {
                     //main menu transition
-                    SetCurrentPlayer(0);
+                    SetCurrentPlayer(firstLivingPlayerIndex);
+                    dialogue.Text = "";
+                    mainMenu.ResetSelection();
+                    //mainMenu.Visible = true;
                     SetState(CombatSystemState.MENU_SELECT);
                 }
                 break;
@@ -210,7 +242,7 @@ public class CombatSystem
                     if (currentPlayerIndex < playerParty.Count - 1)
                     {
                         //advance to the next player
-                        SetCurrentPlayer(currentPlayerIndex + 1);
+                        SetCurrentPlayer(GetNextLivingPlayerIndex(currentPlayerIndex));
                         SetState(CombatSystemState.MENU_SELECT);
                     }
                     else
@@ -262,7 +294,7 @@ public class CombatSystem
         else if (PlayerDefeat())
         {
             //defeat: restart at last save...
-            dialogue.Text += "\nYour party has perished...!";
+            dialogue.Text += "\nYour party has perished...";
             SetState(CombatSystemState.BATTLE_OVER);
         }
     }
@@ -277,6 +309,7 @@ public class CombatSystem
             case CombatSystemState.SELECT_ENEMY_TARGET:
                 enemyTargetIndex--;
                 if (enemyTargetIndex < 0) enemyTargetIndex = 0;
+                enemyTarget.Overlay.Reset();
                 dialogue.Text = GetEnemyTargetText(enemyTarget);
                 break;
         }
@@ -292,6 +325,7 @@ public class CombatSystem
             case CombatSystemState.SELECT_ENEMY_TARGET:
                 enemyTargetIndex++;
                 if (enemyTargetIndex >= enemyParty.Count) enemyTargetIndex = enemyParty.Count - 1;
+                enemyTarget.Overlay.Reset();
                 dialogue.Text = GetEnemyTargetText(enemyTarget);
                 break;
         }
@@ -352,13 +386,36 @@ public class CombatSystem
         mainMenu.IsActive = (currentState == CombatSystemState.MENU_SELECT);
     }
 
-    //utility method to advance to the a new current player
-    //restores the last player's status box position, and moves the new one
+    //utility method to advance to a new current player
     private void SetCurrentPlayer(int index)
     {
+        //index of -1 is a flag value to indicate that there is no current player
+        if (index < -1 || index >= playerParty.Count)
+            throw new ArgumentException(string.Format("Player index {0} out of bounds for party size {1}", index, playerParty.Count));
+
+        //restores the last player's status box position, and moves the new one
         if(currentPlayerIndex >= 0) currentPlayer.StatusBox.Y += CURRENT_PLAYER_OFFSET;
         currentPlayerIndex = index;
         if (currentPlayerIndex >= 0) currentPlayer.StatusBox.Y -= CURRENT_PLAYER_OFFSET;
+    }
+
+    //return the next living player after the given index
+    //returns -1 if there is none
+    private int GetNextLivingPlayerIndex(int index)
+    {
+        //index of -1 is a flag value to indicate that there is no current player
+        if (index < -1 || index >= playerParty.Count)
+            throw new ArgumentException(string.Format("Player index {0} out of bounds for party size {1}", index, playerParty.Count));
+
+        if (index >= lastLivingPlayerIndex)
+        {
+            return -1;
+        }
+        else
+        {
+            PlayerCombatEntity nextLivingPlayer = playerParty.Where(p => p.IsAlive && playerParty.IndexOf(p) > index).First();
+            return playerParty.IndexOf(nextLivingPlayer);
+        }
     }
 
     private void AlignEnemies(List<EnemyCombatEntity> enemies)
