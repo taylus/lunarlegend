@@ -239,7 +239,7 @@ public class CombatSystem
                     }
                     powerMeter.Reset();
 
-                    if (currentPlayerIndex < playerParty.Count - 1)
+                    if (currentPlayerIndex < lastLivingPlayerIndex)
                     {
                         //advance to the next player
                         SetCurrentPlayer(GetNextLivingPlayerIndex(currentPlayerIndex));
