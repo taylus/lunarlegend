@@ -4,7 +4,7 @@ public static class Program
 {
     public static void Main(string[] args)
     {
-        using (WorldDemo game = new WorldDemo())
+        using (Overworld game = new Overworld())
         {
             game.Run();
         }

@@ -23,6 +23,7 @@ public class CombatSystem
         BATTLE_OVER             //battle is finished (either victory or defeat)
     }
 
+    private bool IsActive = false;
     private CombatSystemState currentState;
     private CombatSystemState previousState;
     private MessageBox dialogue;
@@ -42,22 +43,19 @@ public class CombatSystem
 
     //the player party member who is currently issuing commands
     private int currentPlayerIndex = -1;
-    private PlayerCombatEntity currentPlayer { get { return playerParty[currentPlayerIndex]; } }
+    private PlayerCombatEntity currentPlayer { get { return currentPlayerIndex < 0? null : playerParty[currentPlayerIndex]; } }
 
     //the enemy that is currently issuing commands
     private int currentEnemyIndex = 0;
-    private EnemyCombatEntity currentEnemy { get { return enemyParty[currentEnemyIndex]; } }
-
-    //vertical offset (in pixels) to push the current player's status box up when it's their turn
-    private const int CURRENT_PLAYER_OFFSET = 20;
+    private EnemyCombatEntity currentEnemy { get { return currentEnemyIndex < 0? null : enemyParty[currentEnemyIndex]; } }
 
     //the player party member that the player is currently targeting
     private int playerTargetIndex = -1;
-    private PlayerCombatEntity playerTarget { get { return playerParty[playerTargetIndex]; } }
+    private PlayerCombatEntity playerTarget { get { return playerTargetIndex < 0? null : playerParty[playerTargetIndex]; } }
 
     //the enemy that the player is currently targeting
     private int enemyTargetIndex = 0;
-    private EnemyCombatEntity enemyTarget { get { return enemyParty[enemyTargetIndex]; } }
+    private EnemyCombatEntity enemyTarget { get { return enemyTargetIndex < 0? null : enemyParty[enemyTargetIndex]; } }
 
     private Technique selectedTechnique = null;
 
@@ -75,13 +73,24 @@ public class CombatSystem
         if (enemies == null || enemies.Count <= 0)
             throw new ArgumentException("Attempted to enter combat with empty enemy party.");
 
+        IsActive = true;
+        currentPlayerIndex = -1;
+        currentEnemyIndex = 0;
+        playerTargetIndex = -1;
+        enemyTargetIndex = 0;
         background = BaseGame.LoadTexture(bgFile, true);
         enemyParty = enemies;
         AlignEnemies(enemyParty);
         mainMenu = new MenuBox(BattleDemo.CreateMainMenuBoxTemplate(), "Attack", "Defend", "Magic", "Items");
         dialogue = new MessageBox(BattleDemo.CreateMessageBoxTemplate(), GetEngagementText());
         powerMeter = BattleDemo.CreatePowerMeter();
-        SetState(CombatSystemState.TEXT);
+
+        //fail gracefully in case we entered the battle with a dead party or something else weird
+        CheckVictoryOrDefeat();
+        if (currentState != CombatSystemState.BATTLE_OVER)
+        {
+            SetState(CombatSystemState.TEXT);
+        }
     }
 
     public bool PlayerVictory()
@@ -109,6 +118,8 @@ public class CombatSystem
 
     public void Draw(SpriteBatch sb)
     {
+        if (!IsActive) return;
+
         sb.Draw(background, BaseGame.GameWindow, Color.White);
 
         foreach (EnemyCombatEntity enemy in enemyParty)
@@ -150,6 +161,8 @@ public class CombatSystem
 
     public void Update(GameTime currentGameTime)
     {
+        if (!IsActive) return;
+
         powerMeter.Update();
 
         foreach (EnemyCombatEntity enemy in enemyParty)
@@ -160,6 +173,8 @@ public class CombatSystem
 
     public void ConfirmKeyPressed()
     {
+        if (!IsActive) return;
+
         switch(currentState)
         {
             case CombatSystemState.BATTLE_OVER:
@@ -284,23 +299,13 @@ public class CombatSystem
             }
         }
 
-        //check victory or defeat conditions in every state
-        if (PlayerVictory())
-        {
-            //victory: get exp, items, then go back to overworld
-            dialogue.Text += "\nA winner is you!";
-            SetState(CombatSystemState.BATTLE_OVER);
-        }
-        else if (PlayerDefeat())
-        {
-            //defeat: restart at last save...
-            dialogue.Text += "\nYour party has perished...";
-            SetState(CombatSystemState.BATTLE_OVER);
-        }
+        CheckVictoryOrDefeat();
     }
 
     public void LeftKeyPressed()
     {
+        if (!IsActive) return;
+
         switch (currentState)
         {
             case CombatSystemState.MENU_SELECT:
@@ -317,6 +322,8 @@ public class CombatSystem
 
     public void RightKeyPressed()
     {
+        if (!IsActive) return;
+
         switch (currentState)
         {
             case CombatSystemState.MENU_SELECT:
@@ -333,6 +340,8 @@ public class CombatSystem
 
     public void UpKeyPressed()
     {
+        if (!IsActive) return;
+
         switch (currentState)
         {
             case CombatSystemState.MENU_SELECT:
@@ -343,6 +352,8 @@ public class CombatSystem
 
     public void DownKeyPressed()
     {
+        if (!IsActive) return;
+
         switch (currentState)
         {
             case CombatSystemState.MENU_SELECT:
@@ -353,12 +364,31 @@ public class CombatSystem
 
     public void CancelKeyPressed()
     {
+        if (!IsActive) return;
+
         switch (currentState)
         {
             case CombatSystemState.SELECT_ENEMY_TARGET:
                 dialogue.Text = "";
                 SetState(previousState);
                 break;
+        }
+    }
+
+    //check for victory or defeat conditions and advance to the appropriate state
+    public void CheckVictoryOrDefeat()
+    {
+        if (PlayerVictory())
+        {
+            //victory: get exp, items, then go back to overworld
+            dialogue.Text += "\nA winner is you!";
+            SetState(CombatSystemState.BATTLE_OVER);
+        }
+        else if (PlayerDefeat())
+        {
+            //defeat: restart battle? restart at last save?
+            dialogue.Text += "\nYour party has perished...";
+            SetState(CombatSystemState.BATTLE_OVER);
         }
     }
 
@@ -393,10 +423,8 @@ public class CombatSystem
         if (index < -1 || index >= playerParty.Count)
             throw new ArgumentException(string.Format("Player index {0} out of bounds for party size {1}", index, playerParty.Count));
 
-        //restores the last player's status box position, and moves the new one
-        if(currentPlayerIndex >= 0) currentPlayer.StatusBox.Y += CURRENT_PLAYER_OFFSET;
         currentPlayerIndex = index;
-        if (currentPlayerIndex >= 0) currentPlayer.StatusBox.Y -= CURRENT_PLAYER_OFFSET;
+        playerParty.ForEach(p => p.IsCurrent = (p == currentPlayer));
     }
 
     //return the next living player after the given index
@@ -435,14 +463,19 @@ public class CombatSystem
 
     private void AlignPlayers(List<PlayerCombatEntity> players)
     {
-        //TODO: generalize for multiple players and screen resolutions
-        //foreach (PlayerCombatEntity player in players)
-        //{
-        //    int x = BaseGame.GameWindow.Center.X - (player.StatusBox.Width / 2);
-        //    int y = BaseGame.GameWindow.Height - (player.StatusBox.Height + player.StatusBox.Margin);
-        //    player.StatusBox.MoveTo(x, y);
-        //}
-        players[0].StatusBox.MoveTo(220, 492);
-        players[1].StatusBox.MoveTo(420, 492);
+        if (players.Count <= 0) return;
+
+        //splits the screen into n slices, and centers each player in the slice
+        int horizontalStep = BaseGame.GameWindow.Width / players.Count;
+        for (int i = 0; i < players.Count; i++)
+        {
+            int x = (horizontalStep / 2) + (horizontalStep * i);
+            int y = BaseGame.GameWindow.Height - (players[i].Height / 2) - BattleDemo.BOX_SCREEN_MARGIN;
+            players[i].CenterOn(x, y);
+        }
+
+        //TODO: change this to group players together better
+        //divide the screen in half vertically, and center the player party 
+        //on that, with a small margin between each player
     }
 }

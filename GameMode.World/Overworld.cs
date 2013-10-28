@@ -6,7 +6,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Graphics;
 
-public class WorldDemo : BaseGame
+public class Overworld : BaseGame
 {
     //these are static because it only make sense to have one
     //TODO: put Player in World once battle engine is in place
@@ -20,7 +20,7 @@ public class WorldDemo : BaseGame
     private const float DEFAULT_GAME_SCALE = 1.0f;
     private const string GAME_TITLE = "Vidya Gaem";
 
-    public WorldDemo()
+    public Overworld()
     {
         IsMouseVisible = true;
         Content.RootDirectory = "Content";
@@ -35,10 +35,10 @@ public class WorldDemo : BaseGame
 
         //LoadWorld("maps/test/testmap.tmx");
         //LoadWorld("maps/test_scroll/test_scroll.tmx");
-        //LoadWorld("maps/layer_test/layers.tmx");
+        LoadWorld("maps/layer_test/layers.tmx");
         //LoadWorld("maps/pond/pond.tmx");
         //LoadWorld("maps/doors/doors.tmx");
-        LoadWorld("maps/castle/castle.tmx");
+        //LoadWorld("maps/castle/castle.tmx");
     }
 
     public static void LoadWorld(string tmxMapFile)

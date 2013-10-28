@@ -10,7 +10,7 @@ using Microsoft.Xna.Framework.Graphics;
 public class BattleDemo : BaseGame
 {
     private CombatSystem combatSystem;
-    private const int BOX_SCREEN_MARGIN = 8;
+    public const int BOX_SCREEN_MARGIN = 8;
 
     public BattleDemo()
     {
@@ -23,7 +23,6 @@ public class BattleDemo : BaseGame
     {
         base.LoadContent();
         combatSystem = new CombatSystem(CreateSamplePlayerParty());
-        combatSystem.Engage("img/cave_bg.jpg", CreateSampleEnemyParty());
     }
 
     protected override void Update(GameTime gameTime)
@@ -38,6 +37,10 @@ public class BattleDemo : BaseGame
         if (curKeyboard.IsKeyDown(Buttons.QUIT)) this.Exit();
 
         combatSystem.Update(gameTime);
+        if (KeyPressedThisFrame(Buttons.DEBUG))
+        {
+            combatSystem.Engage("img/cave_bg.jpg", CreateSampleEnemyParty());
+        }
         if (KeyPressedThisFrame(Buttons.CONFIRM))
         {
             combatSystem.ConfirmKeyPressed();
@@ -70,7 +73,7 @@ public class BattleDemo : BaseGame
 
     protected override void Draw(GameTime gameTime)
     {
-        //GraphicsDevice.Clear(Color.DarkGray);
+        GraphicsDevice.Clear(Color.DarkGray);
 
         spriteBatch.Begin();
         combatSystem.Draw(spriteBatch);
@@ -82,8 +85,11 @@ public class BattleDemo : BaseGame
     private List<PlayerCombatEntity> CreateSamplePlayerParty()
     {
         List<PlayerCombatEntity> playerParty = new List<PlayerCombatEntity>();
-        playerParty.Add(new PlayerCombatEntity("Brandon", 50, 10, null));
-        playerParty.Add(new PlayerCombatEntity("Spencer", 50, 10, null));
+        playerParty.Add(new PlayerCombatEntity("Brandon", 50, 10));
+        playerParty.Add(new PlayerCombatEntity("Spencer", 50, 10));
+        //playerParty.Add(new PlayerCombatEntity("Justin", 10, 5));
+        //playerParty.Add(new PlayerCombatEntity("Vicks", 5, 0));
+        //playerParty.Add(new PlayerCombatEntity("Wedge", 5, 0));
         return playerParty;
     }
 
@@ -100,9 +106,13 @@ public class BattleDemo : BaseGame
         return enemyParty;
     }
 
+    //gets the letter in the alphabet at the given position (e.g. 1 = A, 2 = B, ...)
+    //used for assigning unique names to monsters when there's multiple copies of the same type of monster
+    //unique names aren't required, it just helps the player and makes targetting not feel as weird
+    //wraps around after 26, but if you have this many enemies at once then I don't want to play your turn-based game
     private char GetLetterByNumber(int i)
     {
-        return (char)Enumerable.Range('A', 'Z' - 'A').ElementAt(i);
+        return (char)Enumerable.Range('A', 'Z' - 'A' + 1).ElementAt(i % 26);
     }
 
     //create the MessageBox whose style, position, etc will be used by all MessageBoxes loaded for this game

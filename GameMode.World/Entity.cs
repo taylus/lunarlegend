@@ -127,7 +127,7 @@ public abstract class WorldEntity : Entity, IWorldEntity
     public float ScreenY { get { return ScreenPosition.Y; } }
     public Vector2 ScreenPosition { get { return World.Current.WorldToScreenCoordinates(WorldPosition); } }
     public Rectangle ScreenRect { get { return new Rectangle((int)Math.Round(ScreenX), (int)Math.Round(ScreenY), Width, Height); } }
-    public bool IsOnScreen { get { return WorldDemo.GameWindow.Contains((int)ScreenX, (int)ScreenY); } }
+    public bool IsOnScreen { get { return Overworld.GameWindow.Contains((int)ScreenX, (int)ScreenY); } }
 
     public WorldEntity(Object obj) : base(obj) 
     {
@@ -227,7 +227,7 @@ public class ChangeLevel : WorldEntity
 
     public override void Touch(Player p)
     {
-        WorldDemo.LoadWorld(Path.Combine("maps", LevelName));
+        Overworld.LoadWorld(Path.Combine("maps", LevelName));
     }
 }
 
@@ -269,12 +269,12 @@ public class NPC : WorldEntity
             if (text.EndsWith(".graphml", StringComparison.OrdinalIgnoreCase))
             {
                 string graphMLFile = Path.Combine(World.Current.Map.MapFileDir, text);
-                Dialogue = MessageBox.LoadFromGraphFile(WorldDemo.CreateMessageBoxTemplate(), graphMLFile);
+                Dialogue = MessageBox.LoadFromGraphFile(Overworld.CreateMessageBoxTemplate(), graphMLFile);
             }
             else
             {
                 text = Regex.Unescape(text);
-                Dialogue = new MessageBox(WorldDemo.CreateMessageBoxTemplate(), text);
+                Dialogue = new MessageBox(Overworld.CreateMessageBoxTemplate(), text);
             }
         }
     }

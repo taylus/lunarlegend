@@ -85,13 +85,8 @@ public class MessageBox : Box
         {
             if (token == "\f")
             {
-                //line feed character -> explicit page break; load any remainder into next MessageBox
-                lines.Add(sb.ToString());
-                remainingText = text.Substring(processedChars);
-                if (!string.IsNullOrWhiteSpace(remainingText))
-                {
-                    Next = new MessageBox(this, remainingText);
-                }
+                //line feed character -> explicit page break
+                break;
             }
             else if (token == "\n" || Font.MeasureString(sb.ToString() + token).X > Width - (Padding + BorderWidth) * 2)
             {
