@@ -51,6 +51,11 @@ public abstract class Entity
         }
     }
 
+    public void Delete()
+    {
+        World.Current.Entities.Remove(this);
+    }
+
     //returns the inheriting entity type that represents the given Tiled Object type
     public static Type GetEntityType(string type)
     {
@@ -237,11 +242,6 @@ public class NPC : WorldEntity
     public Texture2D Image { get; set; }
     public MessageBox Dialogue { get; set; }
 
-    //FIXME? this class being aware about MessageBoxes means it needs to know how to position them,
-    //which is a graphics thing that isn't exposed here... so the Game class is asked for a template
-    //should this class instead only store the text for its MessageBoxes?
-    //but then what about decisions (MessageBoxChoice)? still need to decide how to implement/store these in maps
-
     //TODO: spritesheets/animations
     //TODO: behavior enum (stationary, random movement, predefined path)
     //TODO: opacity
@@ -265,7 +265,8 @@ public class NPC : WorldEntity
         string text = Object.Properties.GetValue("text");
         if (!string.IsNullOrWhiteSpace(text))
         {
-            //TODO: fix coupling between this and WorldDemo
+            //TODO: fix coupling between this and Overworld game
+            //NPCs shouldn't need to concern themselves with MessageBox positioning
             if (text.EndsWith(".graphml", StringComparison.OrdinalIgnoreCase))
             {
                 string graphMLFile = Path.Combine(World.Current.Map.MapFileDir, text);
@@ -277,6 +278,56 @@ public class NPC : WorldEntity
                 Dialogue = new MessageBox(Overworld.CreateMessageBoxTemplate(), text);
             }
         }
+    }
+
+    public override void Draw(SpriteBatch sb)
+    {
+        sb.Draw(Image, ScreenPosition.Round(), Color.White);
+        if (World.Current.Debug)
+        {
+            Util.DrawRectangle(sb, World.Current.ScreenToWorldRectangle(InteractRect), Color.Lerp(Color.LimeGreen, Color.Transparent, 0.55f));
+        }
+    }
+}
+
+public class Enemy : WorldEntity
+{
+    new public static string GetEntityTypeName() { return "info_enemy"; }
+    public Texture2D Image { get; set; }
+    public List<EnemyCombatEntity> CombatParty { get; private set; }
+
+    public Enemy(Object obj) : base(obj) 
+    {
+        //not solid -> touching begins combat
+    }
+
+    public override void Initialize()
+    {
+        //initialize WorldEntity properties first
+        //enemy's bounding box will be overwritten by image size
+        base.Initialize();
+        Image = LoadTextureFromProperty("img");
+        if (Image == null) return;
+        Width = Image.Width;
+        Height = Image.Height;
+        CombatParty = LoadPartyFromProperty("partyID");
+    }
+
+    public override void Touch(Player p)
+    {
+        Overworld.BeginCombat(this, CombatParty);
+    }
+
+    private List<EnemyCombatEntity> LoadPartyFromProperty(string propertyName)
+    {
+        string partyProperty = Object.Properties.GetValue(propertyName);
+        int partyID;
+        if(!int.TryParse(partyProperty, out partyID))
+        {
+            throw new ArgumentException(string.Format("Enemy party ID must be an integer. Got: {0} for info_enemy '{1}'", partyProperty, Object.Name));
+        }
+
+        return Enemies.LoadPartyByID(partyID);
     }
 
     public override void Draw(SpriteBatch sb)
@@ -395,6 +446,11 @@ public static class EntityExtensions
 {
     public static Entity GetByName(this List<Entity> entities, string name)
     {
-        return (from Entity e in entities where e.Object.Name == name select e).FirstOrDefault();
+        return entities.Where(e => e.Object.Name == name).FirstOrDefault();
+    }
+
+    public static void Remove(this List<Entity> entities, string name)
+    {
+        entities.Remove(entities.GetByName(name));
     }
 }

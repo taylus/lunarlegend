@@ -9,10 +9,10 @@ using Microsoft.Xna.Framework.Graphics;
 public class Overworld : BaseGame
 {
     //these are static because it only make sense to have one
-    //TODO: put Player in World once battle engine is in place
     private static Player player;
-    private static Overlay overlay;
     private static MessageBox dialogue;
+    private static CombatSystem combatSystem;
+    private static Enemy engagedEnemy;
 
     //render the world and player to a temp surface for scaling
     private Texture2D gameSurf;
@@ -31,11 +31,14 @@ public class Overworld : BaseGame
     {
         base.LoadContent();
         gameSurf = new RenderTarget2D(GraphicsDevice, GameWidth, GameHeight);
-        overlay = new ScreenOverlay(Color.OrangeRed, 0.15f);
+
+        combatSystem = new CombatSystem(CreateSamplePlayerParty());
+        combatSystem.OnVictory = CombatVictory;
+        combatSystem.OnDefeat = CombatDefeat;
 
         //LoadWorld("maps/test/testmap.tmx");
-        //LoadWorld("maps/test_scroll/test_scroll.tmx");
-        LoadWorld("maps/layer_test/layers.tmx");
+        LoadWorld("maps/test_scroll/test_scroll.tmx");
+        //LoadWorld("maps/layer_test/layers.tmx");
         //LoadWorld("maps/pond/pond.tmx");
         //LoadWorld("maps/doors/doors.tmx");
         //LoadWorld("maps/castle/castle.tmx");
@@ -84,9 +87,6 @@ public class Overworld : BaseGame
 
         if (curKeyboard.IsKeyDown(Buttons.QUIT)) this.Exit();
 
-        //TODO: move most of this logic into World.Update, and call it only if the game state is in "world mode"
-        //      if the game state is in "battle mode" then the battle engine will handle input instead
-
         //toggle debug mode
         if (KeyPressedThisFrame(Buttons.DEBUG))
         {
@@ -94,86 +94,107 @@ public class Overworld : BaseGame
             Window.Title = !World.Current.Debug ? GAME_TITLE : string.Format("{0} - FPS: {1}", GAME_TITLE, Math.Round(1 / gameTime.ElapsedGameTime.TotalSeconds));
         }
 
-        //debug mode wall editor - add/remove walls via mouse click
-        if (World.Current.Debug)
+        //combat system input handling
+        if (combatSystem.IsActive)
         {
-            Point mouseTileCoords = World.Current.Map.GetTileAt(World.Current.ScreenToWorldCoordinates(curMouse.Position() / gameScale));
-
-            if (curMouse.LeftButton == ButtonState.Pressed && !World.Current.CollisionLayer.ContainsTileAt(mouseTileCoords))
-            {
-                World.Current.CollisionLayer.Tiles[mouseTileCoords.X, mouseTileCoords.Y] = World.Current.Map.GetWallTile();
-            }
-            else if (curMouse.RightButton == ButtonState.Pressed && World.Current.CollisionLayer.ContainsTileAt(mouseTileCoords))
-            {
-                World.Current.CollisionLayer.Tiles[mouseTileCoords.X, mouseTileCoords.Y] = new Tile();
-            }
+            combatSystem.Update(gameTime);
+            if (KeyPressedThisFrame(Buttons.CONFIRM))
+                combatSystem.ConfirmKeyPressed();
+            if (KeyPressedThisFrame(Buttons.CANCEL))
+                combatSystem.CancelKeyPressed();
+            if (KeyPressedThisFrame(Buttons.MOVE_LEFT))
+                combatSystem.LeftKeyPressed();
+            if (KeyPressedThisFrame(Buttons.MOVE_RIGHT))
+                combatSystem.RightKeyPressed();
+            if (KeyPressedThisFrame(Buttons.MOVE_UP))
+                combatSystem.UpKeyPressed();
+            if (KeyPressedThisFrame(Buttons.MOVE_DOWN))
+                combatSystem.DownKeyPressed();
         }
-
-        //confirm/use button
-        if (KeyPressedThisFrame(Buttons.CONFIRM))
+        //overworld input handling
+        else
         {
-            if (dialogue != null)
+            //debug mode wall editor - add/remove walls via mouse click
+            if (World.Current.Debug)
             {
-                //scroll down in the current MessageBox if it has more lines to display
-                if (dialogue.HasMoreLinesToDisplay)
+                Point mouseTileCoords = World.Current.Map.GetTileAt(World.Current.ScreenToWorldCoordinates(curMouse.Position() / gameScale));
+
+                if (curMouse.LeftButton == ButtonState.Pressed && !World.Current.CollisionLayer.ContainsTileAt(mouseTileCoords))
                 {
-                    dialogue.AdvanceLines();
+                    World.Current.CollisionLayer.Tiles[mouseTileCoords.X, mouseTileCoords.Y] = World.Current.Map.GetWallTile();
                 }
-                //if it doesn't, jump to the target of its selected choice
-                else if (dialogue.Choices.Count > 0)
+                else if (curMouse.RightButton == ButtonState.Pressed && World.Current.CollisionLayer.ContainsTileAt(mouseTileCoords))
                 {
-                    dialogue = dialogue.SelectedChoice.Next;
-                    dialogue.ResetLines();
+                    World.Current.CollisionLayer.Tiles[mouseTileCoords.X, mouseTileCoords.Y] = new Tile();
                 }
-                //if it has no choices, go to its preferred next MessageBox
-                else if (dialogue.Next != null)
+            }
+
+            //confirm/use button
+            if (KeyPressedThisFrame(Buttons.CONFIRM))
+            {
+                if (dialogue != null)
                 {
-                    dialogue = dialogue.Next;
-                    dialogue.ResetLines();
+                    //scroll down in the current MessageBox if it has more lines to display
+                    if (dialogue.HasMoreLinesToDisplay)
+                    {
+                        dialogue.AdvanceLines();
+                    }
+                    //if it doesn't, jump to the target of its selected choice
+                    else if (dialogue.Choices.Count > 0)
+                    {
+                        dialogue = dialogue.SelectedChoice.Next;
+                        dialogue.ResetLines();
+                    }
+                    //if it has no choices, go to its preferred next MessageBox
+                    else if (dialogue.Next != null)
+                    {
+                        dialogue = dialogue.Next;
+                        dialogue.ResetLines();
+                    }
+                    else
+                    {
+                        dialogue = null;
+                    }
                 }
                 else
                 {
-                    dialogue = null;
-                }
-            }
-            else
-            {
-                //TODO: spatially index entities so we only check those nearby
-                foreach (WorldEntity wEnt in World.Current.Entities.OfType<WorldEntity>())
-                {
-                    if (wEnt.InteractRect.Intersects(player.WorldRect))
+                    //TODO: spatially index entities so we only check those nearby
+                    foreach (WorldEntity wEnt in World.Current.Entities.OfType<WorldEntity>())
                     {
-                        wEnt.Use(player);
-                        if (wEnt.GetType() == typeof(NPC))
+                        if (wEnt.InteractRect.Intersects(player.WorldRect))
                         {
-                            NPC npc = (NPC)wEnt;
-                            if (npc.Dialogue != null) dialogue = npc.Dialogue;
+                            wEnt.Use(player);
+                            if (wEnt.GetType() == typeof(NPC))
+                            {
+                                NPC npc = (NPC)wEnt;
+                                if (npc.Dialogue != null) dialogue = npc.Dialogue;
+                            }
                         }
                     }
                 }
             }
-        }
 
-        if (dialogue != null)
-        {
-            if (KeyPressedThisFrame(Buttons.MOVE_LEFT) || KeyPressedThisFrame(Buttons.MOVE_UP))
-                dialogue.SelectPreviousChoice();
-            if (KeyPressedThisFrame(Buttons.MOVE_RIGHT) || KeyPressedThisFrame(Buttons.MOVE_DOWN))
-                dialogue.SelectNextChoice();
-        }
+            if (dialogue != null)
+            {
+                if (KeyPressedThisFrame(Buttons.MOVE_LEFT) || KeyPressedThisFrame(Buttons.MOVE_UP))
+                    dialogue.SelectPreviousChoice();
+                if (KeyPressedThisFrame(Buttons.MOVE_RIGHT) || KeyPressedThisFrame(Buttons.MOVE_DOWN))
+                    dialogue.SelectNextChoice();
+            }
 
-        //player movement and entity activation
-        if (dialogue == null)
-        {
-            player.Move(curKeyboard);
-            player.TouchEntities();
-        }
+            //player movement and entity activation
+            if (dialogue == null)
+            {
+                player.Move(curKeyboard);
+                player.TouchEntities();
+            }
 
-        //reactivate any inactive buttons that the player is no longer standing on
-        foreach(Button btn in World.Current.Entities.OfType<Button>().Where(b => !b.Active))
-        {
-            if(!btn.WorldRect.Intersects(player.WorldRect)) 
-                btn.Active = true;
+            //reactivate any inactive buttons that the player is no longer standing on
+            foreach (Button btn in World.Current.Entities.OfType<Button>().Where(b => !b.Active))
+            {
+                if (!btn.WorldRect.Intersects(player.WorldRect))
+                    btn.Active = true;
+            }
         }
 
         prevKeyboard = curKeyboard;
@@ -183,17 +204,14 @@ public class Overworld : BaseGame
 
     protected override void Draw(GameTime gameTime)
     {
-        RenderTempSurface();
-
-        //clear the screen
+        RenderTempWorldSurface();
         GraphicsDevice.Clear(Color.DimGray);
-
-        //TODO: don't draw NPCs if the game state is in "battle mode"
-
-        //draw the scaled game surface, then any additional overlays at normal scale
         spriteBatch.Begin();
         spriteBatch.Draw(gameSurf, Vector2.Zero, null, Color.White, 0.0f, Vector2.Zero, gameScale, SpriteEffects.None, 0);
-        //overlay.Draw(spriteBatch);
+        if (combatSystem.IsActive)
+        {
+            combatSystem.Draw(spriteBatch);
+        }
         if (World.Current.Debug) DrawDebugInfo();
         if (dialogue != null)
         {
@@ -204,18 +222,22 @@ public class Overworld : BaseGame
     }
 
     //render the world and all game objects to the temporary surface for scaling
-    private void RenderTempSurface()
+    private void RenderTempWorldSurface()
     {
         //draw the game to the temp surface at normal scale
         GraphicsDevice.SetRenderTarget((RenderTarget2D)gameSurf);
         GraphicsDevice.Clear(Color.Transparent);
         spriteBatch.Begin();
         World.Current.DrawBelowPlayer(spriteBatch);
-        foreach (WorldEntity wEnt in World.Current.Entities.OfType<WorldEntity>())
+        if (!combatSystem.IsActive)
         {
-            wEnt.Draw(spriteBatch);
+            //don't draw entities in combat, only the world
+            foreach (WorldEntity wEnt in World.Current.Entities.OfType<WorldEntity>())
+            {
+                wEnt.Draw(spriteBatch);
+            }
+            player.Draw(spriteBatch);
         }
-        player.Draw(spriteBatch);
         World.Current.DrawAbovePlayer(spriteBatch);
         spriteBatch.End();
 
@@ -252,5 +274,29 @@ public class Overworld : BaseGame
         int x = (GameWidth / 2) - (w / 2);
         int y = 100;
         return new MessageBox(x, y, w, h, Font);
+    }
+
+    public static void BeginCombat(Enemy enemyEntity, List<EnemyCombatEntity> enemyParty)
+    {
+        engagedEnemy = enemyEntity;
+        combatSystem.Engage(enemyParty, "battle/cave_bg.jpg");
+    }
+
+    public void CombatVictory()
+    {
+        engagedEnemy.Delete();
+    }
+
+    public void CombatDefeat()
+    {
+        Environment.Exit(0);
+    }
+
+    private List<PlayerCombatEntity> CreateSamplePlayerParty()
+    {
+        List<PlayerCombatEntity> playerParty = new List<PlayerCombatEntity>();
+        playerParty.Add(new PlayerCombatEntity("Brandon", 50, 10));
+        playerParty.Add(new PlayerCombatEntity("Spencer", 50, 10));
+        return playerParty;
     }
 }

@@ -74,7 +74,7 @@ public class Map
             ValidateMapAttributes();
             ValidateMapElements();
 
-            MapFileDir = Path.GetDirectoryName(tmxFile);
+            MapFileDir = Path.GetDirectoryName(Path.GetFullPath(tmxFile));
             MapFileName = Path.GetFileName(tmxFile);
             graphicsDevice = gd;
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Text;
+using System.Linq;
 using System.Globalization;
 using System.IO.Compression;
 using System.Collections.Generic;
@@ -180,5 +181,14 @@ public static class Util
         }
 
         return uints;
+    }
+
+    //gets the letter in the alphabet at the given position (e.g. 1 = A, 2 = B, ...)
+    //used for assigning unique names to monsters when there's multiple copies of the same type of monster
+    //unique names aren't required, it just helps the player and makes targetting not feel as weird
+    //wraps around after 26, but if you have this many enemies at once then I don't want to play your turn-based game
+    public static char GetLetterByNumber(int i)
+    {
+        return (char)Enumerable.Range('A', 'Z' - 'A' + 1).ElementAt(i % 26);
     }
 }

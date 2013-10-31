@@ -26,7 +26,7 @@ public class ScreenOverlay : Overlay
     public void Draw(SpriteBatch sb)
     {
         Color color = Color.Lerp(Color.Transparent, Color, MathHelper.Clamp(Opacity, 0, 1.0f));
-        Util.DrawRectangle(sb, sb.GraphicsDevice.Viewport.Bounds, Color);
+        Util.DrawRectangle(sb, sb.GraphicsDevice.Viewport.Bounds, color);
     }
 }
 

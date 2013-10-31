@@ -22,6 +22,9 @@ public class Player : IWorldEntity
     public Rectangle WorldRect { get { return new Rectangle((int)Math.Round(WorldX), (int)Math.Round(WorldY), Width, Height); } }
     public List<Point> OccupyingTiles { get { return World.Current.GetOccupyingTiles(WorldRect); } }
 
+    //a copy of WorldRect inflated by 1 pixel on every side, to allow for touch activation of solid entities by bumping into them
+    //public Rectangle InflatedWorldRect { get { return new Rectangle(WorldRect.X - 1, WorldRect.Y - 1, WorldRect.Width + 2, WorldRect.Height + 2); } }
+
     public float ScreenX { get { return ScreenPosition.X; } }
     public float ScreenY { get { return ScreenPosition.Y; } }
     public Vector2 ScreenPosition { get { return World.Current.WorldToScreenCoordinates(WorldPosition); } }
@@ -298,10 +301,11 @@ public class Player : IWorldEntity
     public void TouchEntities()
     {
         //TODO: spatially index the entities so we're not checking all of them
-        foreach (WorldEntity w in World.Current.Entities.OfType<WorldEntity>())
+        //iterate backwards to allow modifying the collection while this loop runs
+        List<WorldEntity> activeEntities = World.Current.Entities.OfType<WorldEntity>().Where(e => e.Active).ToList();
+        for (int i = activeEntities.Count - 1; i >= 0; i--)
         {
-            if (!w.Active) continue;
-
+            WorldEntity w = activeEntities[i];
             if (WorldRect.Intersects(w.WorldRect))
             {
                 w.Touch(this);

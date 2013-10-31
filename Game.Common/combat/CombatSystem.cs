@@ -6,6 +6,10 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
 
+//callback functions for when combat ends
+public delegate void VictoryCallback();
+public delegate void DefeatCallback();
+
 //represents a turn-based battle between the player's party and an AI-controlled enemy party
 //handles adding/removing CombatEntities from the fight (e.g. a monster summons allies)
 //detects victory or defeat conditions for transition to appropriate game state
@@ -23,7 +27,7 @@ public class CombatSystem
         BATTLE_OVER             //battle is finished (either victory or defeat)
     }
 
-    private bool IsActive = false;
+    public bool IsActive = false;
     private CombatSystemState currentState;
     private CombatSystemState previousState;
     private MessageBox dialogue;
@@ -31,7 +35,8 @@ public class CombatSystem
     private MenuBox skills;
     private MenuBox inventory;
     private PowerMeter powerMeter;
-    private Texture2D background;
+    private Texture2D backgroundImage;
+    private ScreenOverlay backgroundOverlay;
 
     private List<PlayerCombatEntity> playerParty = new List<PlayerCombatEntity>();
     private List<EnemyCombatEntity> enemyParty = new List<EnemyCombatEntity>();
@@ -58,6 +63,10 @@ public class CombatSystem
     private EnemyCombatEntity enemyTarget { get { return enemyTargetIndex < 0? null : enemyParty[enemyTargetIndex]; } }
 
     private Technique selectedTechnique = null;
+    private const int BOX_SCREEN_MARGIN = 8;
+
+    public VictoryCallback OnVictory { get; set; }
+    public DefeatCallback OnDefeat { get; set; }
 
     public CombatSystem(List<PlayerCombatEntity> players)
     {
@@ -66,9 +75,10 @@ public class CombatSystem
 
         playerParty = players;
         AlignPlayers(playerParty);
+        backgroundOverlay = new ScreenOverlay(Color.Black, 0.6f);
     }
 
-    public void Engage(string bgFile, List<EnemyCombatEntity> enemies)
+    public void Engage(List<EnemyCombatEntity> enemies, string bgFile = null)
     {
         if (enemies == null || enemies.Count <= 0)
             throw new ArgumentException("Attempted to enter combat with empty enemy party.");
@@ -78,12 +88,15 @@ public class CombatSystem
         currentEnemyIndex = 0;
         playerTargetIndex = -1;
         enemyTargetIndex = 0;
-        background = BaseGame.LoadTexture(bgFile, true);
+        if (!string.IsNullOrWhiteSpace(bgFile))
+        {
+            backgroundImage = BaseGame.LoadTexture(bgFile, true);
+        }
         enemyParty = enemies;
         AlignEnemies(enemyParty);
-        mainMenu = new MenuBox(BattleDemo.CreateMainMenuBoxTemplate(), "Attack", "Defend", "Magic", "Items");
-        dialogue = new MessageBox(BattleDemo.CreateMessageBoxTemplate(), GetEngagementText());
-        powerMeter = BattleDemo.CreatePowerMeter();
+        mainMenu = new MenuBox(CreateMainMenuBoxTemplate(), "Attack", "Defend", "Magic", "Items");
+        dialogue = new MessageBox(CreateMessageBoxTemplate(), GetEngagementText());
+        powerMeter = CreatePowerMeter();
 
         //fail gracefully in case we entered the battle with a dead party or something else weird
         CheckVictoryOrDefeat();
@@ -120,7 +133,16 @@ public class CombatSystem
     {
         if (!IsActive) return;
 
-        sb.Draw(background, BaseGame.GameWindow, Color.White);
+        if (backgroundImage != null)
+        {
+            //draw the background image if one was supplied
+            sb.Draw(backgroundImage, BaseGame.GameWindow, Color.White);
+        }
+        else
+        {
+            //otherwise just darken the map background with an overlay
+            backgroundOverlay.Draw(sb);
+        }
 
         foreach (EnemyCombatEntity enemy in enemyParty)
         {
@@ -179,7 +201,9 @@ public class CombatSystem
         {
             case CombatSystemState.BATTLE_OVER:
             {
-                Environment.Exit(0);
+                IsActive = false;
+                if (PlayerVictory() && OnVictory != null) OnVictory();
+                else if (PlayerDefeat() && OnDefeat != null) OnDefeat();
                 break;
             }
             case CombatSystemState.TEXT:
@@ -470,12 +494,47 @@ public class CombatSystem
         for (int i = 0; i < players.Count; i++)
         {
             int x = (horizontalStep / 2) + (horizontalStep * i);
-            int y = BaseGame.GameWindow.Height - (players[i].Height / 2) - BattleDemo.BOX_SCREEN_MARGIN;
+            int y = BaseGame.GameWindow.Height - (players[i].Height / 2) - BOX_SCREEN_MARGIN;
             players[i].CenterOn(x, y);
         }
 
         //TODO: change this to group players together better
         //divide the screen in half vertically, and center the player party 
         //on that, with a small margin between each player
+    }
+
+    //TODO: find a better place for these template methods to live
+    private MessageBox CreateMessageBoxTemplate()
+    {
+        MenuBox mainMenu = CreateMainMenuBoxTemplate();
+        int w = BaseGame.GameWidth - mainMenu.Width - (2 * BOX_SCREEN_MARGIN);
+        int h = 4;
+        int x = mainMenu.X + mainMenu.Width - mainMenu.BorderWidth;
+        int y = mainMenu.Y;
+        return new MessageBox(x, y, w, h, BaseGame.Font);
+    }
+
+    private MenuBox CreateMainMenuBoxTemplate()
+    {
+        int w = 75;
+        int h = 4;
+        int cols = 1;
+        int x = BOX_SCREEN_MARGIN;
+        int y = BOX_SCREEN_MARGIN;
+        return new MenuBox(x, y, w, h, cols, BaseGame.Font);
+    }
+
+    private PowerMeter CreatePowerMeter()
+    {
+        int w = 350;
+        int h = 40;
+        int x = 225;
+        int y = 420;
+        PowerMeter pm = new PowerMeter(x, y, w, h);
+        //TODO: make specific profile layouts go with different attacks
+        pm.Profiles.Add(new PowerMeterProfile("XX======XX", 6.0f));
+        //pm.Profiles.Add(new PowerMeterProfile("===-XX-===", 6.0f));
+        pm.IsActive = pm.Visible = false;
+        return pm;
     }
 }

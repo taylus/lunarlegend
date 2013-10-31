@@ -62,6 +62,12 @@ public class BaseGame : Game
     {
         if (!external) return contentManager.Load<Texture2D>(imgFile);
 
+        //if the path is relative, then root it in the content project
+        if (!Path.IsPathRooted(imgFile))
+        {
+            imgFile = Path.Combine(contentManager.RootDirectory, imgFile);
+        }
+
         using (FileStream fstream = new FileStream(imgFile, FileMode.Open))
         {
             return Texture2D.FromStream(graphicsDevice, fstream);

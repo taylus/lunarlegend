@@ -58,6 +58,18 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="battle\cave_bg.jpg">
+      <Name>cave_bg</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="battle\slime.png">
+      <Name>slime</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="maps\castle\kefka_back.png">
       <Name>kefka_back</Name>
       <Importer>TextureImporter</Importer>
@@ -224,6 +236,12 @@
     </Content>
     <Content Include="maps\test_scroll\lttp_castlebasement1.png">
       <Name>lttp_castlebasement1</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="maps\test_scroll\slime.png">
+      <Name>slime</Name>
       <Importer>TextureImporter</Importer>
       <Processor>TextureProcessor</Processor>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

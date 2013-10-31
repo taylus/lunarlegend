@@ -94,6 +94,12 @@
   <ItemGroup>
     <Compile Include="BaseGame.cs" />
     <Compile Include="Buttons.cs" />
+    <Compile Include="combat\CombatAction.cs" />
+    <Compile Include="combat\CombatEntity.cs" />
+    <Compile Include="combat\CombatSystem.cs" />
+    <Compile Include="combat\EnemyCombatEntity.cs" />
+    <Compile Include="combat\PlayerCombatEntity.cs" />
+    <Compile Include="combat\Technique.cs" />
     <Compile Include="contract\graphml\ygraphml.cs">
       <DependentUpon>ygraphml.xsd</DependentUpon>
     </Compile>
@@ -101,20 +107,20 @@
     <Compile Include="contract\tmx\map.cs">
       <DependentUpon>map.xsd</DependentUpon>
     </Compile>
-    <Compile Include="Box.cs" />
-    <Compile Include="MenuBox.cs" />
-    <Compile Include="Graph.cs" />
-    <Compile Include="Grid.cs" />
-    <Compile Include="Layer.cs" />
-    <Compile Include="Map.cs" />
-    <Compile Include="MessageBox.cs" />
-    <Compile Include="Object.cs" />
-    <Compile Include="Overlay.cs" />
-    <Compile Include="PowerMeter.cs" />
+    <Compile Include="ui\Box.cs" />
+    <Compile Include="ui\MenuBox.cs" />
+    <Compile Include="ui\Graph.cs" />
+    <Compile Include="map\Grid.cs" />
+    <Compile Include="map\Layer.cs" />
+    <Compile Include="map\Map.cs" />
+    <Compile Include="ui\MessageBox.cs" />
+    <Compile Include="map\Object.cs" />
+    <Compile Include="ui\Overlay.cs" />
+    <Compile Include="ui\PowerMeter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Tile.cs" />
-    <Compile Include="TileSet.cs" />
-    <Compile Include="UIElement.cs" />
+    <Compile Include="map\Tile.cs" />
+    <Compile Include="map\TileSet.cs" />
+    <Compile Include="ui\UIElement.cs" />
     <Compile Include="Util.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -139,6 +145,7 @@
     <Content Include="contract\graphml\readme.txt" />
     <Content Include="contract\tmx\readme.txt" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\XNA Game Studio\Microsoft.Xna.GameStudio.targets" />
   <PropertyGroup>
