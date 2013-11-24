@@ -31,27 +31,14 @@ public class AnimatedSprite : Sprite
         Height = frameHeight;
     }
 
-    //called by Clone()
-    protected AnimatedSprite(Texture2D img, int frameWidth, int frameHeight, float scale, Color tint)
-        : base(img, scale, tint)
+    protected AnimatedSprite(AnimatedSprite other) : base(other)
     {
-        Width = frameWidth;
-        Height = frameHeight;
+        Animation = other.Animation.Clone();
     }
 
     public new AnimatedSprite Clone()
     {
-        AnimatedSprite clone = new AnimatedSprite(image, Width, Height, Scale, Tint);
-        clone.Animation = this.Animation.Clone();
-        clone.UpdateCallback = this.UpdateCallback;
-        clone.UpdateInterval = this.UpdateInterval;
-        clone.X = this.X;
-        clone.Y = this.Y;
-        clone.spin = this.spin;
-        clone.originalTint = this.originalTint;
-        clone.blinkColor1 = this.blinkColor1;
-        clone.blinkColor2 = this.blinkColor2;
-        return clone;
+        return new AnimatedSprite(this);
     }
 
     public override void Draw(SpriteBatch sb)

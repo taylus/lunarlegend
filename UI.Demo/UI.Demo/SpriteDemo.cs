@@ -17,7 +17,7 @@ public class SpriteDemo : BaseGame
     private AnimatedSprite explosion = null;
     private AnimatedSprite clonesplosion = null;
     private int spins = 0;
-    private bool inverted;
+    private bool shook = false;
 
     public SpriteDemo()
     {
@@ -38,13 +38,12 @@ public class SpriteDemo : BaseGame
         awesome.MoveTo(0, GameHeight - (int)awesome.ScaledHeight);
 
         shibe = new Sprite("demo/shibe.gif", 1.0f);
-        shibe.UpdateCallback = FlashSpriteRandomColor;
-        shibe.UpdateInterval = TimeSpan.FromMilliseconds(100);
+        shibe.SetPulse(Color.Blue, 0.05f, 0.6f, TimeSpan.FromMilliseconds(30));
         shibe.MoveTo(560, 350);
 
         background = new Sprite("demo/shibe.jpg");
         background.UpdateInterval = TimeSpan.FromMilliseconds(100);
-        background.UpdateCallback = InvertSprite;
+        background.UpdateCallback = ShakeSprite;
         background.DestinationRectangle = new Rectangle(-20, -20, GameWidth + 40, GameHeight + 40);
 
         explosion = new AnimatedSprite("demo/explosion.png", 64, 64, 3.0f, Color.Orange);
@@ -138,14 +137,13 @@ public class SpriteDemo : BaseGame
         }
     }
 
-    private void InvertSprite(Sprite s)
+    private void ShakeSprite(Sprite s)
     {
-        s.InvertColors();
-        inverted = !inverted;
-
-        if (inverted)
-            s.Rotation = MathHelper.ToRadians(-1.0f);
-        else
+        if (shook)
             s.Rotation = 0;
+        else
+            s.Rotation = MathHelper.ToRadians(-1.0f);
+
+        shook = !shook;
     }
 }

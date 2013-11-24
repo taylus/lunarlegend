@@ -9,7 +9,7 @@ public delegate void SpriteUpdateCallback(Sprite s);
 //a sprite is a wrapper class around Texture2D and offers various effects
 public class Sprite : UIElement
 {
-    protected Texture2D image;
+    public Texture2D image;
     public new Rectangle Rectangle { get { return new Rectangle(X, Y, (int)ScaledWidth, (int)ScaledHeight); } }
 
     //the image is multiplied by this color when drawing
@@ -33,6 +33,10 @@ public class Sprite : UIElement
     protected Color originalTint;
     protected Color blinkColor1;
     protected Color blinkColor2;
+    protected Color pulseColor;
+    protected float pulseLerp;
+    protected float pulseLerpStep;
+    protected float pulseLerpLimit;
     protected float spin;
 
     public Sprite(string imgFile, float scale, Color tint)
@@ -49,28 +53,30 @@ public class Sprite : UIElement
 
     }
 
-    //called by Clone()
-    protected Sprite(Texture2D img, float scale, Color tint)
+    protected Sprite(Sprite other)
     {
-        image = img;
-        Scale = scale;
-        Width = image.Width;
-        Height = image.Height;
-        Tint = tint;
+        image = other.image;
+        Scale = other.Scale;
+        Width = other.Width;
+        Height = other.Height;
+        Tint = other.Tint;
+        UpdateCallback = other.UpdateCallback;
+        UpdateInterval = other.UpdateInterval;
+        X = other.X;
+        Y = other.Y;
+        spin = other.spin;
+        originalTint = other.originalTint;
+        blinkColor1 = other.blinkColor1;
+        blinkColor2 = other.blinkColor2;
+        pulseColor = other.pulseColor;
+        pulseLerp = other.pulseLerp;
+        pulseLerpLimit = other.pulseLerpLimit;
+        pulseLerpStep = other.pulseLerpStep;
     }
 
     public Sprite Clone()
     {
-        Sprite clone = new Sprite(image, Scale, Tint);
-        clone.UpdateCallback = this.UpdateCallback;
-        clone.UpdateInterval = this.UpdateInterval;
-        clone.X = this.X;
-        clone.Y = this.Y;
-        clone.spin = this.spin;
-        clone.originalTint = this.originalTint;
-        clone.blinkColor1 = this.blinkColor1;
-        clone.blinkColor2 = this.blinkColor2;
-        return clone;
+        return new Sprite(this);
     }
 
     public override void Draw(SpriteBatch sb)
@@ -145,6 +151,39 @@ public class Sprite : UIElement
     private static void BlinkCallback(Sprite s)
     {
         s.Tint = (s.Tint == s.blinkColor1 ? s.blinkColor2 : s.blinkColor1);
+    }
+
+    #endregion
+
+    #region Pulse Helper Methods
+
+    public void SetPulse(Color color, float lerpStep, float lerpLimit, TimeSpan interval)
+    {
+        originalTint = Tint;
+        pulseColor = color;
+        pulseLerp = 0;
+        pulseLerpStep = lerpStep;
+        pulseLerpLimit = MathHelper.Clamp(lerpLimit, 0, 1);
+        UpdateInterval = interval;
+        UpdateCallback = PulseCallback;
+    }
+
+    public void StopPulse()
+    {
+        if (UpdateCallback != PulseCallback) return;
+        UpdateCallback = null;
+        Tint = originalTint;
+    }
+
+    private static void PulseCallback(Sprite s)
+    {
+        s.Tint = Color.Lerp(Color.White, s.pulseColor, s.pulseLerp);
+        s.pulseLerp += s.pulseLerpStep;
+
+        if (s.pulseLerp < 0 /*Math.Abs(s.pulseLerpStep)*/ || s.pulseLerp > s.pulseLerpLimit)
+        {
+            s.pulseLerpStep = -s.pulseLerpStep;
+        }
     }
 
     #endregion
