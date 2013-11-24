@@ -24,7 +24,7 @@ public abstract class UIElement
 
     public abstract void Draw(SpriteBatch sb);
 
-    public void MoveTo(int x, int y)
+    public virtual void MoveTo(int x, int y)
     {
         X = x;
         Y = y;
@@ -35,7 +35,7 @@ public abstract class UIElement
         MoveTo(p.X, p.Y);
     }
 
-    public void CenterOn(int x, int y)
+    public virtual void CenterOn(int x, int y)
     {
         MoveTo(x - (Width / 2), y - (Height / 2));
     }

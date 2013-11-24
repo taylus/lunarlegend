@@ -60,6 +60,11 @@ public class BaseGame : Game
 
     public static Texture2D LoadTexture(string imgFile, bool external)
     {
+        //note: loading a texture through the content pipeline will use premultiplied
+        //alpha blending (by default), but loading one from a file stream will not
+        //http://blogs.msdn.com/b/shawnhar/archive/2010/04/08/premultiplied-alpha-in-xna-game-studio-4-0.aspx
+        //http://blogs.msdn.com/b/shawnhar/archive/2009/11/06/premultiplied-alpha.aspx
+
         if (!external) return contentManager.Load<Texture2D>(imgFile);
 
         //if the path is relative, then root it in the content project

@@ -112,7 +112,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="EffectsDemo.cs" />
+    <Compile Include="SpriteDemo.cs" />
     <Compile Include="MenuDemo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Program.cs" />
