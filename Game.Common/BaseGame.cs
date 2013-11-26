@@ -79,6 +79,11 @@ public class BaseGame : Game
         }
     }
 
+    public static RenderTarget2D CreateRenderTarget(int w, int h)
+    {
+        return new RenderTarget2D(graphicsDevice, w, h);
+    }
+
     public static SoundEffect LoadSoundEffect(string sfxFile, bool external)
     {
         if (!external) return contentManager.Load<SoundEffect>(sfxFile);

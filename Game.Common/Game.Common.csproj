@@ -109,6 +109,7 @@
     </Compile>
     <Compile Include="ui\AnimatedSprite.cs" />
     <Compile Include="ui\Box.cs" />
+    <Compile Include="ui\RenderTargetSprite.cs" />
     <Compile Include="ui\Sprite.cs" />
     <Compile Include="ui\MenuBox.cs" />
     <Compile Include="ui\Graph.cs" />

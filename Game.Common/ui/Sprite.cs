@@ -9,7 +9,7 @@ public delegate void SpriteUpdateCallback(Sprite s);
 //a sprite is a wrapper class around Texture2D and offers various effects
 public class Sprite : UIElement
 {
-    public Texture2D image;
+    public Texture2D Image { get; protected set; }
     public new Rectangle Rectangle { get { return new Rectangle(X, Y, (int)ScaledWidth, (int)ScaledHeight); } }
 
     //the image is multiplied by this color when drawing
@@ -20,6 +20,7 @@ public class Sprite : UIElement
     public float ScaledHeight { get { return Height * Scale; } }
     public Rectangle? DestinationRectangle { get; set; }
     public float Rotation { get; set; }
+    public Point RotationCenterOffset { get; set; }
 
     //update callback interval; set to zero to update as fast as possible
     public TimeSpan UpdateInterval { get; set; }
@@ -41,10 +42,10 @@ public class Sprite : UIElement
 
     public Sprite(string imgFile, float scale, Color tint)
     {
-        image = BaseGame.LoadTexture(imgFile, true);
+        Image = BaseGame.LoadTexture(imgFile, true);
         Scale = scale;
-        Width = image.Width;
-        Height = image.Height;
+        Width = Image.Width;
+        Height = Image.Height;
         Tint = tint;
     }
 
@@ -55,7 +56,7 @@ public class Sprite : UIElement
 
     protected Sprite(Sprite other)
     {
-        image = other.image;
+        Image = other.Image;
         Scale = other.Scale;
         Width = other.Width;
         Height = other.Height;
@@ -74,6 +75,11 @@ public class Sprite : UIElement
         pulseLerpStep = other.pulseLerpStep;
     }
 
+    protected Sprite()
+    {
+
+    }
+
     public Sprite Clone()
     {
         return new Sprite(this);
@@ -83,15 +89,16 @@ public class Sprite : UIElement
     {
         if (DestinationRectangle.HasValue)
         {
-            //fit in the destination rectangle if there is one
+            //draw inside the destination rectangle if there is one
             Rectangle offsetDestRect = DestinationRectangle.Value;
             offsetDestRect.Offset(offsetDestRect.Width / 2, offsetDestRect.Height / 2);
-            sb.Draw(image, offsetDestRect, null, Tint, Rotation, new Vector2(image.Width / 2, image.Height / 2), SpriteEffects.None, 0);
+            sb.Draw(Image, offsetDestRect, null, Tint, Rotation, new Vector2(Image.Width / 2, Image.Height / 2), SpriteEffects.None, 0);
         }
         else
         {
-            //otherwise drawn at the provided scale
-            sb.Draw(image, new Vector2(X + ScaledWidth / 2, Y + ScaledHeight / 2), null, Tint, Rotation, new Vector2(Width / 2, Height / 2), Scale, SpriteEffects.None, 0);
+            //otherwise, drawn centered and at the provided scale
+            Vector2 origin = new Vector2((int)(Width / 2) + RotationCenterOffset.X, (int)(Height / 2) + RotationCenterOffset.Y);
+            sb.Draw(Image, new Vector2(X + (int)(ScaledWidth / 2), (int)(Y + ScaledHeight / 2)), null, Tint, Rotation, origin, Scale, SpriteEffects.None, 0);
         }
     }
 
@@ -110,19 +117,19 @@ public class Sprite : UIElement
     public void InvertColors()
     {
         //scan every pixel in the image and invert it
-        //kinda expensive to do this CPU-side, but meh
-        Color[] pixels = new Color[image.Width * image.Height];
-        image.GetData(pixels);
-        for (int y = 0; y < image.Height; y++)
+        //this is expensive to do CPU-side...
+        Color[] pixels = new Color[Image.Width * Image.Height];
+        Image.GetData(pixels);
+        for (int y = 0; y < Image.Height; y++)
         {
-            for (int x = 0; x < image.Width; x++)
+            for (int x = 0; x < Image.Width; x++)
             {
-                int pixelArrayIndex = x + (y * image.Width);
+                int pixelArrayIndex = x + (y * Image.Width);
                 Color c = pixels[pixelArrayIndex];
                 pixels[pixelArrayIndex] = new Color(255 - c.R, 255 - c.G, 255 - c.B, c.A);
             }
         }
-        image.SetData(pixels);
+        Image.SetData(pixels);
     }
 
     public override void CenterOn(int x, int y)
@@ -157,13 +164,13 @@ public class Sprite : UIElement
 
     #region Pulse Helper Methods
 
-    public void SetPulse(Color color, float lerpStep, float lerpLimit, TimeSpan interval)
+    public void SetPulse(Color color, TimeSpan interval, float lerpStep = 0.05f, float lerpLimit = 0.6f)
     {
         originalTint = Tint;
         pulseColor = color;
         pulseLerp = 0;
-        pulseLerpStep = lerpStep;
-        pulseLerpLimit = MathHelper.Clamp(lerpLimit, 0, 1);
+        pulseLerpStep = lerpStep;   //how much to lerp every update
+        pulseLerpLimit = MathHelper.Clamp(lerpLimit, 0, 1);     //max lerp weight towards the given color
         UpdateInterval = interval;
         UpdateCallback = PulseCallback;
     }

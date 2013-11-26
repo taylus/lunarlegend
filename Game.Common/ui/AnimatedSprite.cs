@@ -43,7 +43,7 @@ public class AnimatedSprite : Sprite
 
     public override void Draw(SpriteBatch sb)
     {
-        sb.Draw(image, new Vector2(X + ScaledWidth / 2, Y + ScaledHeight / 2), sourceRect, Tint, Rotation, new Vector2(Width / 2, Height / 2), Scale, SpriteEffects.None, 0);
+        sb.Draw(Image, new Vector2(X + ScaledWidth / 2, Y + ScaledHeight / 2), sourceRect, Tint, Rotation, new Vector2(Width / 2, Height / 2), Scale, SpriteEffects.None, 0);
     }
 
     public override void Update(GameTime currentGameTime)
@@ -60,9 +60,9 @@ public class AnimatedSprite : Sprite
     public Animation CreateDefaultAnimation(TimeSpan frameLength)
     {
         List<Point> frames = new List<Point>();
-        for (int y = 0; y < image.Height; y += Height)
+        for (int y = 0; y < Image.Height; y += Height)
         {
-            for (int x = 0; x < image.Width; x += Width)
+            for (int x = 0; x < Image.Width; x += Width)
             {
                 frames.Add(new Point(x / Width, y / Height));
             }

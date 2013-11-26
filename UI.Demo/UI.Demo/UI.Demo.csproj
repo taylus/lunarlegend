@@ -112,6 +112,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="RenderTargetSpriteDemo.cs" />
     <Compile Include="SpriteDemo.cs" />
     <Compile Include="MenuDemo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

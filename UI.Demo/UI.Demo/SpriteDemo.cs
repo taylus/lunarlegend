@@ -38,7 +38,7 @@ public class SpriteDemo : BaseGame
         awesome.MoveTo(0, GameHeight - (int)awesome.ScaledHeight);
 
         shibe = new Sprite("demo/shibe.gif", 1.0f);
-        shibe.SetPulse(Color.Blue, 0.05f, 0.6f, TimeSpan.FromMilliseconds(30));
+        shibe.SetPulse(Color.Blue, TimeSpan.FromMilliseconds(30), 0.05f, 0.6f);
         shibe.MoveTo(560, 350);
 
         background = new Sprite("demo/shibe.jpg");
@@ -47,7 +47,6 @@ public class SpriteDemo : BaseGame
         background.DestinationRectangle = new Rectangle(-20, -20, GameWidth + 40, GameHeight + 40);
 
         explosion = new AnimatedSprite("demo/explosion.png", 64, 64, 3.0f, Color.Orange);
-        //explosion.SetRotation(MathHelper.ToRadians(2.0f));
         explosion.Animation = explosion.CreateDefaultAnimation(TimeSpan.FromMilliseconds(30));
         explosion.CenterOn(675, 90);
 
@@ -93,9 +92,9 @@ public class SpriteDemo : BaseGame
         background.Draw(spriteBatch);
         carlton.Draw(spriteBatch);
         awesome.Draw(spriteBatch);
-        shibe.Draw(spriteBatch);
         clonesplosion.Draw(spriteBatch);
         explosion.Draw(spriteBatch);
+        shibe.Draw(spriteBatch);
         spriteBatch.End();
 
         base.Draw(gameTime);
