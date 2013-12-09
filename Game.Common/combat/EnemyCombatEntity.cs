@@ -8,13 +8,12 @@ using CombatRatings = System.Collections.Generic.Dictionary<DamageType, CombatRa
 
 public class EnemyCombatEntity : CombatEntity
 {
+    private Sprite sprite;
+    public Point CenterOffset { get; set; } 
+    public bool HasSpriteEffects { get { return sprite.UpdateCallback != null; } }
+
     //used to differentiate if there's multiple of the same named enemy; e.g. Slime A, Slime B
     public char? ID { get; set; }
-    public Texture2D Image { get; set; }
-    public BlinkingSpriteOverlay Overlay { get; set; }
-    public bool DrawOverlay { get; set; }
-    public float Scale { get; set; }
-    public Point CenterOffset { get; set; }
 
     //an enemy's name plus its unique identifier
     public string FullName
@@ -26,6 +25,18 @@ public class EnemyCombatEntity : CombatEntity
         }
     }
 
+    public Color Tint
+    {
+        get
+        {
+            return sprite.Tint;
+        }
+        set
+        {
+            sprite.Tint = value;
+        }
+    }
+
     //TODO: loading a map will load all monsters it contains from a persistent store
     //monsters will appear on the map like the player or NPCS, and can be avoided
 
@@ -33,13 +44,8 @@ public class EnemyCombatEntity : CombatEntity
         base(name, hp, 0, cr)
     {
         ID = id;
-        Image = BaseGame.LoadTexture(imgFile, true);
-        Overlay = new BlinkingSpriteOverlay(Image, Color.Black, 0.5f, TimeSpan.FromSeconds(0.25)) { BlinkEnabled = false };
-        Scale = scale;
-        if (centerOffset == null)
-            CenterOffset = Point.Zero;
-        else
-            CenterOffset = centerOffset.Value;
+        sprite = new Sprite(imgFile, scale);
+        if (centerOffset.HasValue) CenterOffset = centerOffset.Value;
     }
 
     public CombatAction DecideAction(List<EnemyCombatEntity> allies, List<PlayerCombatEntity> enemies)
@@ -52,25 +58,33 @@ public class EnemyCombatEntity : CombatEntity
 
     public void Draw(SpriteBatch sb)
     {
-        sb.Draw(Image, new Vector2(X, Y), null, Color.White, 0, Vector2.Zero, Scale, SpriteEffects.None, 0);
-        if (DrawOverlay && Overlay != null) Overlay.Draw(sb, X, Y, Scale);
+        //sb.Draw(Image, new Vector2(X, Y), null, Color.White, 0, Vector2.Zero, Scale, SpriteEffects.None, 0);
+        sprite.Draw(sb);
     }
 
     public void CenterOn(int x, int y)
     {
-        if (Image == null) return;
-        X = x - (int)(Image.Width * Scale / 2) + CenterOffset.X;
-        Y = y - (int)(Image.Height * Scale / 2) + CenterOffset.Y;
+        sprite.CenterOn(x + CenterOffset.X, y + CenterOffset.Y);
     }
 
     public void CenterOn(Point p)
     {
-        CenterOn(p.X, p.Y);
+        sprite.CenterOn(p);
     }
 
     public override void Update(GameTime currentGameTime)
     {
-        if (DrawOverlay) Overlay.Update(currentGameTime);
+        sprite.Update(currentGameTime);
+    }
+
+    public void StartBlink(int ms = 300)
+    {
+        sprite.SetBlink(Color.White, Color.DarkGray, TimeSpan.FromMilliseconds(ms));
+    }
+
+    public void StopBlink()
+    {
+        sprite.StopBlink();
     }
 }
 

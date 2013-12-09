@@ -146,26 +146,6 @@ public class CombatSystem
 
         foreach (EnemyCombatEntity enemy in enemyParty)
         {
-            //player is selecting an enemy target:
-            //draw a solid overlay on the target(s) he is NOT selecting
-            //draw a blinking overlay on the target he is selecting
-            if (currentState == CombatSystemState.SELECT_ENEMY_TARGET)
-            {
-                enemy.DrawOverlay = true;
-                enemy.Overlay.Color = Color.Black;
-                enemy.Overlay.BlinkEnabled = (enemyTarget == enemy);
-            }
-            else if (currentState == CombatSystemState.ENEMY_ACT && enemy == currentEnemy)
-            {
-                enemy.DrawOverlay = true;
-                enemy.Overlay.Color = Color.Gray;
-                enemy.Overlay.BlinkEnabled = true;
-            }
-            else
-            {
-                enemy.DrawOverlay = false;
-            }
-
             enemy.Draw(sb);
         }
 
@@ -179,6 +159,8 @@ public class CombatSystem
         if(!string.IsNullOrWhiteSpace(dialogue.Text)) dialogue.Draw(sb);
         mainMenu.Draw(sb);
         powerMeter.Draw(sb);
+
+        //sb.DrawString(BaseGame.Font, currentState.ToString(), new Vector2(mainMenu.X, mainMenu.Y + mainMenu.Height + 4), Color.White);
     }
 
     public void Update(GameTime currentGameTime)
@@ -190,6 +172,39 @@ public class CombatSystem
         foreach (EnemyCombatEntity enemy in enemyParty)
         {
             enemy.Update(currentGameTime);
+
+            //apply sprite effects
+            //this is kinda lazy since this runs every update frame
+            //but this avoids having duplicate code in several different state transitions
+
+            //player is selecting an enemy target:
+            if (currentState == CombatSystemState.SELECT_ENEMY_TARGET ||
+                currentState == CombatSystemState.POWER_METER)
+            {
+                //blink the enemy he is selecting
+                if (enemyTarget == enemy)
+                {
+                    if (!enemy.HasSpriteEffects) enemy.StartBlink();
+                }
+                //darken the others with a tint
+                else
+                {
+                    enemy.Tint = Color.DarkGray;
+                    enemy.StopBlink();
+                }
+            }
+            //an enemy is acting:
+            else if (currentState == CombatSystemState.ENEMY_ACT && enemy == currentEnemy)
+            {
+                //make it blink
+                enemy.StartBlink(150);
+            }
+            //clear sprite effects in all other states
+            else
+            {
+                enemy.Tint = Color.White;
+                enemy.StopBlink();
+            }
         }
     }
 
@@ -288,6 +303,7 @@ public class CombatSystem
                     {
                         //enemy turn
                         SetCurrentPlayer(-1);
+                        currentEnemyIndex = 0;
                         SetState(CombatSystemState.ENEMY_ACT);
                     }
                 }
@@ -295,6 +311,8 @@ public class CombatSystem
             }
             case CombatSystemState.ENEMY_ACT:
             {
+                //TODO: fix bug with flashing enemy being ahead by one because of the way the current enemy index is set
+
                 CombatAction enemyAction = currentEnemy.DecideAction(enemyParty, playerParty);
                 CombatEntity target = enemyAction.Target;
                 uint damageDone = enemyAction.Execute();
@@ -338,7 +356,6 @@ public class CombatSystem
             case CombatSystemState.SELECT_ENEMY_TARGET:
                 enemyTargetIndex--;
                 if (enemyTargetIndex < 0) enemyTargetIndex = 0;
-                enemyTarget.Overlay.Reset();
                 dialogue.Text = GetEnemyTargetText(enemyTarget);
                 break;
         }
@@ -356,7 +373,6 @@ public class CombatSystem
             case CombatSystemState.SELECT_ENEMY_TARGET:
                 enemyTargetIndex++;
                 if (enemyTargetIndex >= enemyParty.Count) enemyTargetIndex = enemyParty.Count - 1;
-                enemyTarget.Overlay.Reset();
                 dialogue.Text = GetEnemyTargetText(enemyTarget);
                 break;
         }
@@ -438,6 +454,7 @@ public class CombatSystem
         currentState = state;
 
         mainMenu.IsActive = (currentState == CombatSystemState.MENU_SELECT);
+        //UpdateEnemyTargetSelectionEffects();
     }
 
     //utility method to advance to a new current player

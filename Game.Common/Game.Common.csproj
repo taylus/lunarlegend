@@ -110,6 +110,7 @@
     <Compile Include="ui\AnimatedSprite.cs" />
     <Compile Include="ui\Box.cs" />
     <Compile Include="ui\RenderTargetSprite.cs" />
+    <Compile Include="ui\ScreenOverlay.cs" />
     <Compile Include="ui\Sprite.cs" />
     <Compile Include="ui\MenuBox.cs" />
     <Compile Include="ui\Graph.cs" />
@@ -118,7 +119,6 @@
     <Compile Include="map\Map.cs" />
     <Compile Include="ui\MessageBox.cs" />
     <Compile Include="map\Object.cs" />
-    <Compile Include="ui\Overlay.cs" />
     <Compile Include="ui\PowerMeter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="map\Tile.cs" />
