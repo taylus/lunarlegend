@@ -37,9 +37,9 @@ public class SpriteDemo : BaseGame
         awesome.UpdateCallback = FadeAndRotateSprite;
         awesome.MoveTo(0, GameHeight - (int)awesome.ScaledHeight);
 
-        shibe = new Sprite("demo/shibe.gif", 1.0f);
+        shibe = new Sprite("demo/shibe.gif", 250, 250);
         shibe.SetPulse(Color.Blue, TimeSpan.FromMilliseconds(30), 0.05f, 0.6f);
-        shibe.MoveTo(560, 350);
+        shibe.MoveTo(570, 360);
 
         background = new Sprite("demo/shibe.jpg");
         background.UpdateInterval = TimeSpan.FromMilliseconds(100);

@@ -54,6 +54,13 @@ public class Sprite : UIElement
 
     }
 
+    public Sprite(string imgFile, int width, int height) : this(imgFile, 1.0f, Color.White)
+    {
+        DestinationRectangle = new Rectangle(0, 0, width, height);
+        Width = width;
+        Height = height;
+    }
+
     protected Sprite(Sprite other)
     {
         Image = other.Image;
@@ -130,6 +137,19 @@ public class Sprite : UIElement
             }
         }
         Image.SetData(pixels);
+    }
+
+    public override void MoveTo(int x, int y)
+    {
+        if (DestinationRectangle.HasValue)
+        {
+            Rectangle dr = DestinationRectangle.Value;
+            DestinationRectangle = new Rectangle(x, y, dr.Width, dr.Height);
+        }
+        else
+        {
+            base.MoveTo(x, y);
+        }
     }
 
     public override void CenterOn(int x, int y)
