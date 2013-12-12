@@ -1,11 +1,11 @@
 Content\font.xnb
-Content\demo\shibe.xnb
 Content\battle\cave_bg.jpg
 Content\battle\slime.png
 Content\demo\awesome.png
 Content\demo\carlton.png
 Content\demo\explosion.png
 Content\demo\shibe.gif
+Content\demo\shibe.jpg
 Content\demo\spritesheet.png
 Content\maps\castle\kefka_back.png
 Content\maps\castle\king.png
@@ -39,6 +39,7 @@ Content\maps\test\testmap.tmx
 Content\maps\test_scroll\lttp_castlebasement1.png
 Content\maps\test_scroll\slime.png
 Content\maps\test_scroll\walls.png
+Content\world\locke.png
 Content\maps\gid_example\tileset.png
 Content\maps\test\lttp_castlebasement1.png
 Content\maps\test_scroll\test_scroll.tmx

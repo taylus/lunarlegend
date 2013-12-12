@@ -186,7 +186,7 @@ public class Overworld : BaseGame
             if (dialogue == null)
             {
                 player.Move(curKeyboard);
-                player.TouchEntities();
+                player.Update(gameTime);
             }
 
             //reactivate any inactive buttons that the player is no longer standing on
@@ -227,7 +227,9 @@ public class Overworld : BaseGame
         //draw the game to the temp surface at normal scale
         GraphicsDevice.SetRenderTarget((RenderTarget2D)gameSurf);
         GraphicsDevice.Clear(Color.Transparent);
-        spriteBatch.Begin();
+
+        //SamplerState.PointClamp provides "nearest neighbor" scaling, as opposed to linear (which is blurry for small images)
+        spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp, null, null);
         World.Current.DrawBelowPlayer(spriteBatch);
         if (!combatSystem.IsActive)
         {
