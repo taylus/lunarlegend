@@ -110,6 +110,7 @@ public class Player : IWorldEntity
     public void Move(KeyboardState keyboard)
     {
         //if we're not pressing any movement keys, just keep facing in the same direction
+        //makes the player stop animating once they stop pressing movement keys
         if (!(keyboard.IsKeyDown(Buttons.MOVE_UP) || keyboard.IsKeyDown(Buttons.MOVE_DOWN) ||
               keyboard.IsKeyDown(Buttons.MOVE_LEFT) || keyboard.IsKeyDown(Buttons.MOVE_RIGHT)))
         {
@@ -160,8 +161,6 @@ public class Player : IWorldEntity
 
     private void MoveUp(bool movingDiagonally, float playerSpeed)
     {
-        if (!movingDiagonally) Sprite.SetAnimation("walk_up");
-
         //move less if we can't move a full step
         float playerMoveDist = MathHelper.Min(playerSpeed, MathHelper.Distance(WorldY, 0));
         Vector2 viewScrollOffset = new Vector2(0, -playerMoveDist);
@@ -211,14 +210,23 @@ public class Player : IWorldEntity
             }
         }
 
+        if (playerMoveDist <= 0)
+        {
+            //stop animating when blocked by something solid
+            Sprite.SetAnimation("face_up");
+        }
+        else if (!movingDiagonally || Sprite.Animation.Name.StartsWith("face"))
+        {
+            //4-directional animations with 8-directional movement,
+            //so only change animation when not moving diagonally, unless we're at a stand-still
+            Sprite.SetAnimation("walk_up");
+        }
         WorldY -= playerMoveDist;
         World.Current.ScrollViewWithinMapBounds(this, viewScrollOffset);
     }
 
     private void MoveDown(bool movingDiagonally, float playerSpeed)
     {
-        if (!movingDiagonally) Sprite.SetAnimation("walk_down");
-
         //move less if we can't move a full step
         float playerMoveDist = MathHelper.Min(playerSpeed, MathHelper.Distance(WorldY + Height, World.Current.HeightPx));
         Vector2 viewScrollOffset = new Vector2(0, playerMoveDist);
@@ -267,14 +275,23 @@ public class Player : IWorldEntity
             }
         }
 
+        if (playerMoveDist <= 0)
+        {
+            //stop animating when blocked by something solid
+            Sprite.SetAnimation("face_down");
+        }
+        else if (!movingDiagonally || Sprite.Animation.Name.StartsWith("face"))
+        {
+            //4-directional animations with 8-directional movement,
+            //so only change animation when not moving diagonally, unless we're at a stand-still
+            Sprite.SetAnimation("walk_down");
+        }
         WorldY += playerMoveDist;
         World.Current.ScrollViewWithinMapBounds(this, viewScrollOffset);
     }
 
     private void MoveLeft(bool movingDiagonally, float playerSpeed)
     {
-        if (!movingDiagonally) Sprite.SetAnimation("walk_left");
-
         //move less if we can't move a full step
         float playerMoveDist = MathHelper.Min(playerSpeed, MathHelper.Distance(WorldX, 0));
         Vector2 viewScrollOffset = new Vector2(-playerMoveDist, 0);
@@ -323,14 +340,23 @@ public class Player : IWorldEntity
             }
         }
 
+        if (playerMoveDist <= 0)
+        {
+            //stop animating when blocked by something solid
+            Sprite.SetAnimation("face_left");
+        }
+        else if (!movingDiagonally || Sprite.Animation.Name.StartsWith("face"))
+        {
+            //4-directional animations with 8-directional movement,
+            //so only change animation when not moving diagonally, unless we're at a stand-still
+            Sprite.SetAnimation("walk_left");
+        }
         WorldX -= playerMoveDist;
         World.Current.ScrollViewWithinMapBounds(this, viewScrollOffset);
     }
 
     private void MoveRight(bool movingDiagonally, float playerSpeed)
     {
-        if (!movingDiagonally) Sprite.SetAnimation("walk_right");
-
         //move less if we can't move a full step
         float playerMoveDist = MathHelper.Min(playerSpeed, MathHelper.Distance(WorldX + Width, World.Current.WidthPx));
         Vector2 viewScrollOffset = new Vector2(playerMoveDist, 0);
@@ -377,6 +403,18 @@ public class Player : IWorldEntity
             {
                 playerMoveDist = MathHelper.Max(0, wEnt.WorldX - (WorldX + Width));
             }
+        }
+
+        if (playerMoveDist <= 0)
+        {
+            //stop animating when blocked by something solid
+            Sprite.SetAnimation("face_right");
+        }
+        else if (!movingDiagonally || Sprite.Animation.Name.StartsWith("face"))
+        {
+            //4-directional animations with 8-directional movement,
+            //so only change animation when not moving diagonally, unless we're at a stand-still
+            Sprite.SetAnimation("walk_right");
         }
 
         WorldX += playerMoveDist;
