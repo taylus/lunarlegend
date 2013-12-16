@@ -35,7 +35,7 @@ public static class Program
 
         //just hardcode the demo you want to run for now, and build this project as a 
         //Windows Application instead of a Console Application, to hide the console window
-        using (BaseGame demo = new SpriteDemo())
+        using (BaseGame demo = new BattleDemo())
         {
             demo.Run();
         }

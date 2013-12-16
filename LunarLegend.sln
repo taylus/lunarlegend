@@ -5,13 +5,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Map.Viewer", "Map.Viewer\Ma
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Content", "Content\Content.contentproj", "{686759BB-D49A-4950-B4E5-55B0FA5FC5F7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameMode.World", "GameMode.World\GameMode.World.csproj", "{63317F1E-DD8E-4065-9B27-FC9D68517952}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Game.Main", "Game.Main\Game.Main.csproj", "{63317F1E-DD8E-4065-9B27-FC9D68517952}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Game.Common", "Game.Common\Game.Common.csproj", "{AFFF2D6A-6699-4485-9686-DAAECC117CED}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameMode.Battle", "GameMode.Battle\GameMode.Battle.csproj", "{C9C740F6-87A1-46B0-BBA1-661ADB213E2F}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UI.Demo", "UI.Demo\UI.Demo\UI.Demo.csproj", "{50DE5919-51C2-4C78-B3B9-54E0DDCB2266}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Game.Demos", "Game.Demos\Game.Demos.csproj", "{50DE5919-51C2-4C78-B3B9-54E0DDCB2266}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -59,16 +57,6 @@ Global
 		{AFFF2D6A-6699-4485-9686-DAAECC117CED}.Release|Mixed Platforms.Build.0 = Release|x86
 		{AFFF2D6A-6699-4485-9686-DAAECC117CED}.Release|x86.ActiveCfg = Release|x86
 		{AFFF2D6A-6699-4485-9686-DAAECC117CED}.Release|x86.Build.0 = Release|x86
-		{C9C740F6-87A1-46B0-BBA1-661ADB213E2F}.Debug|Any CPU.ActiveCfg = Debug|x86
-		{C9C740F6-87A1-46B0-BBA1-661ADB213E2F}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
-		{C9C740F6-87A1-46B0-BBA1-661ADB213E2F}.Debug|Mixed Platforms.Build.0 = Debug|x86
-		{C9C740F6-87A1-46B0-BBA1-661ADB213E2F}.Debug|x86.ActiveCfg = Debug|x86
-		{C9C740F6-87A1-46B0-BBA1-661ADB213E2F}.Debug|x86.Build.0 = Debug|x86
-		{C9C740F6-87A1-46B0-BBA1-661ADB213E2F}.Release|Any CPU.ActiveCfg = Release|x86
-		{C9C740F6-87A1-46B0-BBA1-661ADB213E2F}.Release|Mixed Platforms.ActiveCfg = Release|x86
-		{C9C740F6-87A1-46B0-BBA1-661ADB213E2F}.Release|Mixed Platforms.Build.0 = Release|x86
-		{C9C740F6-87A1-46B0-BBA1-661ADB213E2F}.Release|x86.ActiveCfg = Release|x86
-		{C9C740F6-87A1-46B0-BBA1-661ADB213E2F}.Release|x86.Build.0 = Release|x86
 		{50DE5919-51C2-4C78-B3B9-54E0DDCB2266}.Debug|Any CPU.ActiveCfg = Debug|x86
 		{50DE5919-51C2-4C78-B3B9-54E0DDCB2266}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
 		{50DE5919-51C2-4C78-B3B9-54E0DDCB2266}.Debug|Mixed Platforms.Build.0 = Debug|x86

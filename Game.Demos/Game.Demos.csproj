@@ -112,6 +112,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BattleDemo.cs" />
     <Compile Include="RenderTargetSpriteDemo.cs" />
     <Compile Include="SpriteDemo.cs" />
     <Compile Include="MenuDemo.cs" />
@@ -120,7 +121,7 @@
     <Compile Include="PowerMeterDemo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Game.Common\Game.Common.csproj">
+    <ProjectReference Include="..\Game.Common\Game.Common.csproj">
       <Project>{AFFF2D6A-6699-4485-9686-DAAECC117CED}</Project>
       <Name>Game.Common</Name>
     </ProjectReference>
