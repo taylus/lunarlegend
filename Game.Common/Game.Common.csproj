@@ -99,6 +99,7 @@
     <Compile Include="combat\CombatSystem.cs" />
     <Compile Include="combat\EnemyCombatEntity.cs" />
     <Compile Include="combat\PlayerCombatEntity.cs" />
+    <Compile Include="combat\StatusModifier.cs" />
     <Compile Include="combat\Technique.cs" />
     <Compile Include="contract\graphml\ygraphml.cs">
       <DependentUpon>ygraphml.xsd</DependentUpon>

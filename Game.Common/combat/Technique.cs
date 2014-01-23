@@ -9,40 +9,65 @@ using System.Text;
 //TODO: this would be a good candidate, along with specific monster types, to persist using SQLite
 public abstract class Technique
 {
-    public CombatAction OwningAction { get; private set; }
-    public uint ResourceCost { get; private set; }
-    public uint Power { get; private set; }
+    public CombatAction OwningAction { get; protected set; }
+    public uint ResourceCost { get; protected set; }
+    public uint Power { get; protected set; }
     public string Name { get; private set; }
 
-    public abstract uint ActUpon(CombatEntity target);
+    public abstract void ActUpon(CombatEntity target);
+    public abstract string DescribeUsage(CombatEntity source, CombatEntity target);
 }
 
 public class DamageTechnique : Technique
 {
     public DamageType Type { get; private set; }
 
-    public override uint ActUpon(CombatEntity target)
+    public DamageTechnique(uint power)
     {
-        return target.TakeDamage(OwningAction.CalculateDamage());
+        Power = power;
+    }
+
+    public override void ActUpon(CombatEntity target)
+    {
+        target.TakeDamage(OwningAction.CalculateDamage());
+    }
+
+    public override string DescribeUsage(CombatEntity source, CombatEntity target)
+    {
+        throw new NotImplementedException();
     }
 }
 
 public class HealTechnique : Technique
 {
-    public override uint ActUpon(CombatEntity target)
+    public HealTechnique(uint power)
     {
-        return target.Heal(Power);
+        Power = power;
+    }
+
+    public override void ActUpon(CombatEntity target)
+    {
+        target.Heal(Power);
+    }
+
+    public override string DescribeUsage(CombatEntity source, CombatEntity target)
+    {
+        return string.Format("{0} restores {1} health!", source.Name, Power);
     }
 }
 
 public class SupportTechnique : Technique
 {
-    public int TurnDuration { get; private set; }
+    public StatusModifier Effect { get; private set; }
+    //public int TurnDuration { get; private set; }
 
-    public override uint ActUpon(CombatEntity target)
+    public override void ActUpon(CombatEntity target)
     {
-        //TODO: act differently based on type and effect:
-        //which stat, and whether it's a buff or debuff
+        target.Modifiers.Add(Effect);
+    }
+
+    public override string DescribeUsage(CombatEntity source, CombatEntity target)
+    {
         throw new NotImplementedException();
     }
 }

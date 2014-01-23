@@ -15,16 +15,6 @@ public class EnemyCombatEntity : CombatEntity
     //used to differentiate if there's multiple of the same named enemy; e.g. Slime A, Slime B
     public char? ID { get; set; }
 
-    //an enemy's name plus its unique identifier
-    public string FullName
-    {
-        get
-        {
-            if (ID == null) return Name;
-            return string.Format("{0} {1}", Name, ID);
-        }
-    }
-
     public Color Tint
     {
         get
@@ -35,6 +25,16 @@ public class EnemyCombatEntity : CombatEntity
         {
             sprite.Tint = value;
         }
+    }
+
+    //an enemy's name plus its unique identifier, to differentiate multiples of the same enemy type
+    public override string FullName 
+    { 
+        get 
+        {
+            if (ID == null) return Name;
+            return string.Format("{0} {1}", Name, ID);
+        } 
     }
 
     //TODO: loading a map will load all monsters it contains from a persistent store

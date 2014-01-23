@@ -27,6 +27,16 @@ public class PlayerCombatEntity : CombatEntity
     private static readonly Color ALIVE_COLOR = Box.DEFAULT_BACKGROUND_COLOR;
     private static readonly Color DEAD_COLOR = Color.Lerp(Color.Transparent, Color.DarkRed, MathHelper.Clamp(Box.DEFAULT_OPACITY, 0, 1));
 
+    //public Weapon Weapon { get; set; }
+    //public Armor Armor { get; set; }
+    //public List<Item> Items { get; set; }
+
+    //public List<StatusModifier> GetAllStatusModifiers()
+    //{
+    //    var itemMods = Items.SelectMany(i => i.Modifiers);
+    //    return Modifiers.Union(Weapon.Modifiers).Union(Armor.Modifiers).Union(itemMods).Distinct().ToList();
+    //}
+
     public PlayerCombatEntity(string name, uint hp, uint resource, CombatRatings cr = null) :
         base(name, hp, resource, cr)
     {

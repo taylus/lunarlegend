@@ -9,7 +9,7 @@ public delegate void SpriteUpdateCallback(Sprite s);
 //a sprite is a wrapper class around Texture2D and offers various effects
 public class Sprite : UIElement
 {
-    public Texture2D Image { get; protected set; }
+    public Texture2D Image { get; set; }
     public new Rectangle Rectangle { get { return new Rectangle(X, Y, (int)ScaledWidth, (int)ScaledHeight); } }
 
     //the image is multiplied by this color when drawing
@@ -94,6 +94,8 @@ public class Sprite : UIElement
 
     public override void Draw(SpriteBatch sb)
     {
+        if (!Visible) return;
+
         if (DestinationRectangle.HasValue)
         {
             //draw inside the destination rectangle if there is one

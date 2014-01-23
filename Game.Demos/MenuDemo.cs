@@ -11,10 +11,26 @@ using Microsoft.Xna.Framework.Graphics;
 public class MenuDemo : BaseGame
 {
     private MessageBox msg;
+    private Sprite doge;
+    private BaseMenuBox activeMenu;
+    private MenuBox<string> monthMenu;
+    private MenuBox<string> confirmMenu;
+    private MenuBox<Fruit> fruitMenu;
 
-    private MenuBox activeMenu;
-    private MenuBox monthMenu;
-    private MenuBox confirmMenu;
+    private class Fruit : Sprite
+    {
+        public string Name;
+
+        public Fruit(string imgFile, string name) : base(imgFile)
+        {
+            Name = name;
+        }
+
+        public override string ToString()
+        {
+            return Name;
+        }
+    }
 
     public MenuDemo()
     {
@@ -25,9 +41,15 @@ public class MenuDemo : BaseGame
     {
         base.LoadContent();
         msg = CreateMessageBox();
+        doge = new Sprite("demo/shibe.gif");
+        doge.Rotation = MathHelper.ToRadians(20);
+        doge.MoveTo(550, 395);
+        doge.Visible = false;
         activeMenu = monthMenu = CreateMonthMenu();
         confirmMenu = CreateConfirmMenu();
+        fruitMenu = CreateFruitMenu();
         confirmMenu.Visible = false;
+        fruitMenu.Visible = false;
     }
 
     protected override void Update(GameTime gameTime)
@@ -41,60 +63,74 @@ public class MenuDemo : BaseGame
         //exit on esc
         if (curKeyboard.IsKeyDown(Buttons.QUIT)) this.Exit();
 
-        //if (KeyPressedThisFrame(Buttons.CONFIRM) && msg != null)
-        //{
-        //    if (msg.HasMoreLinesToDisplay)
-        //    {
-        //        msg.AdvanceLines();
-        //    }
-        //    else if (msg.Next != null)
-        //    {
-        //        msg = msg.Next;
-        //    }
-        //}
-
-        if (activeMenu != null)
+        if (KeyPressedThisFrame(Buttons.MOVE_LEFT))
         {
-            if (KeyPressedThisFrame(Buttons.MOVE_LEFT))
+            if(activeMenu != null) activeMenu.SelectLeftChoice();
+        }
+        if (KeyPressedThisFrame(Buttons.MOVE_UP))
+        {
+            if (activeMenu != null) activeMenu.SelectAboveChoice();
+        }
+        if (KeyPressedThisFrame(Buttons.MOVE_RIGHT))
+        {
+            if (activeMenu != null) activeMenu.SelectRightChoice();
+        }
+        if (KeyPressedThisFrame(Buttons.MOVE_DOWN))
+        {
+            if (activeMenu != null) activeMenu.SelectBelowChoice();
+        }
+        if (KeyPressedThisFrame(Buttons.CONFIRM))
+        {
+            if (activeMenu == monthMenu)
             {
-                activeMenu.SelectLeftChoice();
+                msg.Text = string.Format("{0}, huh?", monthMenu.SelectedText);
+                confirmMenu.Visible = true;
+                activeMenu = confirmMenu;
             }
-            if (KeyPressedThisFrame(Buttons.MOVE_UP))
+            else if (activeMenu == confirmMenu)
             {
-                activeMenu.SelectAboveChoice();
-            }
-            if (KeyPressedThisFrame(Buttons.MOVE_RIGHT))
-            {
-                activeMenu.SelectRightChoice();
-            }
-            if (KeyPressedThisFrame(Buttons.MOVE_DOWN))
-            {
-                activeMenu.SelectBelowChoice();
-            }
-            if (KeyPressedThisFrame(Buttons.CONFIRM))
-            {
-                if (activeMenu == monthMenu)
+                if (confirmMenu.SelectedText == "Yes")
                 {
-                    msg = new MessageBox(msg, string.Format("{0}, huh?", monthMenu.SelectedText));
-                    confirmMenu.Visible = true;
-                    activeMenu = confirmMenu;
+                    msg.Text = "That's my favorite, too.";
+                    monthMenu.Visible = false;
+                    confirmMenu.Visible = false;
+                    activeMenu = null;
                 }
-                else if (activeMenu == confirmMenu)
+                else
                 {
-                    if (confirmMenu.SelectedText == "Yes")
-                    {
-                        msg = new MessageBox(msg, "That's my favorite, too.");
-                        monthMenu.Visible = false;
-                        confirmMenu.Visible = false;
-                        activeMenu = null;
-                    }
-                    else
-                    {
-                        confirmMenu.ResetSelection();
-                        confirmMenu.Visible = false;
-                        activeMenu = monthMenu;
-                        msg = CreateMessageBox();
-                    }
+                    confirmMenu.ResetSelection();
+                    confirmMenu.Visible = false;
+                    activeMenu = monthMenu;
+                    msg = CreateMessageBox();
+                }
+            }
+            else if (activeMenu == fruitMenu)
+            {
+                if (fruitMenu.Choices.Count > 2)
+                {
+                    msg.Text = string.Format("Much gross, doge hate {0}.", fruitMenu.SelectedText.ToLower());
+                    fruitMenu.RemoveSelection();
+                }
+                else
+                {
+                    msg.Text = string.Format("Wow, doge love {0}!", fruitMenu.SelectedText.ToLower());
+                    doge.Image = BaseGame.LoadTexture("demo/shibehappy.gif", true);
+                    fruitMenu.Visible = false;
+                    activeMenu = null;
+                }
+            }
+            else
+            {
+                if (fruitMenu.Choices.Count > 2)
+                {
+                    msg.Text = "Give fruit to doge?";
+                    fruitMenu.Visible = true;
+                    doge.Visible = true;
+                    activeMenu = fruitMenu;
+                }
+                else
+                {
+                    Exit();
                 }
             }
         }
@@ -111,44 +147,66 @@ public class MenuDemo : BaseGame
         spriteBatch.Begin();
         msg.Draw(spriteBatch);
         monthMenu.Draw(spriteBatch);
+        fruitMenu.Draw(spriteBatch);
         confirmMenu.Draw(spriteBatch);
+        doge.Draw(spriteBatch);
         spriteBatch.End();
 
         base.Draw(gameTime);
     }
 
-    public static MessageBox CreateMessageBox()
+    private static MessageBox CreateMessageBox()
     {
         int w = 780;
         int h = 1;
         int x = (GameWidth / 2) - (w / 2);
         int y = 10;
-        return new MessageBox(x, y, w, h, Font, "Select your favorite month:");
+        return new MessageBox(x, y, w, h, Font, "What's your favorite month?");
     }
 
-    public static MenuBox CreateMonthMenu()
+    private static MenuBox<string> CreateMonthMenu()
     {
         int w = 400;
         int h = 3;
         int cols = 4;
         int x = 10;
         int y = 50;
-        return new MenuBox(x, y, w, h, cols, Font, GetMonthNames());
+        return new MenuBox<string>(x, y, w, h, cols, Font, GetMonthNames());
     }
 
-    public static MenuBox CreateConfirmMenu()
+    private static MenuBox<Fruit> CreateFruitMenu()
+    {
+        int w = 450;
+        int h = 1;
+        int cols = 3;
+        int x = 10;
+        int y = 50;
+        return new MenuBox<Fruit>(x, y, w, h, cols, Font, CreateFruit());
+    }
+
+    private static MenuBox<string> CreateConfirmMenu()
     {
         int w = 100;
         int h = 1;
         int cols = 2;
         int x = 415;
         int y = 50;
-        return new MenuBox(x, y, w, h, cols, Font, "Yes", "No");
+        return new MenuBox<string>(x, y, w, h, cols, Font, "Yes", "No");
     }
 
-    public static string[] GetMonthNames()
+    private static string[] GetMonthNames()
     {
         //too cool to just hard code an array
         return Enumerable.Range(1, 12).Select(i => CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(i)).ToArray();
+    }
+
+    private static Fruit[] CreateFruit()
+    {
+        return new Fruit[] 
+        {
+            new Fruit("demo/apple.png", "Apple"),
+            new Fruit("demo/watermelon.png", "Watermelon"),
+            new Fruit("demo/grape.png", "Grapes")
+        };
     }
 }

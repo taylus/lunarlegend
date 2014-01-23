@@ -12,6 +12,7 @@ using CombatRatings = System.Collections.Generic.Dictionary<DamageType, CombatRa
 public abstract class CombatEntity
 {
     public string Name { get; set; }
+    public virtual string FullName { get { return Name; } }
     public Measure Health;
     public Measure Resource;    //mana, energy, etc
     public bool IsAlive { get { return Health.Current > 0; } }
@@ -22,6 +23,7 @@ public abstract class CombatEntity
     //base combat stats, before crits, buffs, or any other damage modifiers
     public Dictionary<DamageType, CombatRating> CombatRatings { get; set; }
     public float CriticalDamageModifier = 1.0f;
+    public List<StatusModifier> Modifiers { get; set; }
 
     public const int DEFAULT_ATTACK = 5;
     public const int DEFAULT_DEFENSE = 0;

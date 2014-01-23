@@ -30,14 +30,16 @@ public class CombatSystem
     public bool IsActive = false;
     private CombatSystemState currentState;
     private CombatSystemState previousState;
+
     private MessageBox dialogue;
-    private MenuBox mainMenu;
-    private MenuBox skills;
-    private MenuBox inventory;
+    private MenuBox<string> mainMenu;
+    private MenuBox<string> techniqueMenu;
+
     private PowerMeter powerMeter;
     private Texture2D backgroundImage;
     private ScreenOverlay backgroundOverlay;
 
+    //TODO: combine list of players, inventory, gold into single class, to be shared between combat system and overworld menus
     private List<PlayerCombatEntity> playerParty = new List<PlayerCombatEntity>();
     private List<EnemyCombatEntity> enemyParty = new List<EnemyCombatEntity>();
 
@@ -94,7 +96,7 @@ public class CombatSystem
         }
         enemyParty = enemies;
         AlignEnemies(enemyParty);
-        mainMenu = new MenuBox(CreateMainMenuBoxTemplate(), "Attack", "Defend", "Magic", "Items");
+        mainMenu = new MenuBox<string>(CreateMainMenuBoxTemplate(), "Attack", "Defend", "Magic", "Items");
         dialogue = new MessageBox(CreateMessageBoxTemplate(), GetEngagementText());
         powerMeter = CreatePowerMeter();
 
@@ -237,7 +239,6 @@ public class CombatSystem
                     SetCurrentPlayer(firstLivingPlayerIndex);
                     dialogue.Text = "";
                     mainMenu.ResetSelection();
-                    //mainMenu.Visible = true;
                     SetState(CombatSystemState.MENU_SELECT);
                 }
                 break;
@@ -247,7 +248,7 @@ public class CombatSystem
                 if (mainMenu.SelectedText == "Attack")
                 {
                     SetState(CombatSystemState.SELECT_ENEMY_TARGET);
-                    dialogue.Text = GetEnemyTargetText(enemyTarget);
+                    dialogue.Text = GetTargetText(enemyTarget);
                 }
                 break;
             }
@@ -277,54 +278,24 @@ public class CombatSystem
 
                     currentPlayer.CriticalDamageModifier = powerMeter.DamageModifier;
                     CombatAction action = new CombatAction(currentPlayer, enemyTarget);
-                    uint damageDone = action.Execute();
+                    dialogue.Text = action.Execute();
 
                     if (enemyTarget.IsDead)
                     {
-                        //TODO: draw damage numbers directly on the target, instead of displaying it as dialogue
-                        dialogue.Text = string.Format("{0} attacks {1} for {2} damage!\n{1} is defeated!", currentPlayer.Name, enemyTarget.FullName, damageDone);
                         enemyParty.Remove(enemyTarget);
                         enemyTargetIndex = 0;
                     }
-                    else
-                    {
-                        //TODO: draw damage numbers directly on the target, instead of displaying it as dialogue
-                        dialogue.Text = string.Format("{0} attacks {1} for {2} damage!", currentPlayer.Name, enemyTarget.FullName, damageDone);
-                    }
-                    powerMeter.Reset();
 
-                    if (currentPlayerIndex < lastLivingPlayerIndex)
-                    {
-                        //advance to the next player
-                        SetCurrentPlayer(GetNextLivingPlayerIndex(currentPlayerIndex));
-                        SetState(CombatSystemState.MENU_SELECT);
-                    }
-                    else
-                    {
-                        //enemy turn
-                        SetCurrentPlayer(-1);
-                        currentEnemyIndex = 0;
-                        SetState(CombatSystemState.ENEMY_ACT);
-                    }
+                    powerMeter.Reset();
+                    AdvancePlayer();
                 }
                 break;
             }
             case CombatSystemState.ENEMY_ACT:
             {
-                //TODO: fix bug with flashing enemy being ahead by one because of the way the current enemy index is set
-
                 CombatAction enemyAction = currentEnemy.DecideAction(enemyParty, playerParty);
                 CombatEntity target = enemyAction.Target;
-                uint damageDone = enemyAction.Execute();
-
-                if (target.IsDead)
-                {
-                    dialogue.Text = string.Format("{0} attacks {1} for {2} damage!\n{1} is defeated!", currentEnemy.FullName, target.Name, damageDone);
-                }
-                else
-                {
-                    dialogue.Text = string.Format("{0} attacks {1} for {2} damage!", currentEnemy.FullName, target.Name, damageDone);
-                }
+                dialogue.Text = enemyAction.Execute();
 
                 if (currentEnemyIndex < enemyParty.Count - 1)
                 {
@@ -344,6 +315,26 @@ public class CombatSystem
         CheckVictoryOrDefeat();
     }
 
+    //a player has completed their turn
+    //move onto the next, or start the enemy turn if it was the last player
+    private void AdvancePlayer()
+    {
+        mainMenu.ResetSelection();
+        if (currentPlayerIndex < lastLivingPlayerIndex)
+        {
+            //advance to the next player
+            SetCurrentPlayer(GetNextLivingPlayerIndex(currentPlayerIndex));
+            SetState(CombatSystemState.MENU_SELECT);
+        }
+        else
+        {
+            //enemy turn
+            SetCurrentPlayer(-1);
+            currentEnemyIndex = 0;
+            SetState(CombatSystemState.ENEMY_ACT);
+        }
+    }
+
     public void LeftKeyPressed()
     {
         if (!IsActive) return;
@@ -356,7 +347,7 @@ public class CombatSystem
             case CombatSystemState.SELECT_ENEMY_TARGET:
                 enemyTargetIndex--;
                 if (enemyTargetIndex < 0) enemyTargetIndex = 0;
-                dialogue.Text = GetEnemyTargetText(enemyTarget);
+                dialogue.Text = GetTargetText(enemyTarget);
                 break;
         }
     }
@@ -373,7 +364,7 @@ public class CombatSystem
             case CombatSystemState.SELECT_ENEMY_TARGET:
                 enemyTargetIndex++;
                 if (enemyTargetIndex >= enemyParty.Count) enemyTargetIndex = enemyParty.Count - 1;
-                dialogue.Text = GetEnemyTargetText(enemyTarget);
+                dialogue.Text = GetTargetText(enemyTarget);
                 break;
         }
     }
@@ -432,9 +423,9 @@ public class CombatSystem
         }
     }
 
-    private string GetEnemyTargetText(EnemyCombatEntity enemy)
+    private string GetTargetText(CombatEntity target)
     {
-        return string.Format("To: {0}", enemy.FullName);
+        return string.Format("To: {0}", target.FullName);
     }
 
     private string GetEngagementText()
@@ -445,6 +436,7 @@ public class CombatSystem
             return string.Format("{0} attacks!", enemyParty[0].Name);
     }
 
+    //TODO: simplify the state machine by getting rid of this method
     private void SetState(CombatSystemState state)
     {
         //current and previous states should only be directly set here
@@ -454,7 +446,6 @@ public class CombatSystem
         currentState = state;
 
         mainMenu.IsActive = (currentState == CombatSystemState.MENU_SELECT);
-        //UpdateEnemyTargetSelectionEffects();
     }
 
     //utility method to advance to a new current player
@@ -521,24 +512,24 @@ public class CombatSystem
     }
 
     //TODO: find a better place for these template methods to live
-    private MessageBox CreateMessageBoxTemplate()
-    {
-        MenuBox mainMenu = CreateMainMenuBoxTemplate();
-        int w = BaseGame.GameWidth - mainMenu.Width - (2 * BOX_SCREEN_MARGIN);
-        int h = 4;
-        int x = mainMenu.X + mainMenu.Width - mainMenu.BorderWidth;
-        int y = mainMenu.Y;
-        return new MessageBox(x, y, w, h, BaseGame.Font);
-    }
-
-    private MenuBox CreateMainMenuBoxTemplate()
+    private MenuBox<string> CreateMainMenuBoxTemplate()
     {
         int w = 75;
         int h = 4;
         int cols = 1;
         int x = BOX_SCREEN_MARGIN;
         int y = BOX_SCREEN_MARGIN;
-        return new MenuBox(x, y, w, h, cols, BaseGame.Font);
+        return new MenuBox<string>(x, y, w, h, cols, BaseGame.Font);
+    }
+
+    private MessageBox CreateMessageBoxTemplate()
+    {
+        MenuBox<string> mainMenu = CreateMainMenuBoxTemplate();
+        int w = BaseGame.GameWidth - mainMenu.Width - (2 * BOX_SCREEN_MARGIN);
+        int h = 4;
+        int x = mainMenu.X + mainMenu.Width - mainMenu.BorderWidth;
+        int y = mainMenu.Y;
+        return new MessageBox(x, y, w, h, BaseGame.Font);
     }
 
     private PowerMeter CreatePowerMeter()
