@@ -282,6 +282,7 @@ public class Overworld : BaseGame
     {
         engagedEnemy = enemyEntity;
         combatSystem.Engage(enemyParty, "battle/cave_bg.jpg");
+        //combatSystem.Engage(Enemies.LoadPartyByID(3));
     }
 
     public void CombatVictory()

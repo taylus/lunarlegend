@@ -25,8 +25,9 @@ public abstract class CombatEntity
     public float CriticalDamageModifier = 1.0f;
     public List<StatusModifier> Modifiers { get; set; }
 
-    public const int DEFAULT_ATTACK = 5;
-    public const int DEFAULT_DEFENSE = 0;
+    public const uint DEFAULT_PHYSICAL_ATTACK = 5;
+    public const uint DEFAULT_MAGICAL_ATTACK = 0;
+    public const uint DEFAULT_DEFENSE = 0;
 
     public CombatEntity(string name, uint hp, uint resource, CombatRatings stats)
     {
@@ -39,9 +40,16 @@ public abstract class CombatEntity
         foreach (DamageType type in Enum.GetValues(typeof(DamageType)))
         {
             if (stats != null && stats.ContainsKey(type))
+            {
                 CombatRatings.Add(type, stats[type]);
+            }
             else
-                CombatRatings.Add(type, new CombatRating(DEFAULT_ATTACK, DEFAULT_DEFENSE));
+            {
+                if(type == DamageType.Physical)
+                    CombatRatings.Add(type, new CombatRating(DEFAULT_PHYSICAL_ATTACK, DEFAULT_DEFENSE));
+                else
+                    CombatRatings.Add(type, new CombatRating(DEFAULT_MAGICAL_ATTACK, DEFAULT_DEFENSE));
+            }
         }
     }
 

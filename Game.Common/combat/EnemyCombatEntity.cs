@@ -94,6 +94,7 @@ public static class Enemies
     public static List<EnemyCombatEntity> LoadPartyByID(int id)
     {
         List<EnemyCombatEntity> enemyParty = new List<EnemyCombatEntity>();
+        CombatRatings stats = null;
         switch(id)
         {
             case 1:
@@ -107,10 +108,15 @@ public static class Enemies
                 //3 powerful lime slimes to test losing a battle
                 for (int i = 0; i < 3; i++)
                 {
-                    Dictionary<DamageType, CombatRating> stats = new Dictionary<DamageType, CombatRating>();
+                    stats = new CombatRatings();
                     stats.Add(DamageType.Physical, new CombatRating(25, 5));
                     enemyParty.Add(new EnemyCombatEntity("Lime Slime", 12, stats, "battle/slime.png", 3.0f, null, Util.GetLetterByNumber(i)));
                 }
+                break;
+            case 3:
+                stats = new CombatRatings();
+                stats.Add(DamageType.Physical, new CombatRating(20, 5));
+                enemyParty.Add(new EnemyCombatEntity("Doge Wizard", 50, stats, "demo/dogewizard.png", 0.85f, new Point(0, -20)));
                 break;
             default:
                 //missingno

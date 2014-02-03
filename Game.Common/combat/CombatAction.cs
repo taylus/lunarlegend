@@ -15,10 +15,11 @@ public class CombatAction
     public SoundEffect Sound;
     public Color? ScreenFlash;
 
-    public CombatAction(CombatEntity source, CombatEntity target)
+    public CombatAction(CombatEntity source, CombatEntity target, Technique tech = null)
     {
         Source = source;
         Target = target;
+        Technique = tech;
     }
 
     //perform this action, and return a textual representation of what occurred for display in battle
@@ -31,15 +32,15 @@ public class CombatAction
             uint damage = CalculateDamage();
             description = string.Format("{0} attacks {1} for {2} damage!", Source.FullName, Target.FullName, damage);
             Target.TakeDamage(damage);
-            if (Target.IsDead) description += string.Format("\n{0} is defeated!", Target.FullName);
         }
         else
         {
-            if (Technique.ResourceCost > 0 && Technique.ResourceCost <= Source.Resource.Current)
+            if (Technique.ResourceCost >= 0 && Technique.ResourceCost <= Source.Resource.Current)
             {
                 Source.Resource.Current -= Technique.ResourceCost;
-                Technique.ActUpon(Target);
-                description = Technique.DescribeUsage(Source, Target);
+                uint damage = CalculateDamage();
+                description = string.Format("{0} casts {1} on {2} for {3} damage!", Source.FullName, Technique.Name, Target.FullName, damage);
+                Target.TakeDamage(damage);
             }
             else
             {
@@ -48,6 +49,7 @@ public class CombatAction
             }
         }
 
+        if (Target.IsDead) description += string.Format("\n{0} is defeated!", Target.FullName);
         return description;
     }
 
@@ -55,7 +57,7 @@ public class CombatAction
     {
         //determine damage type: physical unless a technique is being used
         DamageType type = DamageType.Physical;
-        if (Technique != null && Technique.GetType() == typeof(DamageType))
+        if (Technique != null && Technique.GetType() == typeof(DamageTechnique))
         {
             type = ((DamageTechnique)Technique).Type;
         }
@@ -63,9 +65,9 @@ public class CombatAction
         //determine base damage before crit and defenses
         //a technique's damage is calculated to be (Power + Attack for that school) * Crit
         uint baseDamage = Source.CombatRatings[type].Attack;
-        if (Technique != null && Technique.GetType() == typeof(DamageType))
+        if (Technique != null && Technique.GetType() == typeof(DamageTechnique))
         {
-            baseDamage += Technique.Power;
+            baseDamage += ((DamageTechnique)Technique).Power;
         }
 
         //if a player is normal attacking, apply attack from equipped weapon

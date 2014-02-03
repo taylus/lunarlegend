@@ -119,9 +119,9 @@ public class PowerMeterDemo : BaseGame
         int x = (GameWidth / 2) - (w / 2);
         int y = (GameHeight / 2) - (h / 2);
         PowerMeter pm = new PowerMeter(x, y, w, h);
-        pm.Profiles.Add(new PowerMeterProfile("====XX====", 5.0f));
-        pm.Profiles.Add(new PowerMeterProfile("===-XX-===", 6.0f));
-        pm.Profiles.Add(new PowerMeterProfile("==--XX--==", 7.0f));
+        pm.Patterns.Add(new PowerMeterPattern("====XX====", 5.0f));
+        pm.Patterns.Add(new PowerMeterPattern("===-XX-===", 6.0f));
+        pm.Patterns.Add(new PowerMeterPattern("==--XX--==", 7.0f));
         return pm;
     }
 }

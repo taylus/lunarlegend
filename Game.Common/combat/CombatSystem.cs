@@ -29,11 +29,12 @@ public class CombatSystem
 
     public bool IsActive = false;
     private CombatSystemState currentState;
-    private CombatSystemState previousState;
 
     private MessageBox dialogue;
+    private BaseMenuBox currentMenu;
     private MenuBox<string> mainMenu;
-    private MenuBox<string> techniqueMenu;
+    private MenuBox<Technique> techMenu;
+    //private MenuBox<Item> itemMenu;
 
     private PowerMeter powerMeter;
     private Texture2D backgroundImage;
@@ -70,6 +71,9 @@ public class CombatSystem
     public VictoryCallback OnVictory { get; set; }
     public DefeatCallback OnDefeat { get; set; }
 
+    //power meter used for normal attacks
+    private static readonly PowerMeterPattern DEFAULT_POWER_METER_PATTERN = new PowerMeterPattern("XX======XX", 6.0f);
+
     public CombatSystem(List<PlayerCombatEntity> players)
     {
         if (players == null || players.Count <= 0)
@@ -96,15 +100,17 @@ public class CombatSystem
         }
         enemyParty = enemies;
         AlignEnemies(enemyParty);
-        mainMenu = new MenuBox<string>(CreateMainMenuBoxTemplate(), "Attack", "Defend", "Magic", "Items");
+        currentMenu = mainMenu = new MenuBox<string>(CreateMainMenuBoxTemplate(), "Attack", "Defend", "Magic", "Items") { IsActive = false };
         dialogue = new MessageBox(CreateMessageBoxTemplate(), GetEngagementText());
+        techMenu = new MenuBox<Technique>(dialogue.X, dialogue.Y, dialogue.Width, 4, 3, BaseGame.Font, LoadTechniques()) { Visible = false };
         powerMeter = CreatePowerMeter();
+        currentState = CombatSystemState.TEXT;
 
         //fail gracefully in case we entered the battle with a dead party or something else weird
         CheckVictoryOrDefeat();
         if (currentState != CombatSystemState.BATTLE_OVER)
         {
-            SetState(CombatSystemState.TEXT);
+            currentState = CombatSystemState.TEXT;
         }
     }
 
@@ -160,6 +166,7 @@ public class CombatSystem
 
         if(!string.IsNullOrWhiteSpace(dialogue.Text)) dialogue.Draw(sb);
         mainMenu.Draw(sb);
+        techMenu.Draw(sb);
         powerMeter.Draw(sb);
 
         //sb.DrawString(BaseGame.Font, currentState.ToString(), new Vector2(mainMenu.X, mainMenu.Y + mainMenu.Height + 4), Color.White);
@@ -239,16 +246,47 @@ public class CombatSystem
                     SetCurrentPlayer(firstLivingPlayerIndex);
                     dialogue.Text = "";
                     mainMenu.ResetSelection();
-                    SetState(CombatSystemState.MENU_SELECT);
+                    mainMenu.IsActive = true;
+                    currentMenu = mainMenu;
+                    currentState = CombatSystemState.MENU_SELECT;
                 }
                 break;
             }
             case CombatSystemState.MENU_SELECT:
             {
-                if (mainMenu.SelectedText == "Attack")
+                if (!currentMenu.IsActive) break;
+
+                if (currentMenu == mainMenu)
                 {
-                    SetState(CombatSystemState.SELECT_ENEMY_TARGET);
-                    dialogue.Text = GetTargetText(enemyTarget);
+                    if (mainMenu.SelectedText == "Attack")
+                    {
+                        selectedTechnique = null;
+                        dialogue.Text = GetTargetText(enemyTarget);
+                        currentState = CombatSystemState.SELECT_ENEMY_TARGET;
+                    }
+                    else if (mainMenu.SelectedText == "Magic")
+                    {
+                        techMenu.ResetSelection();
+                        techMenu.Visible = true;
+                        currentMenu = techMenu;
+                        dialogue.Visible = false;
+                    }
+                }
+                else if (currentMenu == techMenu)
+                {
+                    selectedTechnique = techMenu.SelectedValue;
+                    if (selectedTechnique.GetType() == typeof(DamageTechnique))
+                    {
+                        techMenu.Visible = false;
+                        dialogue.Visible = true;
+                        dialogue.Text = GetTargetText(enemyTarget);
+                        currentState = CombatSystemState.SELECT_ENEMY_TARGET;
+                    }
+                    else if (selectedTechnique.GetType() == typeof(HealTechnique) ||
+                             selectedTechnique.GetType() == typeof(SupportTechnique))
+                    {
+
+                    }
                 }
                 break;
             }
@@ -256,28 +294,30 @@ public class CombatSystem
             {
                 if (selectedTechnique == null)
                 {
-                    //normal attack
-                    SetState(CombatSystemState.POWER_METER);
-                    powerMeter.IsActive = powerMeter.Visible = true;
+                    //load power meter for normal attack
+                    powerMeter.Patterns = new List<PowerMeterPattern>() {DEFAULT_POWER_METER_PATTERN};
                 }
                 else
                 {
-                    //special technique
-                    //TODO: load technique's PowerMeterProfile(s)
+                    //load power meter specific to special technique
+                    powerMeter.Patterns = selectedTechnique.PowerMeterPatterns;
                 }
+
+                powerMeter.IsActive = powerMeter.Visible = true;
+                currentState = CombatSystemState.POWER_METER;
                 break;
             }
             case CombatSystemState.POWER_METER:
             {
                 PowerMeterResult result = powerMeter.ConfirmCursor();
-                if (!powerMeter.Advance())
+                if (result == PowerMeterResult.MISS || !powerMeter.Advance())
                 {
-                    //at the end of the meter's levels; stop the meter and deal the damage
+                    //missed, or finished the last pattern in the set, so stop the meter and deal the damage
                     powerMeter.IsActive = false;
                     powerMeter.Visible = false;
 
                     currentPlayer.CriticalDamageModifier = powerMeter.DamageModifier;
-                    CombatAction action = new CombatAction(currentPlayer, enemyTarget);
+                    CombatAction action = new CombatAction(currentPlayer, enemyTarget, selectedTechnique);
                     dialogue.Text = action.Execute();
 
                     if (enemyTarget.IsDead)
@@ -287,6 +327,8 @@ public class CombatSystem
                     }
 
                     powerMeter.Reset();
+
+                    //TODO: go to a text state first to clear the dialogue?
                     AdvancePlayer();
                 }
                 break;
@@ -306,7 +348,7 @@ public class CombatSystem
                 {
                     //player turn
                     currentEnemyIndex = 0;
-                    SetState(CombatSystemState.TEXT);
+                    currentState = CombatSystemState.TEXT;
                 }
                 break;
             }
@@ -324,14 +366,15 @@ public class CombatSystem
         {
             //advance to the next player
             SetCurrentPlayer(GetNextLivingPlayerIndex(currentPlayerIndex));
-            SetState(CombatSystemState.MENU_SELECT);
+            currentMenu = mainMenu;
+            currentState = CombatSystemState.MENU_SELECT;
         }
         else
         {
             //enemy turn
             SetCurrentPlayer(-1);
             currentEnemyIndex = 0;
-            SetState(CombatSystemState.ENEMY_ACT);
+            currentState = CombatSystemState.ENEMY_ACT;
         }
     }
 
@@ -342,7 +385,7 @@ public class CombatSystem
         switch (currentState)
         {
             case CombatSystemState.MENU_SELECT:
-                mainMenu.SelectLeftChoice();
+                currentMenu.SelectLeftChoice();
                 break;
             case CombatSystemState.SELECT_ENEMY_TARGET:
                 enemyTargetIndex--;
@@ -359,7 +402,7 @@ public class CombatSystem
         switch (currentState)
         {
             case CombatSystemState.MENU_SELECT:
-                mainMenu.SelectRightChoice();
+                currentMenu.SelectRightChoice();
                 break;
             case CombatSystemState.SELECT_ENEMY_TARGET:
                 enemyTargetIndex++;
@@ -376,7 +419,7 @@ public class CombatSystem
         switch (currentState)
         {
             case CombatSystemState.MENU_SELECT:
-                mainMenu.SelectAboveChoice();
+                currentMenu.SelectAboveChoice();
                 break;
         }
     }
@@ -388,7 +431,7 @@ public class CombatSystem
         switch (currentState)
         {
             case CombatSystemState.MENU_SELECT:
-                mainMenu.SelectBelowChoice();
+                currentMenu.SelectBelowChoice();
                 break;
         }
     }
@@ -401,7 +444,21 @@ public class CombatSystem
         {
             case CombatSystemState.SELECT_ENEMY_TARGET:
                 dialogue.Text = "";
-                SetState(previousState);
+                currentState = CombatSystemState.MENU_SELECT;
+                if (currentMenu == techMenu)
+                {
+                    //cancelled while targetting a technique, go back to technique menu
+                    techMenu.Visible = true;
+                    dialogue.Visible = false;
+                }
+                break;
+            case CombatSystemState.MENU_SELECT:
+                if (currentMenu == techMenu)
+                {
+                    currentMenu = mainMenu;
+                    techMenu.Visible = false;
+                    dialogue.Visible = true;
+                }
                 break;
         }
     }
@@ -413,13 +470,14 @@ public class CombatSystem
         {
             //victory: get exp, items, then go back to overworld
             dialogue.Text += "\nA winner is you!";
-            SetState(CombatSystemState.BATTLE_OVER);
+            currentState = CombatSystemState.BATTLE_OVER;
         }
         else if (PlayerDefeat())
         {
             //defeat: restart battle? restart at last save?
-            dialogue.Text += "\nYour party has perished...";
-            SetState(CombatSystemState.BATTLE_OVER);
+            //dialogue.Text += "\nYour party has perished...";
+            dialogue.Text += "\nSuch disgrace...";
+            currentState = CombatSystemState.BATTLE_OVER;
         }
     }
 
@@ -434,18 +492,6 @@ public class CombatSystem
             return string.Format("{0} and company attack!", enemyParty[0].Name);
         else
             return string.Format("{0} attacks!", enemyParty[0].Name);
-    }
-
-    //TODO: simplify the state machine by getting rid of this method
-    private void SetState(CombatSystemState state)
-    {
-        //current and previous states should only be directly set here
-        //wrap them in a class or something to enforce this?
-        //TODO: maintain stack of states? (pushdown automata)
-        previousState = currentState;
-        currentState = state;
-
-        mainMenu.IsActive = (currentState == CombatSystemState.MENU_SELECT);
     }
 
     //utility method to advance to a new current player
@@ -539,10 +585,26 @@ public class CombatSystem
         int x = 225;
         int y = 420;
         PowerMeter pm = new PowerMeter(x, y, w, h);
-        //TODO: make specific profile layouts go with different attacks
-        pm.Profiles.Add(new PowerMeterProfile("XX======XX", 6.0f));
-        //pm.Profiles.Add(new PowerMeterProfile("===-XX-===", 6.0f));
         pm.IsActive = pm.Visible = false;
         return pm;
+    }
+
+    private Technique[] LoadTechniques()
+    {
+        return new Technique[] 
+        { 
+            Techniques.LoadByName("Fireball"),
+            Techniques.LoadByName("Firestorm"),
+            Techniques.LoadByName("Hellfire"),
+            new DamageTechnique("Frostbite", 10, DamageType.Water),
+            new DamageTechnique("Spark", 10, DamageType.Wind),
+            new DamageTechnique("Thunderstorm", 20, DamageType.Wind),
+            new DamageTechnique("Boulder", 10, DamageType.Earth),
+            new DamageTechnique("Earthquake", 20, DamageType.Earth),
+            new HealTechnique("Heal", 20),
+            new SupportTechnique("Empower"),
+            new SupportTechnique("Chant"),
+            new SupportTechnique("Fortify"),
+        };
     }
 }

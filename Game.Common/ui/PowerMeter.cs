@@ -7,7 +7,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
 //the UI element that implements the power meter used for determining action strength
-//stores an arbitrary number of "profiles" comprised of "slices," and a cursor that moves across them
+//stores an arbitrary number of "patterns" comprised of "slices," and a cursor that moves across them
 //the slice under the cursor is be inspected to determine if an action should miss, hit, or crit
 public class PowerMeter : Box
 {
@@ -23,27 +23,27 @@ public class PowerMeter : Box
 
     //current X coord of the cursor (relative, this meter's X coord = 0); moves from 0 to Width and back again based on speed
     private float cursorPosition;
-    private int curProfileIndex = 0;
+    private int curPatternIndex = 0;
 
     public bool IsActive { get; set; }
     public Color HitColor { get; set; }
     public Color CritColor { get; set; }
     public float CursorWidth { get; set; }
     public float LineWidth { get; set; }
-    public List<PowerMeterProfile> Profiles { get; set; }
-    public PowerMeterProfile CurrentProfile { get { return Profiles[curProfileIndex]; } }
+    public List<PowerMeterPattern> Patterns { get; set; }
+    public PowerMeterPattern CurrentPattern { get { return Patterns[curPatternIndex]; } }
     public float DamageModifier { get; set; }
 
     public PowerMeter(int x, int y, int w, int h) : base(x, y, w, h)
     {
         HitColor = BorderColor;
-        CritColor = Color.Red;
+        CritColor = Color.Purple;
         IsActive = true;
         LineWidth = 3.0f;
         CursorWidth = 2.0f;
         cursorPosition = 0;
         DamageModifier = 1.0f;
-        Profiles = new List<PowerMeterProfile>();
+        Patterns = new List<PowerMeterPattern>();
         Reset();
     }
 
@@ -53,23 +53,33 @@ public class PowerMeter : Box
 
         DrawBackground(sb);
 
-        //draw current profile's slices
-        float sliceWidth = (float)Math.Round((float)Width / CurrentProfile.Slices.Count);
-        for (int i = 0; i < CurrentProfile.Slices.Count; i++)
+        //draw current pattern's slices
+        float sliceWidth = (float)Math.Round((float)Width / CurrentPattern.Slices.Count);
+        PowerMeterResult lastSlice = default(PowerMeterResult);
+        for (int i = 0; i < CurrentPattern.Slices.Count; i++)
         {
-            PowerMeterResult slice = CurrentProfile.Slices[i];
-            if (slice == PowerMeterResult.MISS) continue;
+            PowerMeterResult slice = CurrentPattern.Slices[i];
 
             float sliceX = sliceWidth * i;
             Color sliceColor = (slice == PowerMeterResult.CRIT ? CritColor : HitColor);
+            float lineWidth = (slice == PowerMeterResult.CRIT ? LineWidth * 2 : LineWidth);
 
-            float lineY = Y + (Height / 2) - (LineWidth / 2);
+            float lineY = Y + (Height / 2) - (lineWidth / 2);
             Vector2 leftPoint = new Vector2(X + sliceX, lineY);
             Vector2 rightPoint = new Vector2(X + sliceX + sliceWidth, lineY);
             if (rightPoint.X > X + Width) rightPoint.X = X + Width; //handles iffyness if Width not evenly divisible by # of slices
 
-            Util.DrawLine(sb, LineWidth, leftPoint, rightPoint, sliceColor);
+            if (slice != PowerMeterResult.MISS)
+                Util.DrawLine(sb, lineWidth, leftPoint, rightPoint, sliceColor);
+
+            //draw vertical lines whenever the slice type changes
+            //if (i > 0 && i <= CurrentPattern.Slices.Count && lastSlice != slice)
+                //Util.DrawLine(sb, CursorWidth, new Vector2(leftPoint.X, Y), new Vector2(leftPoint.X, Y + Height), BorderColor);
+
+            lastSlice = slice;
         }
+
+        //draw vertical lines between slices
 
         //draw cursor
         float cursorX = X + cursorPosition + (CursorWidth / 2);
@@ -83,38 +93,38 @@ public class PowerMeter : Box
         if (!IsActive) return;
 
         //move the cursor, bouncing if it reaches either end
-        cursorPosition += CurrentProfile.CursorSpeed;
+        cursorPosition += CurrentPattern.CursorSpeed;
         if (cursorPosition >= Width)
         {
             //bounce off the right end
             cursorPosition = Width;
-            CurrentProfile.CursorSpeed = -CurrentProfile.CursorSpeed;
+            CurrentPattern.CursorSpeed = -CurrentPattern.CursorSpeed;
         }
         else if (cursorPosition < 0)
         {
             //bounce off the left end
             cursorPosition = 0;
-            CurrentProfile.CursorSpeed = -CurrentProfile.CursorSpeed;
+            CurrentPattern.CursorSpeed = -CurrentPattern.CursorSpeed;
         }
     }
 
     public bool Advance()
     {
-        float prevCursorSpeed = CurrentProfile.CursorSpeed;
+        float prevCursorSpeed = CurrentPattern.CursorSpeed;
 
-        if (curProfileIndex < Profiles.Count - 1)
+        if (curPatternIndex < Patterns.Count - 1)
         {
-            curProfileIndex++;
+            curPatternIndex++;
 
             //keep the sign on the speed the same between transitions, so if
             //we were moving left before we keep moving left now, and vice versa
             if (prevCursorSpeed < 0)
             {
-                CurrentProfile.CursorSpeed = -Math.Abs(CurrentProfile.CursorSpeed);
+                CurrentPattern.CursorSpeed = -Math.Abs(CurrentPattern.CursorSpeed);
             }
             else
             {
-                CurrentProfile.CursorSpeed = Math.Abs(CurrentProfile.CursorSpeed);
+                CurrentPattern.CursorSpeed = Math.Abs(CurrentPattern.CursorSpeed);
             }
             return true;
         }
@@ -122,14 +132,14 @@ public class PowerMeter : Box
         return false;
     }
 
-    public bool HasNextProfile()
+    public bool HasNextPattern()
     {
-        return curProfileIndex < Profiles.Count - 1;
+        return curPatternIndex < Patterns.Count - 1;
     }
 
     public void Reset()
     {
-        curProfileIndex = 0;
+        curPatternIndex = 0;
         DamageModifier = 1.0f;
 
         //randomize the starting position?
@@ -141,23 +151,23 @@ public class PowerMeter : Box
     //and multiplies the current damage modifier accordingly
     public PowerMeterResult ConfirmCursor()
     {
-        int sliceWidth = Width / CurrentProfile.Slices.Count;
+        int sliceWidth = Width / CurrentPattern.Slices.Count;
         int sliceIndex = (int)cursorPosition / sliceWidth;
-        if (sliceIndex >= CurrentProfile.Slices.Count) sliceIndex = CurrentProfile.Slices.Count - 1;
-        PowerMeterResult result =  CurrentProfile.Slices[sliceIndex];
-        bool isFirstProfile = curProfileIndex <= 0;
+        if (sliceIndex >= CurrentPattern.Slices.Count) sliceIndex = CurrentPattern.Slices.Count - 1;
+        PowerMeterResult result = CurrentPattern.Slices[sliceIndex];
+        bool isFirstPattern = curPatternIndex <= 0;
         switch (result)
         {
             case PowerMeterResult.MISS:
                 //be more forgiving for misses on later levels
                 //don't make the whole attack do zero damage, just don't add any extra
-                if (isFirstProfile)
+                if (isFirstPattern)
                     DamageModifier = 0;
                 break;
-            case PowerMeterResult.HIT:
-                if (!isFirstProfile)
-                    DamageModifier *= 1.25f;
-                break;
+            //case PowerMeterResult.HIT:
+            //    if (!isFirstPattern)
+            //        DamageModifier *= 1.25f;
+            //    break;
             case PowerMeterResult.CRIT:
                 DamageModifier *= 1.5f;
                 break;
@@ -169,12 +179,12 @@ public class PowerMeter : Box
 //represents a power bar layout, and the speed of the cursor moving across it
 //each technique will have a different one or more of these
 //the PowerMeter UI element above handles drawing and processing them
-public class PowerMeterProfile
+public class PowerMeterPattern
 {
     public float CursorSpeed { get; set; }
     public List<PowerMeterResult> Slices { get; set; }
 
-    public PowerMeterProfile(string layout, float cursorSpeed)
+    public PowerMeterPattern(string layout, float cursorSpeed)
     {
         Slices = ParseSlices(layout);
         CursorSpeed = cursorSpeed;

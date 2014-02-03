@@ -175,7 +175,7 @@ public class Sprite : UIElement
         if (UpdateCallback != BlinkCallback) return;
         UpdateCallback = null;
         untilNextUpdate = TimeSpan.Zero;
-        Tint = originalTint;
+        //Tint = originalTint;
     }
 
     private static void BlinkCallback(Sprite s)

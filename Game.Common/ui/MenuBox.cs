@@ -11,6 +11,7 @@ using Microsoft.Xna.Framework.Graphics;
 public abstract class BaseMenuBox : Box
 {
     public BaseMenuBox(int x, int y, int w, int h) : base(x, y, w, h) { }
+    public bool IsActive { get; set; }
     public abstract void SelectBelowChoice();
     public abstract void SelectAboveChoice();
     public abstract void SelectLeftChoice();
@@ -27,7 +28,6 @@ public class MenuBox<T> : BaseMenuBox
     public int Columns { get; set; }
     public SpriteFont Font { get; set; }
     public Color FontColor { get; set; }
-    public bool IsActive { get; set; }
     public IList<MenuBoxChoice<T>> Choices { get { return choices.AsReadOnly(); } }
     private List<MenuBoxChoice<T>> choices;
     private int selectedChoiceIndex = 0;
@@ -48,6 +48,15 @@ public class MenuBox<T> : BaseMenuBox
         {
             if (SelectedChoice == null) return null;
             return SelectedChoice.Text;
+        }
+    }
+
+    public T SelectedValue
+    {
+        get
+        {
+            if (SelectedChoice == null) return default(T);
+            return SelectedChoice.Payload;
         }
     }
 
