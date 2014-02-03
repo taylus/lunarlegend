@@ -76,12 +76,6 @@
       <Processor>TextureProcessor</Processor>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="battle\lunar_bg.png">
-      <Name>lunar_bg</Name>
-      <Importer>TextureImporter</Importer>
-      <Processor>TextureProcessor</Processor>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="battle\plains_bg.jpg">
       <Name>plains_bg</Name>
       <Importer>TextureImporter</Importer>

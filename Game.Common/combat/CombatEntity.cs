@@ -35,6 +35,7 @@ public abstract class CombatEntity
         Health.Current = Health.Maximum = hp;
         Resource.Current = Resource.Maximum = resource;
         CombatRatings = new CombatRatings();
+        Modifiers = new List<StatusModifier>();
 
         //default all combat ratings except those overridden by the given stats
         foreach (DamageType type in Enum.GetValues(typeof(DamageType)))
@@ -72,6 +73,14 @@ public abstract class CombatEntity
         uint amountHealed = Math.Max(health, Health.Maximum - Health.Current);
         Health.Current += health;
         return amountHealed;
+    }
+
+    //fully heal and reset the status of this entity
+    public void Restore()
+    {
+        Health.Current = Health.Maximum;
+        Resource.Current = Resource.Maximum;
+        Modifiers.Clear();
     }
 
     public virtual void Update(GameTime currentGameTime)

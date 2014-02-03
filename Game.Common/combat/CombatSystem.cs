@@ -100,6 +100,7 @@ public class CombatSystem
         }
         enemyParty = enemies;
         AlignEnemies(enemyParty);
+        playerParty.ForEach(p => p.Restore());
         currentMenu = mainMenu = new MenuBox<string>(CreateMainMenuBoxTemplate(), "Attack", "Defend", "Magic", "Items") { IsActive = false };
         dialogue = new MessageBox(CreateMessageBoxTemplate(), GetEngagementText());
         techMenu = new MenuBox<Technique>(dialogue.X, dialogue.Y, dialogue.Width, 4, 3, BaseGame.Font, LoadTechniques()) { Visible = false };
@@ -193,7 +194,7 @@ public class CombatSystem
                 //blink the enemy he is selecting
                 if (enemyTarget == enemy)
                 {
-                    if (!enemy.HasSpriteEffects) enemy.StartBlink();
+                    if (!enemy.HasSpriteEffects) enemy.StartBlink(150);
                 }
                 //darken the others with a tint
                 else
@@ -242,13 +243,10 @@ public class CombatSystem
                 }
                 else
                 {
-                    //main menu transition
-                    SetCurrentPlayer(firstLivingPlayerIndex);
+                    //transitioning from text to a player's turn
                     dialogue.Text = "";
-                    mainMenu.ResetSelection();
                     mainMenu.IsActive = true;
-                    currentMenu = mainMenu;
-                    currentState = CombatSystemState.MENU_SELECT;
+                    AdvancePlayer();
                 }
                 break;
             }
@@ -328,8 +326,9 @@ public class CombatSystem
 
                     powerMeter.Reset();
 
-                    //TODO: go to a text state first to clear the dialogue?
-                    AdvancePlayer();
+                    //finish reading text; current player is advanced in that state
+                    mainMenu.IsActive = false;
+                    currentState = CombatSystemState.TEXT;
                 }
                 break;
             }
@@ -375,6 +374,7 @@ public class CombatSystem
             SetCurrentPlayer(-1);
             currentEnemyIndex = 0;
             currentState = CombatSystemState.ENEMY_ACT;
+            mainMenu.IsActive = false;
         }
     }
 
@@ -475,8 +475,7 @@ public class CombatSystem
         else if (PlayerDefeat())
         {
             //defeat: restart battle? restart at last save?
-            //dialogue.Text += "\nYour party has perished...";
-            dialogue.Text += "\nSuch disgrace...";
+            dialogue.Text += "\nYour party has perished...";
             currentState = CombatSystemState.BATTLE_OVER;
         }
     }
