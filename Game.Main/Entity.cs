@@ -71,7 +71,7 @@ public abstract class Entity
         string imgFile = Object.Properties.GetValue(propertyName);
         if (string.IsNullOrWhiteSpace(imgFile)) return null;
         imgFile = Path.Combine(World.Current.Map.MapFileDir, imgFile);
-        return BaseGame.LoadTexture(imgFile, true);
+        return BaseGame.LoadTextureExternal(imgFile);
     }
 
     protected SoundEffect LoadSoundEffectFromProperty(string propertyName)

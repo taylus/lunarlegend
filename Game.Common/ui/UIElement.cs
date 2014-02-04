@@ -35,6 +35,11 @@ public abstract class UIElement
         gd.SetRenderTarget(null);
     }
 
+    public virtual void Update(GameTime currentGameTime)
+    {
+
+    }
+
     public virtual void MoveTo(int x, int y)
     {
         X = x;

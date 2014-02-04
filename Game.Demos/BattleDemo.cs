@@ -17,7 +17,7 @@ public class BattleDemo : BaseGame
     {
         base.LoadContent();
         combatSystem = new CombatSystem(CreateSamplePlayerParty());
-        combatSystem.Engage(Enemies.LoadPartyByID(1), "battle/cave_bg.jpg");
+        combatSystem.Engage(Enemies.LoadPartyByID(1), @"battle\cave_bg");
     }
 
     protected override void Update(GameTime gameTime)
@@ -33,7 +33,7 @@ public class BattleDemo : BaseGame
 
         combatSystem.Update(gameTime);
         if (KeyPressedThisFrame(Buttons.DEBUG))
-            combatSystem.Engage(Enemies.LoadPartyByID(1), "battle/cave_bg.jpg");
+            combatSystem.Engage(Enemies.LoadPartyByID(1), @"battle\cave_bg");
         if (KeyPressedThisFrame(Buttons.CONFIRM))
             combatSystem.ConfirmKeyPressed();
         if (KeyPressedThisFrame(Buttons.CANCEL))

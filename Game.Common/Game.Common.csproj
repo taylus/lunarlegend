@@ -110,6 +110,7 @@
     </Compile>
     <Compile Include="ui\AnimatedSprite.cs" />
     <Compile Include="ui\Box.cs" />
+    <Compile Include="ui\EffectsManager.cs" />
     <Compile Include="ui\RenderTargetSprite.cs" />
     <Compile Include="ui\ScreenOverlay.cs" />
     <Compile Include="ui\Sprite.cs" />

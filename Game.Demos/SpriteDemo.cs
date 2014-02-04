@@ -28,25 +28,25 @@ public class SpriteDemo : BaseGame
     {
         base.LoadContent();
 
-        carlton = new Sprite("demo/carlton.png", 0.75f);
+        carlton = new Sprite(@"demo\carlton", 0.75f);
         carlton.MoveTo(-50, -20);
         carlton.Rotation = MathHelper.ToRadians(45);
         carlton.SetBlink(Color.White, Color.Purple, TimeSpan.FromMilliseconds(300));
 
-        awesome = new Sprite("demo/awesome.png", 0.35f);
+        awesome = new Sprite(@"demo\awesome", 0.35f);
         awesome.UpdateCallback = FadeAndRotateSprite;
         awesome.MoveTo(0, GameHeight - (int)awesome.ScaledHeight);
 
-        shibe = new Sprite("demo/shibe.gif", 250, 250);
+        shibe = new Sprite(@"demo\shibe", 250, 250);
         shibe.SetPulse(Color.Blue, TimeSpan.FromMilliseconds(30), 0.05f, 0.6f);
         shibe.MoveTo(570, 360);
 
-        background = new Sprite("demo/shibe.jpg");
+        background = new Sprite(@"demo\shibefull");
         background.UpdateInterval = TimeSpan.FromMilliseconds(100);
         background.UpdateCallback = ShakeSprite;
         background.DestinationRectangle = new Rectangle(-20, -20, GameWidth + 40, GameHeight + 40);
 
-        explosion = new AnimatedSprite("demo/explosion.png", 64, 64, 3.0f, Color.Orange);
+        explosion = new AnimatedSprite(@"demo\explosion", 64, 64, 3.0f, Color.Orange);
         explosion.Animation = explosion.CreateDefaultAnimation(TimeSpan.FromMilliseconds(30));
         explosion.CenterOn(675, 90);
 

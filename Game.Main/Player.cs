@@ -45,7 +45,7 @@ public class Player : IWorldEntity
         //TODO: put in a factory method, and later persist/load the specifics
         //this sprite sheet also doesn't have diagonally directions, but this game does
         //replace with a more suitable one later; this will require programming changes
-        Sprite = new AnimatedSprite("world/locke.png", 16, 24, 2.0f);
+        Sprite = new AnimatedSprite(@"world\locke", 16, 24, 2.0f);
         Sprite.SpriteSheetOrigin = new Point(2, 48);
         Sprite.FrameMarginWidth = 14;
         Sprite.FrameMarginHeight = 6;

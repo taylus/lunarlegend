@@ -96,12 +96,12 @@ public class CombatSystem
         enemyTargetIndex = 0;
         if (!string.IsNullOrWhiteSpace(bgFile))
         {
-            backgroundImage = BaseGame.LoadTexture(bgFile, true);
+            backgroundImage = BaseGame.LoadTexture(bgFile);
         }
         enemyParty = enemies;
         AlignEnemies(enemyParty);
         playerParty.ForEach(p => p.Restore());
-        currentMenu = mainMenu = new MenuBox<string>(CreateMainMenuBoxTemplate(), "Attack", "Defend", "Magic", "Items") { IsActive = false };
+        currentMenu = mainMenu = new MenuBox<string>(CreateMainMenuBoxTemplate(), "Attack", "Magic", "Items", "Run") { IsActive = false };
         dialogue = new MessageBox(CreateMessageBoxTemplate(), GetEngagementText());
         techMenu = new MenuBox<Technique>(dialogue.X, dialogue.Y, dialogue.Width, 4, 3, BaseGame.Font, LoadTechniques()) { Visible = false };
         powerMeter = CreatePowerMeter();

@@ -23,7 +23,7 @@ public class RenderTargetSpriteDemo : BaseGame
     {
         base.LoadContent();
 
-        background = new Sprite("demo/shibe.jpg");
+        background = new Sprite(@"demo\shibefull");
         background.DestinationRectangle = new Rectangle(-20, -20, GameWidth + 40, GameHeight + 40);
 
         msgBoxes = CreateMessageBoxes();

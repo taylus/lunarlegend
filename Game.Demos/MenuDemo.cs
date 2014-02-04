@@ -41,7 +41,7 @@ public class MenuDemo : BaseGame
     {
         base.LoadContent();
         msg = CreateMessageBox();
-        doge = new Sprite("demo/shibe.gif");
+        doge = new Sprite(@"demo\shibe");
         doge.Rotation = MathHelper.ToRadians(20);
         doge.MoveTo(550, 395);
         doge.Visible = false;
@@ -114,7 +114,7 @@ public class MenuDemo : BaseGame
                 else
                 {
                     msg.Text = string.Format("Wow, doge love {0}!", fruitMenu.SelectedText.ToLower());
-                    doge.Image = BaseGame.LoadTexture("demo/shibehappy.gif", true);
+                    doge.Image = BaseGame.LoadTexture(@"demo\shibehappy");
                     fruitMenu.Visible = false;
                     activeMenu = null;
                 }
@@ -204,9 +204,9 @@ public class MenuDemo : BaseGame
     {
         return new Fruit[] 
         {
-            new Fruit("demo/apple.png", "Apple"),
-            new Fruit("demo/watermelon.png", "Watermelon"),
-            new Fruit("demo/grape.png", "Grapes")
+            new Fruit(@"demo\apple", "Apple"),
+            new Fruit(@"demo\watermelon", "Watermelon"),
+            new Fruit(@"demo\grape", "Grapes")
         };
     }
 }

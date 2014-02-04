@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Audio;
@@ -30,6 +31,10 @@ public class BaseGame : Game
     protected MouseState prevMouse;
     protected MouseState curMouse;
 
+    //keep copies of textures keyed by filename used to request them
+    //won't be smart enough to know that foo.png is the same as ./foo.png, but meh
+    private static Dictionary<string, Texture2D> textureCache = new Dictionary<string, Texture2D>();
+
     //TODO: make some kind of font manager for different fonts, sizes, and settings
     public static SpriteFont Font { get; protected set; }
 
@@ -40,8 +45,13 @@ public class BaseGame : Game
         Content.RootDirectory = "Content";
 
         graphics = new GraphicsDeviceManager(this);
-        graphics.PreferredBackBufferWidth = 800;
-        graphics.PreferredBackBufferHeight = 600;
+        ResizeWindow(800, 600);
+    }
+
+    protected void ResizeWindow(int w, int h)
+    {
+        graphics.PreferredBackBufferWidth = w;
+        graphics.PreferredBackBufferHeight = h;
         graphics.ApplyChanges();
     }
 
@@ -58,15 +68,36 @@ public class BaseGame : Game
         return !prevKeyboard.IsKeyDown(key) && curKeyboard.IsKeyDown(key);
     }
 
-    public static Texture2D LoadTexture(string imgFile, bool external)
+    public bool LeftClickThisFrame()
     {
-        //note: loading a texture through the content pipeline will use premultiplied
-        //alpha blending (by default), but loading one from a file stream will not
-        //http://blogs.msdn.com/b/shawnhar/archive/2010/04/08/premultiplied-alpha-in-xna-game-studio-4-0.aspx
-        //http://blogs.msdn.com/b/shawnhar/archive/2009/11/06/premultiplied-alpha.aspx
+        return prevMouse.LeftButton == ButtonState.Released && curMouse.LeftButton == ButtonState.Pressed;
+    }
 
-        if (!external) return contentManager.Load<Texture2D>(imgFile);
+    public bool MiddleClickThisFrame()
+    {
+        return prevMouse.MiddleButton == ButtonState.Released && curMouse.MiddleButton == ButtonState.Pressed;
+    }
 
+    public bool RightClickThisFrame()
+    {
+        return prevMouse.RightButton == ButtonState.Released && curMouse.RightButton == ButtonState.Pressed;
+    }
+
+    //loads a texture using the content pipeline
+    public static Texture2D LoadTexture(string imgFile)
+    {
+        return contentManager.Load<Texture2D>(imgFile);
+    }
+
+    //loads a texture outside of the content pipeline
+    //this is useful for when the image isn't known until runtime
+    //but it brings along some important to note differences:
+    //  the content pipeline caches textures under the hood
+    //  the content pipeline defaults to premultiplied alpha blending, see:
+    //  http://blogs.msdn.com/b/shawnhar/archive/2010/04/08/premultiplied-alpha-in-xna-game-studio-4-0.aspx
+    //  http://blogs.msdn.com/b/shawnhar/archive/2009/11/06/premultiplied-alpha.aspx
+    public static Texture2D LoadTextureExternal(string imgFile)
+    {
         //if the path is relative, then root it in the content project
         if (!Path.IsPathRooted(imgFile))
         {
@@ -75,8 +106,15 @@ public class BaseGame : Game
 
         using (FileStream fstream = new FileStream(imgFile, FileMode.Open))
         {
-            return Texture2D.FromStream(graphicsDevice, fstream);
+            Texture2D t = Texture2D.FromStream(graphicsDevice, fstream);
+            textureCache.Add(imgFile, t);
+            return t;
         }
+    }
+
+    public static void ClearTextureCache()
+    {
+        textureCache.Clear();
     }
 
     public static RenderTarget2D CreateRenderTarget(int w, int h)

@@ -29,9 +29,20 @@ public static class Util
         return rng.Next(min, max);
     }
 
+    public static Color RandomColor()
+    {
+        return new Color(RandomRange(0, 255), RandomRange(0, 255), RandomRange(0, 255));
+    }
+
     public static Vector2 ToVector2(this Point p)
     {
         return new Vector2(p.X, p.Y);
+    }
+
+    public static Point ToPoint(this Vector2 v)
+    {
+        v = v.Round();
+        return new Point((int)v.X, (int)v.Y);
     }
 
     public static Vector2 Position(this MouseState ms)

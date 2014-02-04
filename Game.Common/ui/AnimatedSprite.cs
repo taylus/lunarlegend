@@ -68,7 +68,7 @@ public class AnimatedSprite : Sprite
 
     //helper method that creates a default animation for this sprite sheet
     //that displays all frames from left to right, top to bottom, and loops
-    public Animation CreateDefaultAnimation(TimeSpan frameLength)
+    public Animation CreateDefaultAnimation(TimeSpan frameLength, bool loop = true)
     {
         List<Point> frames = new List<Point>();
         for (int y = 0; y < Image.Height; y += Height)
@@ -78,7 +78,7 @@ public class AnimatedSprite : Sprite
                 frames.Add(new Point(x / Width, y / Height));
             }
         }
-        return new Animation("default", frameLength, true, frames.ToArray());
+        return new Animation("default", frameLength, loop, frames.ToArray());
     }
 
     public void SetAnimation(string name)
@@ -141,13 +141,13 @@ public class Animation
     public bool IsOver()
     {
         if (Loop) return false;
-        return currentFrameIndex >= Frames.Count;
+        return currentFrameIndex >= Frames.Count - 1;
     }
 
     private bool HasNextFrame()
     {
         if (Loop) return true;
-        return currentFrameIndex + 1 < Frames.Count;
+        return currentFrameIndex < Frames.Count - 1;
     }
 
     public void Advance()

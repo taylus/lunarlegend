@@ -101,7 +101,7 @@ public static class Enemies
                 //4 weak lime slimes
                 for (int i = 0; i < 4; i++)
                 {
-                    enemyParty.Add(new EnemyCombatEntity("Lime Slime", 6, null, "battle/slime.png", 3.0f, null, Util.GetLetterByNumber(i)));
+                    enemyParty.Add(new EnemyCombatEntity("Lime Slime", 6, null, @"battle\slime", 3.0f, null, Util.GetLetterByNumber(i)));
                 }
                 break;
             case 2:
@@ -110,17 +110,17 @@ public static class Enemies
                 {
                     stats = new CombatRatings();
                     stats.Add(DamageType.Physical, new CombatRating(25, 5));
-                    enemyParty.Add(new EnemyCombatEntity("Lime Slime", 12, stats, "battle/slime.png", 3.0f, null, Util.GetLetterByNumber(i)));
+                    enemyParty.Add(new EnemyCombatEntity("Lime Slime", 12, stats, @"battle\slime", 3.0f, null, Util.GetLetterByNumber(i)));
                 }
                 break;
             case 3:
                 stats = new CombatRatings();
                 stats.Add(DamageType.Physical, new CombatRating(20, 5));
-                enemyParty.Add(new EnemyCombatEntity("Doge Wizard", 50, stats, "demo/dogewizard.png", 0.85f, new Point(0, -20)));
+                enemyParty.Add(new EnemyCombatEntity("Doge Wizard", 50, stats, @"demo\dogewizard", 0.85f, new Point(0, -20)));
                 break;
             default:
                 //missingno
-                enemyParty.Add(new EnemyCombatEntity("Equine Esquire", 25, null, "battle/horsemask_esquire.png", 1.0f, new Point(0, 40)));
+                enemyParty.Add(new EnemyCombatEntity("Equine Esquire", 25, null, @"battle\horsemask_esquire", 1.0f, new Point(0, 40)));
                 break;
         }
         return enemyParty;

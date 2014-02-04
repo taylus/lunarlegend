@@ -42,7 +42,7 @@ public class Sprite : UIElement
 
     public Sprite(string imgFile, float scale, Color tint)
     {
-        Image = BaseGame.LoadTexture(imgFile, true);
+        Image = BaseGame.LoadTexture(imgFile);
         Scale = scale;
         Width = Image.Width;
         Height = Image.Height;
@@ -111,7 +111,7 @@ public class Sprite : UIElement
         }
     }
 
-    public virtual void Update(GameTime currentGameTime)
+    public override void Update(GameTime currentGameTime)
     {
         if(UpdateCallback == null) return;
 
