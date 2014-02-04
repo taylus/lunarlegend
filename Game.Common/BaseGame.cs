@@ -31,10 +31,6 @@ public class BaseGame : Game
     protected MouseState prevMouse;
     protected MouseState curMouse;
 
-    //keep copies of textures keyed by filename used to request them
-    //won't be smart enough to know that foo.png is the same as ./foo.png, but meh
-    private static Dictionary<string, Texture2D> textureCache = new Dictionary<string, Texture2D>();
-
     //TODO: make some kind of font manager for different fonts, sizes, and settings
     public static SpriteFont Font { get; protected set; }
 
@@ -92,10 +88,10 @@ public class BaseGame : Game
     //loads a texture outside of the content pipeline
     //this is useful for when the image isn't known until runtime
     //but it brings along some important to note differences:
-    //  the content pipeline caches textures under the hood
+    //  //  the content pipeline caches textures under the hood
+    //  the content pipeline manages its memory, disposing textures as needed
     //  the content pipeline defaults to premultiplied alpha blending, see:
     //  http://blogs.msdn.com/b/shawnhar/archive/2010/04/08/premultiplied-alpha-in-xna-game-studio-4-0.aspx
-    //  http://blogs.msdn.com/b/shawnhar/archive/2009/11/06/premultiplied-alpha.aspx
     public static Texture2D LoadTextureExternal(string imgFile)
     {
         //if the path is relative, then root it in the content project
@@ -106,15 +102,8 @@ public class BaseGame : Game
 
         using (FileStream fstream = new FileStream(imgFile, FileMode.Open))
         {
-            Texture2D t = Texture2D.FromStream(graphicsDevice, fstream);
-            textureCache.Add(imgFile, t);
-            return t;
+            return Texture2D.FromStream(graphicsDevice, fstream);
         }
-    }
-
-    public static void ClearTextureCache()
-    {
-        textureCache.Clear();
     }
 
     public static RenderTarget2D CreateRenderTarget(int w, int h)

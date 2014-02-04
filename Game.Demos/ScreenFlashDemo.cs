@@ -36,10 +36,6 @@ public class ScreenFlashDemo : BaseGame
         {
             EffectsManager.ScreenFlash(Color.Red);
         }
-        if (KeyPressedThisFrame(Keys.Tab))
-        {
-            BaseGame.ClearTextureCache();
-        }
         //if(LeftClickThisFrame())
         if (curMouse.LeftButton == ButtonState.Pressed)
         {
