@@ -6,9 +6,12 @@ using Microsoft.Xna.Framework.Graphics;
 
 public static class EffectsManager
 {
-    //public List<Sprite> Sprites { get; private set; }
-    //public ScreenFlash ScreenFlash { get; private set; }
     public static List<UIElement> Effects { get; private set; }
+
+    private static float screenShakeIntensity; //upper bound for calculating random vector used to offset the game's main SpriteBatch
+    private static float screenShakeDecrease = 1; //how much to decrease the screen shake intensity by each update
+    private static TimeSpan untilNextShakeDecrease = TimeSpan.MaxValue; //how long until the next screen shake update
+    private static TimeSpan shakeDecreaseInterval = TimeSpan.MaxValue; //how long between screen shake updates
 
     static EffectsManager()
     {
@@ -33,10 +36,31 @@ public static class EffectsManager
         Register(new ScreenFlash(color, startOpacity, opacityStep, stepInterval));
     }
 
-    public static void ScreenShake(uint intensity, TimeSpan duration)
+    public static void ScreenShake(float intensity, TimeSpan duration, float intensityDecrease = 1)
     {
-        throw new NotImplementedException();
+        //TODO: fix timing
+        //don't specify intensity decrease? calculate it based on duration and current FPS (?)
+
+        //this approach decreases the screen shake intensity linearly
+        //a somewhat more realistic-looking approach would slow the decrease interval as the intensity approaches zero
+        screenShakeIntensity = intensity;
+        screenShakeDecrease = intensityDecrease;
+        untilNextShakeDecrease = shakeDecreaseInterval = TimeSpan.FromTicks(duration.Ticks / (int)(intensity * screenShakeDecrease));
     }
+
+    public static Matrix TranslateShake()
+    {
+        if (screenShakeIntensity <= 0) return Matrix.Identity;
+        Vector3 randomShake = Shake(screenShakeIntensity);
+        return Matrix.CreateTranslation(randomShake);
+    }
+
+    private static Vector3 Shake(float intensity)
+    {
+        float x = (Util.Random() * intensity) - (intensity / 2);
+        float y = (Util.Random() * intensity) - (intensity / 2);
+        return new Vector3(x, y, 0);
+    }  
 
     public static void PutSprite(Sprite spr, Point position)
     {
@@ -61,6 +85,15 @@ public static class EffectsManager
 
     public static void Update(GameTime currentGameTime)
     {
+        //decrease screen shake intensity every time shakeDecreaseInterval elapses
+        untilNextShakeDecrease -= currentGameTime.ElapsedGameTime;
+        if (untilNextShakeDecrease.TotalMilliseconds <= 0)
+        {
+            screenShakeIntensity -= screenShakeDecrease;
+            if (screenShakeIntensity <= 0) screenShakeIntensity = 0;
+            untilNextShakeDecrease = shakeDecreaseInterval;
+        }
+
         for (int i = Effects.Count - 1; i >= 0; i--)
         {
             UIElement e = Effects[i];

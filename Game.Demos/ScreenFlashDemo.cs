@@ -10,7 +10,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 public class ScreenFlashDemo : BaseGame
 {
-    Texture2D background = null;
+    private Texture2D background = null;
 
     public ScreenFlashDemo()
     {
@@ -28,6 +28,8 @@ public class ScreenFlashDemo : BaseGame
         //don't respond to input if the game isn't active
         if (!IsActive) return;
 
+        EffectsManager.Update(gameTime);
+
         curKeyboard = Keyboard.GetState();
         curMouse = Mouse.GetState();
 
@@ -36,14 +38,14 @@ public class ScreenFlashDemo : BaseGame
         {
             EffectsManager.ScreenFlash(Color.Red);
         }
-        //if(LeftClickThisFrame())
+        if (curMouse.MiddleButton == ButtonState.Pressed)
+        {
+            EffectsManager.ScreenShake(20.0f, TimeSpan.FromSeconds(1), 2.0f);
+        }
         if (curMouse.LeftButton == ButtonState.Pressed)
         {
             EffectsManager.PutSprite(new AnimatedSprite(@"demo\explosion", 64, 64, 3.0f, Color.White), curMouse.Position().ToPoint());
         }
-
-        EffectsManager.Update(gameTime);
-        GC.Collect();
 
         prevKeyboard = curKeyboard;
         prevMouse = curMouse;
@@ -52,9 +54,9 @@ public class ScreenFlashDemo : BaseGame
 
     protected override void Draw(GameTime gameTime)
     {
-        GraphicsDevice.Clear(Color.DarkGray);
+        GraphicsDevice.Clear(Color.Black);
 
-        spriteBatch.Begin();
+        spriteBatch.Begin(0, null, null, null, null, null, EffectsManager.TranslateShake());
         spriteBatch.Draw(background, GameWindow, Color.White);
         EffectsManager.Draw(spriteBatch);
         spriteBatch.End();

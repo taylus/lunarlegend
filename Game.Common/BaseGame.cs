@@ -79,6 +79,16 @@ public class BaseGame : Game
         return prevMouse.RightButton == ButtonState.Released && curMouse.RightButton == ButtonState.Pressed;
     }
 
+    public bool ScrollUpThisFrame()
+    {
+        return prevMouse.ScrollWheelValue < curMouse.ScrollWheelValue;
+    }
+
+    public bool ScrollDownThisFrame()
+    {
+        return prevMouse.ScrollWheelValue > curMouse.ScrollWheelValue;
+    }
+
     //loads a texture using the content pipeline
     public static Texture2D LoadTexture(string imgFile)
     {
