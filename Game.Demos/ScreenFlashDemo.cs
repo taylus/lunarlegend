@@ -40,7 +40,7 @@ public class ScreenFlashDemo : BaseGame
         }
         if (curMouse.MiddleButton == ButtonState.Pressed)
         {
-            EffectsManager.ScreenShake(20.0f, TimeSpan.FromSeconds(1), 2.0f);
+            EffectsManager.ScreenShake(15.0f, TimeSpan.FromSeconds(0.6), TimeSpan.FromMilliseconds(50));
         }
         if (curMouse.LeftButton == ButtonState.Pressed)
         {

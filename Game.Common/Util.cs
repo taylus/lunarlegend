@@ -29,6 +29,13 @@ public static class Util
         return rng.Next(min, max);
     }
 
+    //returns a random float between the given values
+    public static float RandomRange(float min, float max)
+    {
+        float range = max - min;
+        return (float)((rng.NextDouble() * range) + min);
+    }
+
     public static Color RandomColor()
     {
         return new Color(RandomRange(0, 255), RandomRange(0, 255), RandomRange(0, 255));
