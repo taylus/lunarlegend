@@ -74,7 +74,7 @@ public static class EffectsManager
 
         Vector3 v = new Vector3(x, y, 0);
         v.Normalize();
-        return v * intensity;
+        return (v * intensity).Round();
     }  
 
     public static Matrix TranslateShake()

@@ -62,6 +62,11 @@ public static class Util
         return new Vector2((float)Math.Round(v.X), (float)Math.Round(v.Y));
     }
 
+    public static Vector3 Round(this Vector3 v)
+    {
+        return new Vector3((float)Math.Round(v.X), (float)Math.Round(v.Y), (float)Math.Round(v.Z));
+    }
+
     public static Rectangle Scale(this Rectangle rect, float scale)
     {
         return new Rectangle(rect.X, rect.Y, (int)(rect.Width * scale), (int)(rect.Height * scale));
