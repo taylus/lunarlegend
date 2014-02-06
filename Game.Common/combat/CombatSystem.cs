@@ -338,6 +338,10 @@ public class CombatSystem
                 CombatEntity target = enemyAction.Target;
                 dialogue.Text = enemyAction.Execute();
 
+                //TODO: not all enemy actions will be generic attacks, revisit this once they have some AI
+                //TODO: make the screen shake intensity/duration scale with the monster's power?
+                EffectsManager.ScreenShake(10.0f, TimeSpan.FromSeconds(0.2), TimeSpan.FromMilliseconds(50));
+
                 if (currentEnemyIndex < enemyParty.Count - 1)
                 {
                     //advance to the next enemy

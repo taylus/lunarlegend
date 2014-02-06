@@ -113,8 +113,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BattleDemo.cs" />
-    <Compile Include="ScreenFlashDemo.cs" />
     <Compile Include="RenderTargetSpriteDemo.cs" />
+    <Compile Include="SpecialEffectsDemo.cs" />
     <Compile Include="SpriteDemo.cs" />
     <Compile Include="MenuDemo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

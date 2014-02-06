@@ -8,13 +8,13 @@ using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 
-public class ScreenFlashDemo : BaseGame
+public class SpecialEffectsDemo : BaseGame
 {
     private Texture2D background = null;
 
-    public ScreenFlashDemo()
+    public SpecialEffectsDemo()
     {
-        Window.Title = "ScreenFlash Demo";
+        Window.Title = "Special Effects Demo";
     }
 
     protected override void LoadContent()

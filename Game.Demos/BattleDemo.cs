@@ -31,6 +31,7 @@ public class BattleDemo : BaseGame
         //exit on esc
         if (curKeyboard.IsKeyDown(Buttons.QUIT)) this.Exit();
 
+        EffectsManager.Update(gameTime);
         combatSystem.Update(gameTime);
         if (KeyPressedThisFrame(Buttons.DEBUG))
             combatSystem.Engage(Enemies.LoadPartyByID(1), @"battle\cave_bg");
@@ -54,7 +55,8 @@ public class BattleDemo : BaseGame
 
     protected override void Draw(GameTime gameTime)
     {
-        spriteBatch.Begin();
+        GraphicsDevice.Clear(Color.Black);
+        spriteBatch.Begin(0, null, null, null, null, null, EffectsManager.TranslateShake());
         combatSystem.Draw(spriteBatch);
         spriteBatch.End();
 
