@@ -317,6 +317,11 @@ public class CombatSystem
                     currentPlayer.CriticalDamageModifier = powerMeter.DamageModifier;
                     CombatAction action = new CombatAction(currentPlayer, enemyTarget, selectedTechnique);
                     dialogue.Text = action.Execute();
+                    if (selectedTechnique != null && selectedTechnique.GetType() == typeof(DamageTechnique))
+                    {
+                        DamageTechnique dt = (DamageTechnique)selectedTechnique;
+                        EffectsManager.ScreenFlash(dt.GetColor(), 0.5f, 0.05f);
+                    }
 
                     if (enemyTarget.IsDead)
                     {
@@ -604,10 +609,12 @@ public class CombatSystem
             new DamageTechnique("Thunderstorm", 20, DamageType.Wind),
             new DamageTechnique("Boulder", 10, DamageType.Earth),
             new DamageTechnique("Earthquake", 20, DamageType.Earth),
-            new HealTechnique("Heal", 20),
-            new SupportTechnique("Empower"),
-            new SupportTechnique("Chant"),
-            new SupportTechnique("Fortify"),
+            new DamageTechnique("Astral Flare", 50, DamageType.Astral),
+            new DamageTechnique("Shadowburn", 50, DamageType.Shadow),
+            //new HealTechnique("Heal", 20),
+            //new SupportTechnique("Empower"),
+            //new SupportTechnique("Chant"),
+            //new SupportTechnique("Fortify"),
         };
     }
 }

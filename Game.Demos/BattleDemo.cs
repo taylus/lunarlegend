@@ -58,6 +58,7 @@ public class BattleDemo : BaseGame
         GraphicsDevice.Clear(Color.Black);
         spriteBatch.Begin(0, null, null, null, null, null, EffectsManager.TranslateShake());
         combatSystem.Draw(spriteBatch);
+        EffectsManager.Draw(spriteBatch);
         spriteBatch.End();
 
         base.Draw(gameTime);

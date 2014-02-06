@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Microsoft.Xna.Framework;
 
 //represents any special attack or spell
 //different types of spells and abilities are subclasses (e.g. offensive, defensive, buff/debuff)
@@ -47,6 +48,31 @@ public class DamageTechnique : Technique
     {
         Power = power;
         Type = type;
+    }
+
+    //color representing this technique's DamageType
+    //used for screen flashes when using this technique
+    public Color GetColor()
+    {
+        switch (Type)
+        {
+            case DamageType.Astral:
+                return Color.MediumPurple;
+            case DamageType.Earth:
+                return Color.SaddleBrown;
+            case DamageType.Fire:
+                return Color.Red;
+            case DamageType.Physical:
+                return Color.Gray;
+            case DamageType.Shadow:
+                return Color.Black;
+            case DamageType.Water:
+                return Color.Blue;
+            case DamageType.Wind:
+                return Color.Yellow;
+            default:
+                return Color.PapayaWhip; //always wanted to use this color
+        }
     }
 }
 
