@@ -44,6 +44,9 @@ public class CombatSystem
     private List<PlayerCombatEntity> playerParty = new List<PlayerCombatEntity>();
     private List<EnemyCombatEntity> enemyParty = new List<EnemyCombatEntity>();
 
+    //kept around until their death animations finish, but kept separate from the living enemy party so they're untargetable
+    private List<EnemyCombatEntity> dyingEnemies = new List<EnemyCombatEntity>();
+
     private PlayerCombatEntity firstLivingPlayer { get { return playerParty.Where(p => p.IsAlive).First(); } }
     private int firstLivingPlayerIndex { get { return playerParty.IndexOf(firstLivingPlayer); } }
     private PlayerCombatEntity lastLivingPlayer { get { return playerParty.Where(p => p.IsAlive).Last(); } }
@@ -157,6 +160,10 @@ public class CombatSystem
         {
             enemy.Draw(sb);
         }
+        foreach (EnemyCombatEntity enemy in dyingEnemies)
+        {
+            enemy.Draw(sb);
+        }
 
         foreach (PlayerCombatEntity player in playerParty)
         {
@@ -194,7 +201,7 @@ public class CombatSystem
                 //blink the enemy he is selecting
                 if (enemyTarget == enemy)
                 {
-                    if (!enemy.HasSpriteEffects) enemy.StartBlink(150);
+                    if (!enemy.HasSpriteEffects) enemy.Blink(TimeSpan.FromMilliseconds(150));
                 }
                 //darken the others with a tint
                 else
@@ -207,14 +214,16 @@ public class CombatSystem
             else if (currentState == CombatSystemState.ENEMY_ACT && enemy == currentEnemy)
             {
                 //make it blink
-                enemy.StartBlink(150);
+                enemy.Blink(TimeSpan.FromMilliseconds(150));
             }
-            //clear sprite effects in all other states
-            else
-            {
-                enemy.Tint = Color.White;
-                enemy.StopBlink();
-            }
+        }
+
+        //remove dying enemies once they're no longer visible
+        for (int i = dyingEnemies.Count - 1; i >= 0; i--)
+        {
+            dyingEnemies[i].Update(currentGameTime);
+            if (dyingEnemies[i].Tint.A <= 0)
+                dyingEnemies.RemoveAt(i);
         }
     }
 
@@ -325,10 +334,15 @@ public class CombatSystem
 
                     if (enemyTarget.IsDead)
                     {
-                        enemyParty.Remove(enemyTarget);
+                        ShowEnemyDeathAnimation(enemyTarget);
                         enemyTargetIndex = 0;
                     }
+                    else
+                    {
+                        enemyTarget.ShakeFor(TimeSpan.FromMilliseconds(200), 4, TimeSpan.FromMilliseconds(20));
+                    }
 
+                    DisableEnemyBlinkEffects();
                     powerMeter.Reset();
 
                     //finish reading text; current player is advanced in that state
@@ -342,6 +356,7 @@ public class CombatSystem
                 CombatAction enemyAction = currentEnemy.DecideAction(enemyParty, playerParty);
                 CombatEntity target = enemyAction.Target;
                 dialogue.Text = enemyAction.Execute();
+                DisableEnemyBlinkEffects();
 
                 //TODO: not all enemy actions will be generic attacks, revisit this once they have some AI
                 //TODO: make the screen shake intensity/duration scale with the monster's power?
@@ -453,13 +468,14 @@ public class CombatSystem
         {
             case CombatSystemState.SELECT_ENEMY_TARGET:
                 dialogue.Text = "";
-                currentState = CombatSystemState.MENU_SELECT;
+                DisableEnemyBlinkEffects();
                 if (currentMenu == techMenu)
                 {
                     //cancelled while targetting a technique, go back to technique menu
                     techMenu.Visible = true;
                     dialogue.Visible = false;
                 }
+                currentState = CombatSystemState.MENU_SELECT;
                 break;
             case CombatSystemState.MENU_SELECT:
                 if (currentMenu == techMenu)
@@ -487,6 +503,14 @@ public class CombatSystem
             dialogue.Text += "\nYour party has perished...";
             currentState = CombatSystemState.BATTLE_OVER;
         }
+    }
+
+    public void ShowEnemyDeathAnimation(EnemyCombatEntity enemy)
+    {
+        //enemy.Tint = Color.Red;
+        enemy.FadeOut(TimeSpan.FromSeconds(1));
+        dyingEnemies.Add(enemy);
+        enemyParty.Remove(enemy);
     }
 
     private string GetTargetText(CombatEntity target)
@@ -563,6 +587,15 @@ public class CombatSystem
         //TODO: change this to group players together better
         //divide the screen in half vertically, and center the player party 
         //on that, with a small margin between each player
+    }
+
+    private void DisableEnemyBlinkEffects()
+    {
+        foreach (EnemyCombatEntity e in enemyParty)
+        {
+            e.StopBlink();
+            e.Tint = Color.White;
+        }
     }
 
     //TODO: find a better place for these template methods to live

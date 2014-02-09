@@ -6,6 +6,20 @@ using Microsoft.Xna.Framework.Graphics;
 
 public delegate void SpriteUpdateCallback(Sprite s);
 
+//TODO: rework sprite effects so multiple can be added together using multicast delegates
+//e.g. UpdateCallback = blinkCallback + rotateCallback + shakeCallback + ...
+//will need to keep track of separate update intervals and durations for each one
+
+//public struct SpriteEffect
+//{
+//    public SpriteUpdateCallback Update;
+//    public TimeSpan Duration;
+//    public TimeSpan UpdateInterval;
+//    public TimeSpan UntilNextUpdate;
+//    //some callback to reset the sprite's state after Duration finishes?
+//    //e.g. blink sets color back to white, rotate sets rotation back to zero
+//}
+
 //a sprite is a wrapper class around Texture2D and offers various effects
 public class Sprite : UIElement
 {
@@ -25,13 +39,10 @@ public class Sprite : UIElement
     //update callback interval; set to zero to update as fast as possible
     public TimeSpan UpdateInterval { get; set; }
     private TimeSpan untilNextUpdate;
+    private TimeSpan? duration = null;
     public SpriteUpdateCallback UpdateCallback { get; set; }
 
-    //TODO: support keeping track of multiple update intervals for multicast delegates?
-    //e.g. a sprite that rotates and blinks, but the rotate callback has a shorter interval
-
     //variables to keep track of things for the default update callbacks
-    protected Color originalTint;
     protected Color blinkColor1;
     protected Color blinkColor2;
     protected Color pulseColor;
@@ -39,6 +50,9 @@ public class Sprite : UIElement
     protected float pulseLerpStep;
     protected float pulseLerpLimit;
     protected float spin;
+    protected float shakeIntensity;
+    protected Vector2 shakeOffset;
+    protected int fadeAlphaDrop;
 
     public Sprite(string imgFile, float scale, Color tint)
     {
@@ -73,13 +87,15 @@ public class Sprite : UIElement
         X = other.X;
         Y = other.Y;
         spin = other.spin;
-        originalTint = other.originalTint;
         blinkColor1 = other.blinkColor1;
         blinkColor2 = other.blinkColor2;
         pulseColor = other.pulseColor;
         pulseLerp = other.pulseLerp;
         pulseLerpLimit = other.pulseLerpLimit;
         pulseLerpStep = other.pulseLerpStep;
+        shakeIntensity = other.shakeIntensity;
+        shakeOffset = other.shakeOffset;
+        fadeAlphaDrop = other.fadeAlphaDrop;
     }
 
     protected Sprite()
@@ -100,14 +116,14 @@ public class Sprite : UIElement
         {
             //draw inside the destination rectangle if there is one
             Rectangle offsetDestRect = DestinationRectangle.Value;
-            offsetDestRect.Offset(offsetDestRect.Width / 2, offsetDestRect.Height / 2);
+            offsetDestRect.Offset((offsetDestRect.Width / 2) + (int)(shakeOffset.X), (offsetDestRect.Height / 2) + (int)(shakeOffset.Y));
             sb.Draw(Image, offsetDestRect, null, Tint, Rotation, new Vector2(Image.Width / 2, Image.Height / 2), SpriteEffects.None, 0);
         }
         else
         {
             //otherwise, drawn centered and at the provided scale
             Vector2 origin = new Vector2((int)(Width / 2) + RotationCenterOffset.X, (int)(Height / 2) + RotationCenterOffset.Y);
-            sb.Draw(Image, new Vector2(X + (int)(ScaledWidth / 2), (int)(Y + ScaledHeight / 2)), null, Tint, Rotation, origin, Scale, SpriteEffects.None, 0);
+            sb.Draw(Image, new Vector2(X + (int)(ScaledWidth / 2) + shakeOffset.X, (int)(Y + ScaledHeight / 2) + shakeOffset.Y), null, Tint, Rotation, origin, Scale, SpriteEffects.None, 0);
         }
     }
 
@@ -115,6 +131,36 @@ public class Sprite : UIElement
     {
         if(UpdateCallback == null) return;
 
+        //two ways of handling effects:
+        //1.) effect has a total duration
+        if (duration.HasValue)
+        {
+            if (duration.Value.TotalMilliseconds > 0)
+            {
+                duration -= currentGameTime.ElapsedGameTime;
+                if (duration.Value.TotalMilliseconds > 0)
+                {
+                    CheckFireUpdateCallback(currentGameTime);
+                }
+                else
+                {
+                    //duration just elapsed, stop the effect
+                    duration = null;
+                    shakeOffset = Vector2.Zero;
+                    Tint = Color.White;
+                    UpdateCallback = null;
+                }
+            }
+        }
+        //2.) effect continues until manually stopped
+        else
+        {
+            CheckFireUpdateCallback(currentGameTime);
+        }
+    }
+
+    private void CheckFireUpdateCallback(GameTime currentGameTime)
+    {
         untilNextUpdate -= currentGameTime.ElapsedGameTime;
         if (untilNextUpdate.TotalMilliseconds <= 0)
         {
@@ -161,9 +207,8 @@ public class Sprite : UIElement
 
     #region Blink Helper Methods
 
-    public void SetBlink(Color color1, Color color2, TimeSpan interval)
+    public void Blink(Color color1, Color color2, TimeSpan interval)
     {
-        originalTint = Tint;
         blinkColor1 = color1;
         blinkColor2 = color2;
         UpdateInterval = interval;
@@ -175,7 +220,12 @@ public class Sprite : UIElement
         if (UpdateCallback != BlinkCallback) return;
         UpdateCallback = null;
         untilNextUpdate = TimeSpan.Zero;
-        //Tint = originalTint;
+    }
+
+    public void BlinkFor(TimeSpan duration, Color color1, Color color2, TimeSpan interval)
+    {
+        this.duration = duration;
+        Blink(color1, color2, interval);
     }
 
     private static void BlinkCallback(Sprite s)
@@ -187,12 +237,11 @@ public class Sprite : UIElement
 
     #region Pulse Helper Methods
 
-    public void SetPulse(Color color, TimeSpan interval, float lerpStep = 0.05f, float lerpLimit = 0.6f)
+    public void Pulse(Color color, TimeSpan interval, float lerpStep = 0.05f, float lerpLimit = 0.6f)
     {
-        originalTint = Tint;
         pulseColor = color;
         pulseLerp = 0;
-        pulseLerpStep = lerpStep;   //how much to lerp every update
+        pulseLerpStep = lerpStep;   //how much to lerp between the two colors every update
         pulseLerpLimit = MathHelper.Clamp(lerpLimit, 0, 1);     //max lerp weight towards the given color
         UpdateInterval = interval;
         UpdateCallback = PulseCallback;
@@ -202,7 +251,12 @@ public class Sprite : UIElement
     {
         if (UpdateCallback != PulseCallback) return;
         UpdateCallback = null;
-        Tint = originalTint;
+    }
+
+    public void PulseFor(TimeSpan duration, Color color, TimeSpan interval, float lerpStep = 0.05f, float lerpLimit = 0.6f)
+    {
+        this.duration = duration;
+        Pulse(color, interval, lerpStep, lerpLimit);
     }
 
     private static void PulseCallback(Sprite s)
@@ -220,17 +274,23 @@ public class Sprite : UIElement
 
     #region Rotate Helper Methods
 
-    public void SetRotation(float rads, TimeSpan? interval = null)
+    public void Rotate(float rads, TimeSpan? interval = null)
     {
         spin = rads;
         UpdateInterval = interval.HasValue? interval.Value : TimeSpan.Zero;
         UpdateCallback = RotateCallback;
     }
 
-    public void StopRotation()
+    public void StopRotate()
     {
         if (UpdateCallback != RotateCallback) return;
         UpdateCallback = null;
+    }
+
+    public void RotateFor(TimeSpan duration, float rads, TimeSpan? interval = null)
+    {
+        this.duration = duration;
+        Rotate(rads, interval);
     }
 
     private static void RotateCallback(Sprite s)
@@ -238,6 +298,75 @@ public class Sprite : UIElement
         s.Rotation += s.spin;
         if (s.Rotation <= 0 || s.Rotation >= MathHelper.TwoPi)
             s.Rotation %= MathHelper.TwoPi;
+    }
+
+    #endregion
+
+    #region Shake Helper Methods
+
+    public void ShakeFor(TimeSpan duration, float intensity, TimeSpan interval)
+    {
+        this.duration = duration;
+        shakeIntensity = intensity;
+        UpdateInterval = interval;
+        UpdateCallback = ShakeCallback;
+    }
+
+    private static void ShakeCallback(Sprite s)
+    {
+        s.shakeOffset = RandomShake(s);
+    }
+
+    //generate a random vector of the given magnitude
+    private static Vector2 RandomShake(Sprite s)
+    {
+        //set x or y to zero to only shake on one axis
+        //use a wider range to weigh one axis more than the other
+        float x = Util.RandomRange(-1.0f, 1.0f);
+        float y = Util.RandomRange(-1.0f, 1.0f);
+
+        //if both signs of the new shake vector are the same as the last, flip one or both of them at random
+        //makes it so successive shake vectors are never in the same quadrant, making the shake look better
+        if (Math.Sign(x) == Math.Sign(s.shakeOffset.X) && Math.Sign(y) == Math.Sign(s.shakeOffset.Y))
+        {
+            switch (Util.RandomRange(0, 3))
+            {
+                case 0:
+                    x = -x;
+                    break;
+                case 1:
+                    y = -y;
+                    break;
+                default:
+                    x = -x;
+                    y = -y;
+                    break;
+            }
+        }
+
+        Vector2 v = new Vector2(x, y);
+        v.Normalize();
+        return (v * s.shakeIntensity).Round();
+    }
+
+    #endregion
+
+    #region Fade Helper Methods
+
+    public void FadeOut(TimeSpan duration, int alphaDrop = 16)
+    {
+        fadeAlphaDrop = alphaDrop;
+        UpdateCallback = FadeOutCallback;
+        UpdateInterval = TimeSpan.FromTicks(duration.Ticks / (Tint.A / alphaDrop));
+    }
+
+    private static void FadeOutCallback(Sprite s)
+    {
+        if (s.Tint.A > 0)
+        {
+            s.Tint = new Color(s.Tint.R - s.fadeAlphaDrop, s.Tint.G - s.fadeAlphaDrop, 
+                               s.Tint.B - s.fadeAlphaDrop, s.Tint.A - s.fadeAlphaDrop);
+        }
     }
 
     #endregion

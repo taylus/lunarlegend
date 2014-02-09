@@ -74,7 +74,7 @@ public class RenderTargetSpriteDemo : BaseGame
         MessageBox msgBox1 = new MessageBox(0, 0, 100, 1, BaseGame.Font, "such pulse");
         RenderTargetSprite msgBoxSprite1 = new RenderTargetSprite(msgBox1);
         msgBoxSprite1.CenterOn(100, 160);
-        msgBoxSprite1.SetPulse(Color.Blue, TimeSpan.FromMilliseconds(50), 0.04f, 0.5f);
+        msgBoxSprite1.Pulse(Color.Blue, TimeSpan.FromMilliseconds(50), 0.04f, 0.5f);
         msgBoxes.Add(msgBox1, msgBoxSprite1);
 
         MessageBox msgBox2 = new MessageBox(0, 0, 100, 1, BaseGame.Font, "such rotate");
@@ -86,7 +86,7 @@ public class RenderTargetSpriteDemo : BaseGame
         MessageBox msgBox3 = new MessageBox(0, 0, 80, 1, BaseGame.Font, "so blink");
         RenderTargetSprite msgBoxSprite3 = new RenderTargetSprite(msgBox3);
         msgBoxSprite3.CenterOn(740, 70);
-        msgBoxSprite3.SetBlink(Color.Gray, Color.White, TimeSpan.FromMilliseconds(300));
+        msgBoxSprite3.Blink(Color.Gray, Color.White, TimeSpan.FromMilliseconds(300));
         msgBoxes.Add(msgBox3, msgBoxSprite3);
 
         MessageBox msgBox4 = new MessageBox(0, 0, 85, 1, BaseGame.Font, "so shake");
@@ -99,7 +99,7 @@ public class RenderTargetSpriteDemo : BaseGame
         MessageBox msgBox5 = new MessageBox(0, 0, 110, 1, BaseGame.Font, "very fade");
         RenderTargetSprite msgBoxSprite5 = new RenderTargetSprite(msgBox5);
         msgBoxSprite5.CenterOn(680, 320);
-        msgBoxSprite5.SetPulse(Color.Transparent, TimeSpan.FromMilliseconds(60), 0.09f, 0.75f);
+        msgBoxSprite5.Pulse(Color.Transparent, TimeSpan.FromMilliseconds(60), 0.09f, 0.75f);
         msgBoxes.Add(msgBox5, msgBoxSprite5);
 
         MessageBox msgBox6 = new MessageBox(0, 0, 107, 1, BaseGame.Font, "upside doge");

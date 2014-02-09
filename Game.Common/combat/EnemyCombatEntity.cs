@@ -77,14 +77,29 @@ public class EnemyCombatEntity : CombatEntity
         sprite.Update(currentGameTime);
     }
 
-    public void StartBlink(int ms = 300)
+    public void Blink(TimeSpan interval)
     {
-        sprite.SetBlink(Color.White, Color.DarkGray, TimeSpan.FromMilliseconds(ms));
+        sprite.Blink(Color.White, Color.DarkGray, interval);
+    }
+
+    public void BlinkFor(TimeSpan duration, TimeSpan interval)
+    {
+        sprite.BlinkFor(duration, Color.White, Color.Red, interval);
     }
 
     public void StopBlink()
     {
         sprite.StopBlink();
+    }
+
+    public void ShakeFor(TimeSpan duration, float intensity, TimeSpan interval)
+    {
+        sprite.ShakeFor(duration, intensity, interval);
+    }
+
+    public void FadeOut(TimeSpan duration, int alphaDrop = 16)
+    {
+        sprite.FadeOut(duration, alphaDrop);
     }
 }
 

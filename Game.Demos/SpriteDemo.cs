@@ -31,14 +31,16 @@ public class SpriteDemo : BaseGame
         carlton = new Sprite(@"demo\carlton", 0.75f);
         carlton.MoveTo(-50, -20);
         carlton.Rotation = MathHelper.ToRadians(45);
-        carlton.SetBlink(Color.White, Color.Purple, TimeSpan.FromMilliseconds(300));
+        //carlton.Blink(Color.White, Color.Purple, TimeSpan.FromMilliseconds(300));
+        //carlton.BlinkFor(TimeSpan.FromSeconds(2), Color.White, Color.Purple, TimeSpan.FromMilliseconds(300));
+        //carlton.ShakeFor(TimeSpan.FromMilliseconds(100), 5, TimeSpan.FromMilliseconds(50));
 
         awesome = new Sprite(@"demo\awesome", 0.35f);
         awesome.UpdateCallback = FadeAndRotateSprite;
         awesome.MoveTo(0, GameHeight - (int)awesome.ScaledHeight);
 
         shibe = new Sprite(@"demo\shibe", 250, 250);
-        shibe.SetPulse(Color.Blue, TimeSpan.FromMilliseconds(30), 0.05f, 0.6f);
+        shibe.Pulse(Color.Blue, TimeSpan.FromMilliseconds(30), 0.05f, 0.6f);
         shibe.MoveTo(570, 360);
 
         background = new Sprite(@"demo\shibefull");
@@ -67,9 +69,10 @@ public class SpriteDemo : BaseGame
         //exit on esc
         if (curKeyboard.IsKeyDown(Buttons.QUIT)) this.Exit();
 
-        if (curKeyboard.IsKeyDown(Buttons.CONFIRM))
+        if (KeyPressedThisFrame(Buttons.CONFIRM))
         {
-            carlton.StopBlink();
+            //carlton.ShakeFor(TimeSpan.FromMilliseconds(150), 5, TimeSpan.FromMilliseconds(50));
+            carlton.FadeOut(TimeSpan.FromSeconds(0.5));
         }
 
         background.Update(gameTime);
