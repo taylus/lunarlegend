@@ -41,7 +41,9 @@ public class BaseGame : Game
         Content.RootDirectory = "Content";
 
         graphics = new GraphicsDeviceManager(this);
+        //graphics.IsFullScreen = true;
         ResizeWindow(800, 600);
+        //GoFullscreenWindowed();
     }
 
     protected void ResizeWindow(int w, int h)
@@ -49,6 +51,17 @@ public class BaseGame : Game
         graphics.PreferredBackBufferWidth = w;
         graphics.PreferredBackBufferHeight = h;
         graphics.ApplyChanges();
+    }
+
+    //hacky way to make the game window fullscreen borderless since XNA doesn't do that out of the box
+    //see http://lukecapizano.blogspot.com/2012/09/want-to-display-borderless-window-in-xna.html
+    protected void GoFullscreenWindowed()
+    {
+        IntPtr hWnd = this.Window.Handle;
+        var control = System.Windows.Forms.Control.FromHandle(hWnd);
+        var form = control.FindForm();
+        form.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
+        form.WindowState = System.Windows.Forms.FormWindowState.Maximized;
     }
 
     protected override void LoadContent()
