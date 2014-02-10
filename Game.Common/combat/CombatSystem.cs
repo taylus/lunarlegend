@@ -61,7 +61,7 @@ public class CombatSystem
     private EnemyCombatEntity currentEnemy { get { return currentEnemyIndex < 0? null : enemyParty[currentEnemyIndex]; } }
 
     //the player party member that the player is currently targeting
-    private int playerTargetIndex = -1;
+    private int playerTargetIndex = 0;
     private PlayerCombatEntity playerTarget { get { return playerTargetIndex < 0? null : playerParty[playerTargetIndex]; } }
 
     //the enemy that the player is currently targeting
@@ -95,7 +95,7 @@ public class CombatSystem
         IsActive = true;
         currentPlayerIndex = -1;
         currentEnemyIndex = 0;
-        playerTargetIndex = -1;
+        playerTargetIndex = 0;
         enemyTargetIndex = 0;
         if (!string.IsNullOrWhiteSpace(bgFile))
         {
@@ -167,9 +167,8 @@ public class CombatSystem
 
         foreach (PlayerCombatEntity player in playerParty)
         {
-            bool grayedOut = (currentState == CombatSystemState.SELECT_PLAYER_TARGET && playerTarget != player);
             bool current = (currentPlayerIndex > 0 && currentPlayerIndex < playerParty.Count - 1 && currentPlayer == player);
-            player.Draw(sb, grayedOut, current);
+            player.Draw(sb, current);
         }
 
         if(!string.IsNullOrWhiteSpace(dialogue.Text)) dialogue.Draw(sb);
@@ -180,6 +179,8 @@ public class CombatSystem
         //sb.DrawString(BaseGame.Font, currentState.ToString(), new Vector2(mainMenu.X, mainMenu.Y + mainMenu.Height + 4), Color.White);
     }
 
+    //TODO: take sprite effects out of Update() and move them into keypresses
+    //otherwise things are being constantly being reassigned every frame
     public void Update(GameTime currentGameTime)
     {
         if (!IsActive) return;
@@ -284,19 +285,23 @@ public class CombatSystem
                 {
                     if (!techMenu.SelectedChoice.Enabled) break;
 
+                    techMenu.Visible = false;
+                    dialogue.Visible = true;
                     selectedTechnique = techMenu.SelectedValue;
+
                     if (selectedTechnique.GetType() == typeof(DamageTechnique))
                     {
-                        techMenu.Visible = false;
-                        dialogue.Visible = true;
                         dialogue.Text = GetTargetText(enemyTarget);
+                        //TODO: hook enemy sprite effects here instead of doing them in Update()
                         currentState = CombatSystemState.SELECT_ENEMY_TARGET;
                     }
-                    else if (selectedTechnique.GetType() == typeof(HealTechnique) ||
-                             selectedTechnique.GetType() == typeof(SupportTechnique))
+                    else if (selectedTechnique.GetType() == typeof(HealTechnique))
                     {
-
+                        dialogue.Text = GetTargetText(playerTarget);
+                        playerParty.ForEach(p => p.IsSelected = (p == playerTarget));
+                        currentState = CombatSystemState.SELECT_PLAYER_TARGET;
                     }
+                    //TODO: support techs -- can be either offensive or defensive, make some flag to tell
                 }
                 break;
             }
@@ -317,6 +322,18 @@ public class CombatSystem
                 currentState = CombatSystemState.POWER_METER;
                 break;
             }
+            case CombatSystemState.SELECT_PLAYER_TARGET:
+            {
+                //should always have a selected technique
+                if (selectedTechnique == null)
+                {
+                    throw new Exception("Attempting to perform action on player target.");
+                }
+                powerMeter.Patterns = selectedTechnique.PowerMeterPatterns;
+                powerMeter.IsActive = powerMeter.Visible = true;
+                currentState = CombatSystemState.POWER_METER;
+                break;
+            }
             case CombatSystemState.POWER_METER:
             {
                 PowerMeterResult result = powerMeter.ConfirmCursor();
@@ -325,26 +342,36 @@ public class CombatSystem
                     //missed, or finished the last pattern in the set, so stop the meter and deal the damage
                     powerMeter.IsActive = false;
                     powerMeter.Visible = false;
+                    currentPlayer.CriticalModifier = powerMeter.DamageModifier;
 
-                    currentPlayer.CriticalDamageModifier = powerMeter.DamageModifier;
-                    CombatAction action = new CombatAction(currentPlayer, enemyTarget, selectedTechnique);
+                    //determine the target based on the type of attack or technique used
+                    CombatEntity target = null;
+                    if (selectedTechnique == null || selectedTechnique.GetType() == typeof(DamageTechnique))
+                        target = enemyTarget;
+                    else if (selectedTechnique.GetType() == typeof(HealTechnique))
+                        target = playerTarget;
+
+                    CombatAction action = new CombatAction(currentPlayer, target, selectedTechnique);
                     dialogue.Text = action.Execute();
-                    if (selectedTechnique != null && selectedTechnique.GetType() == typeof(DamageTechnique))
+                    if (selectedTechnique != null)
                     {
-                        DamageTechnique dt = (DamageTechnique)selectedTechnique;
-                        EffectsManager.ScreenFlash(dt.GetColor(), 0.5f, 0.05f);
+                        EffectsManager.ScreenFlash(selectedTechnique.GetColor(), 0.5f, 0.05f);
                     }
 
-                    if (enemyTarget.IsDead)
+                    if(target == enemyTarget)
                     {
-                        ShowEnemyDeathAnimation(enemyTarget);
-                        enemyTargetIndex = 0;
-                    }
-                    else
-                    {
-                        enemyTarget.ShakeFor(TimeSpan.FromMilliseconds(200), 4, TimeSpan.FromMilliseconds(20));
+                        if (enemyTarget.IsDead)
+                        {
+                            ShowEnemyDeathAnimation(enemyTarget);
+                            enemyTargetIndex = 0;
+                        }
+                        else
+                        {
+                            enemyTarget.ShakeFor(TimeSpan.FromMilliseconds(200), 4, TimeSpan.FromMilliseconds(20));
+                        }
                     }
 
+                    playerParty.ForEach(p => p.IsSelected = null);
                     DisableEnemyBlinkEffects();
                     powerMeter.Reset();
 
@@ -419,6 +446,12 @@ public class CombatSystem
                 if (enemyTargetIndex < 0) enemyTargetIndex = 0;
                 dialogue.Text = GetTargetText(enemyTarget);
                 break;
+            case CombatSystemState.SELECT_PLAYER_TARGET:
+                playerTargetIndex--;
+                if (playerTargetIndex < 0) playerTargetIndex = 0;
+                dialogue.Text = GetTargetText(playerTarget);
+                playerParty.ForEach(p => p.IsSelected = (p == playerTarget));
+                break;
         }
     }
 
@@ -435,6 +468,12 @@ public class CombatSystem
                 enemyTargetIndex++;
                 if (enemyTargetIndex >= enemyParty.Count) enemyTargetIndex = enemyParty.Count - 1;
                 dialogue.Text = GetTargetText(enemyTarget);
+                break;
+            case CombatSystemState.SELECT_PLAYER_TARGET:
+                playerTargetIndex++;
+                if (playerTargetIndex >= playerParty.Count) playerTargetIndex = playerParty.Count - 1;
+                dialogue.Text = GetTargetText(playerTarget);
+                playerParty.ForEach(p => p.IsSelected = (p == playerTarget));
                 break;
         }
     }
@@ -480,6 +519,17 @@ public class CombatSystem
                 }
                 currentState = CombatSystemState.MENU_SELECT;
                 break;
+            case CombatSystemState.SELECT_PLAYER_TARGET:
+                dialogue.Text = "";
+                if (currentMenu == techMenu)
+                {
+                    //cancelled while targetting a technique, go back to technique menu
+                    techMenu.Visible = true;
+                    dialogue.Visible = false;
+                }
+                playerParty.ForEach(p => p.IsSelected = null);
+                currentState = CombatSystemState.MENU_SELECT;
+                break;
             case CombatSystemState.MENU_SELECT:
                 if (currentMenu == techMenu)
                 {
@@ -519,6 +569,7 @@ public class CombatSystem
 
     private string GetTargetText(CombatEntity target)
     {
+        if (target == currentPlayer) return "To: Self";
         return string.Format("To: {0}", target.FullName);
     }
 
@@ -657,7 +708,7 @@ public class CombatSystem
             Techniques.LoadByName("Earthquake"),
             Techniques.LoadByName("Astral Flare"),
             Techniques.LoadByName("Shadowburn"),
-            //new HealTechnique("Heal", 20),
+            Techniques.LoadByName("Heal"),
             //new SupportTechnique("Empower"),
             //new SupportTechnique("Chant"),
             //new SupportTechnique("Fortify"),

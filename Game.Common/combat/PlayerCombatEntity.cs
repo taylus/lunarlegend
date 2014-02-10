@@ -24,6 +24,10 @@ public class PlayerCombatEntity : CombatEntity
     private int originalY;
     public bool IsCurrent { get; set; }
 
+    //is the player being targeted by a technique? 
+    //null if no targeting is occurring
+    public bool? IsSelected { get; set; }
+
     private static readonly Color ALIVE_COLOR = Box.DEFAULT_BACKGROUND_COLOR;
     private static readonly Color DEAD_COLOR = Color.Lerp(Color.Transparent, Color.DarkRed, MathHelper.Clamp(Box.DEFAULT_OPACITY, 0, 1));
 
@@ -45,8 +49,7 @@ public class PlayerCombatEntity : CombatEntity
         ResourceType = ResourceType.Mana;
     }
 
-    //TODO: bake all this into a PlayerStatusBox or something?
-    public void Draw(SpriteBatch sb, bool grayedOut = false, bool currentPlayer = false)
+    public void Draw(SpriteBatch sb, bool currentPlayer = false)
     {
         statusBox.BackgroundColor = IsDead ? DEAD_COLOR : ALIVE_COLOR;
         statusBox.Y = IsCurrent ? originalY - CURRENT_PLAYER_OFFSET : originalY;
@@ -73,6 +76,9 @@ public class PlayerCombatEntity : CombatEntity
             string resourceLabel = ResourceType == ResourceType.Mana ? "Mana: " : "Energy: ";
             sb.DrawString(BaseGame.Font, String.Format("{0}    {1}/{2}", resourceLabel, Resource.Current, Resource.Maximum), resourceLabelPosition, Color.White);
         }
+
+        //darken non-selected players when targeting
+        if (IsSelected.HasValue && !IsSelected.Value) Util.DrawRectangle(sb, statusBox.Rectangle, Color.Lerp(Color.Transparent, Color.Black, 0.5f));
     }
 
     public void CenterOn(int x, int y)

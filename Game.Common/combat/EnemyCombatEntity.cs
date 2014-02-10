@@ -82,11 +82,6 @@ public class EnemyCombatEntity : CombatEntity
         sprite.Blink(Color.White, Color.DarkGray, interval);
     }
 
-    public void BlinkFor(TimeSpan duration, TimeSpan interval)
-    {
-        sprite.BlinkFor(duration, Color.White, Color.Red, interval);
-    }
-
     public void StopBlink()
     {
         sprite.StopBlink();

@@ -22,7 +22,7 @@ public abstract class CombatEntity
     public int Y { get; set; }
     //base combat stats, before crits, buffs, or any other damage modifiers
     public Dictionary<DamageType, CombatRating> CombatRatings { get; set; }
-    public float CriticalDamageModifier = 1.0f;
+    public float CriticalModifier = 1.0f;
     public List<StatusModifier> Modifiers { get; set; }
 
     public const uint DEFAULT_PHYSICAL_ATTACK = 5;

@@ -37,6 +37,11 @@ public abstract class Technique
     {
         return Name;
     }
+
+    public virtual Color GetColor()
+    {
+        return Color.White;
+    }
 }
 
 public class DamageTechnique : Technique
@@ -44,7 +49,7 @@ public class DamageTechnique : Technique
     public DamageType Type { get; private set; }
     public uint Power { get; protected set; }
 
-    public DamageTechnique(string name, uint power, DamageType type = DamageType.Physical, uint cost = 0, List<PowerMeterPattern> powerMeterPatterns = null)
+    public DamageTechnique(string name, uint power, DamageType type, uint cost, List<PowerMeterPattern> powerMeterPatterns = null)
         : base(name, cost, powerMeterPatterns)
     {
         Power = power;
@@ -53,7 +58,7 @@ public class DamageTechnique : Technique
 
     //color representing this technique's DamageType
     //used for screen flashes when using this technique
-    public Color GetColor()
+    public override Color GetColor()
     {
         switch (Type)
         {
@@ -81,7 +86,7 @@ public class HealTechnique : Technique
 {
     public uint Power { get; protected set; }
 
-    public HealTechnique(string name, uint power) : base(name)
+    public HealTechnique(string name, uint power, uint cost) : base(name, cost)
     {
         Power = power;
     }
@@ -137,6 +142,8 @@ public static class Techniques
                 return new DamageTechnique("Astral Flare", 50, DamageType.Astral, 10);
             case "Shadowburn":
                 return new DamageTechnique("Shadowburn", 50, DamageType.Shadow, 10);
+            case "Heal":
+                return new HealTechnique("Heal", 20, 5);
             default:
                 throw new ArgumentException("Technique \"" + name + "\" not found.");
         }

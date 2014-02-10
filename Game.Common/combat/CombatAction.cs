@@ -38,9 +38,22 @@ public class CombatAction
             if (Technique.ResourceCost >= 0 && Technique.ResourceCost <= Source.Resource.Current)
             {
                 Source.Resource.Current -= Technique.ResourceCost;
-                uint damage = CalculateDamage();
-                description = string.Format("{0} casts {1} on {2} for {3} damage!", Source.FullName, Technique.Name, Target.FullName, damage);
-                Target.TakeDamage(damage);
+
+                if (Technique.GetType() == typeof(DamageTechnique))
+                {
+                    uint damage = CalculateDamage();
+                    description = string.Format("{0} casts {1} on {2} for {3} damage!", Source.FullName, Technique.Name, Target.FullName, damage);
+                    Target.TakeDamage(damage);
+                }
+                else if (Technique.GetType() == typeof(HealTechnique))
+                {
+                    uint healAmount = ((HealTechnique)Technique).Power;
+                    if (Source == Target)
+                        description = string.Format("{0} casts {1} for {2} health!", Source.FullName, Technique.Name, healAmount);
+                    else
+                        description = string.Format("{0} casts {1} on {2} for {3} health!", Source.FullName, Technique.Name, Target.FullName, healAmount);
+                    Target.Heal(healAmount);
+                }
             }
             else
             {
@@ -78,7 +91,7 @@ public class CombatAction
         //}
 
         //apply crit and defenses to determine final damage
-        float damage = baseDamage * Source.CriticalDamageModifier;
+        float damage = baseDamage * Source.CriticalModifier;
         uint defense = Target.CombatRatings[type].Defense;
 
         //if target is a player, apply defense from equipped armor

@@ -25,7 +25,7 @@ public abstract class UIElement
     public abstract void Draw(SpriteBatch sb);
 
     //draw this element into the given RenderSprite, allowing for sprite effects to be applied
-    //this must be called outside any other SpriteBatch begin/end!
+    //this must be called outside of this SpriteBatch's begin/end
     public virtual void DrawTo(RenderTargetSprite target, SpriteBatch sb, GraphicsDevice gd)
     {
         gd.SetRenderTarget(target.RenderTarget);
