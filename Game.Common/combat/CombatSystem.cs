@@ -275,12 +275,15 @@ public class CombatSystem
                     {
                         techMenu.ResetSelection();
                         techMenu.Visible = true;
+                        BindTechniquesFromPlayer(currentPlayer);
                         currentMenu = techMenu;
                         dialogue.Visible = false;
                     }
                 }
                 else if (currentMenu == techMenu)
                 {
+                    if (!techMenu.SelectedChoice.Enabled) break;
+
                     selectedTechnique = techMenu.SelectedValue;
                     if (selectedTechnique.GetType() == typeof(DamageTechnique))
                     {
@@ -507,6 +510,7 @@ public class CombatSystem
 
     public void ShowEnemyDeathAnimation(EnemyCombatEntity enemy)
     {
+        //TODO: more impressive death animations for bosses; maybe even block the UI
         //enemy.Tint = Color.Red;
         enemy.FadeOut(TimeSpan.FromSeconds(1));
         dyingEnemies.Add(enemy);
@@ -589,6 +593,15 @@ public class CombatSystem
         //on that, with a small margin between each player
     }
 
+    private void BindTechniquesFromPlayer(PlayerCombatEntity player)
+    {
+        //TODO: populate w/ player's techniques
+        foreach (MenuBoxChoice<Technique> choice in techMenu.Choices)
+        {
+            choice.Enabled = player.Resource.Current >= choice.Payload.ResourceCost;
+        }
+    }
+
     private void DisableEnemyBlinkEffects()
     {
         foreach (EnemyCombatEntity e in enemyParty)
@@ -637,13 +650,13 @@ public class CombatSystem
             Techniques.LoadByName("Fireball"),
             Techniques.LoadByName("Firestorm"),
             Techniques.LoadByName("Hellfire"),
-            new DamageTechnique("Frostbite", 10, DamageType.Water),
-            new DamageTechnique("Spark", 10, DamageType.Wind),
-            new DamageTechnique("Thunderstorm", 20, DamageType.Wind),
-            new DamageTechnique("Boulder", 10, DamageType.Earth),
-            new DamageTechnique("Earthquake", 20, DamageType.Earth),
-            new DamageTechnique("Astral Flare", 50, DamageType.Astral),
-            new DamageTechnique("Shadowburn", 50, DamageType.Shadow),
+            Techniques.LoadByName("Frostbite"),
+            Techniques.LoadByName("Spark"),
+            Techniques.LoadByName("Thunderstorm"),
+            Techniques.LoadByName("Boulder"),
+            Techniques.LoadByName("Earthquake"),
+            Techniques.LoadByName("Astral Flare"),
+            Techniques.LoadByName("Shadowburn"),
             //new HealTechnique("Heal", 20),
             //new SupportTechnique("Empower"),
             //new SupportTechnique("Chant"),

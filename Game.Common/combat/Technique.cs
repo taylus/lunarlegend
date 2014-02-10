@@ -16,9 +16,10 @@ public abstract class Technique
     public bool MultiTarget { get; private set; }   //TODO: techniques that target all enemies
     public List<PowerMeterPattern> PowerMeterPatterns { get; protected set; }
 
-    public Technique(string name, List<PowerMeterPattern> powerMeterPatterns = null)
+    public Technique(string name, uint cost = 0, List<PowerMeterPattern> powerMeterPatterns = null)
     {
         Name = name;
+        ResourceCost = cost;
 
         if (powerMeterPatterns != null)
         {
@@ -43,8 +44,8 @@ public class DamageTechnique : Technique
     public DamageType Type { get; private set; }
     public uint Power { get; protected set; }
 
-    public DamageTechnique(string name, uint power, DamageType type = DamageType.Physical, List<PowerMeterPattern> powerMeterPatterns = null)
-        : base(name, powerMeterPatterns)
+    public DamageTechnique(string name, uint power, DamageType type = DamageType.Physical, uint cost = 0, List<PowerMeterPattern> powerMeterPatterns = null)
+        : base(name, cost, powerMeterPatterns)
     {
         Power = power;
         Type = type;
@@ -112,16 +113,30 @@ public static class Techniques
         {
             case "Fireball":
                 patterns.Add(new PowerMeterPattern("========XX", 5.0f));
-                return new DamageTechnique(name, 10, DamageType.Fire, patterns);
+                return new DamageTechnique(name, 10, DamageType.Fire, 2, patterns);
             case "Firestorm":
                 patterns.Add(new PowerMeterPattern("==-=X=X=-==", 5.0f));
                 patterns.Add(new PowerMeterPattern("=---=X=---=", 7.0f));
-                return new DamageTechnique(name, 20, DamageType.Fire, patterns);
+                return new DamageTechnique(name, 20, DamageType.Fire, 5, patterns);
             case "Hellfire":
                 patterns.Add(new PowerMeterPattern("X===XX===X", 5.0f));
                 patterns.Add(new PowerMeterPattern("X=--====--=X", 7.0f));
                 patterns.Add(new PowerMeterPattern("X=-----==-----=X", 8.0f));
-                return new DamageTechnique(name, 30, DamageType.Fire, patterns);
+                return new DamageTechnique(name, 30, DamageType.Fire, 10, patterns);
+            case "Frostbite":
+                return new DamageTechnique("Frostbite", 10, DamageType.Water, 2);
+            case "Spark":
+                return new DamageTechnique("Spark", 10, DamageType.Wind, 2);
+            case "Thunderstorm":
+                return new DamageTechnique("Thunderstorm", 20, DamageType.Wind, 5);
+            case "Boulder":
+                return new DamageTechnique("Boulder", 10, DamageType.Earth, 2);
+            case "Earthquake":
+                return new DamageTechnique("Earthquake", 20, DamageType.Earth, 5);
+            case "Astral Flare":
+                return new DamageTechnique("Astral Flare", 50, DamageType.Astral, 10);
+            case "Shadowburn":
+                return new DamageTechnique("Shadowburn", 50, DamageType.Shadow, 10);
             default:
                 throw new ArgumentException("Technique \"" + name + "\" not found.");
         }

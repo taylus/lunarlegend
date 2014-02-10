@@ -17,7 +17,7 @@ public class BattleDemo : BaseGame
     {
         base.LoadContent();
         combatSystem = new CombatSystem(CreateSamplePlayerParty());
-        combatSystem.Engage(Enemies.LoadPartyByID(1), @"battle\cave_bg");
+        combatSystem.Engage(Enemies.LoadPartyByID(3), @"battle\cave_bg");
     }
 
     protected override void Update(GameTime gameTime)
@@ -67,8 +67,8 @@ public class BattleDemo : BaseGame
     private List<PlayerCombatEntity> CreateSamplePlayerParty()
     {
         List<PlayerCombatEntity> playerParty = new List<PlayerCombatEntity>();
-        playerParty.Add(new PlayerCombatEntity("Brandon", 50, 10));
-        playerParty.Add(new PlayerCombatEntity("Spencer", 50, 10));
+        playerParty.Add(new PlayerCombatEntity("Brandon", 50, 25));
+        playerParty.Add(new PlayerCombatEntity("Spencer", 50, 50));
         //playerParty.Add(new PlayerCombatEntity("Justin", 10, 5));
         //playerParty.Add(new PlayerCombatEntity("Vicks", 5, 0));
         //playerParty.Add(new PlayerCombatEntity("Wedge", 5, 0));

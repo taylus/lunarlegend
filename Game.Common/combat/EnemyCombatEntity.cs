@@ -130,8 +130,8 @@ public static class Enemies
                 break;
             case 3:
                 stats = new CombatRatings();
-                stats.Add(DamageType.Physical, new CombatRating(20, 5));
-                enemyParty.Add(new EnemyCombatEntity("Doge Wizard", 50, stats, @"demo\dogewizard", 0.85f, new Point(0, -20)));
+                stats.Add(DamageType.Physical, new CombatRating(5, 2));
+                enemyParty.Add(new EnemyCombatEntity("Doge Wizard", 250, stats, @"demo\dogewizard", 0.85f, new Point(0, -20)));
                 break;
             default:
                 //missingno

@@ -33,7 +33,7 @@ public class MenuBox<T> : BaseMenuBox
     private int selectedChoiceIndex = 0;
     private static readonly Color DEFAULT_FONT_COLOR = Color.White;
 
-    private MenuBoxChoice<T> SelectedChoice
+    public MenuBoxChoice<T> SelectedChoice
     {
         get
         {
@@ -132,7 +132,8 @@ public class MenuBox<T> : BaseMenuBox
         foreach (MenuBoxChoice<T> choice in choices)
         {
             Color choiceColor;
-            if (!IsActive || !choice.Enabled) choiceColor = Color.Gray;
+            if (choice == SelectedChoice && !choice.Enabled) choiceColor = Color.DarkGoldenrod;
+            else if (!IsActive || !choice.Enabled) choiceColor = Color.Gray;
             else choiceColor = (choice == SelectedChoice) ? Color.Yellow : Color.White;
 
             if (typeof(UIElement).IsAssignableFrom(typeof(T)))
@@ -154,7 +155,6 @@ public class MenuBox<T> : BaseMenuBox
         }
     }
 
-    //TODO: skip over disabled choices
     public override void SelectBelowChoice()
     {
         if (!IsActive) return;

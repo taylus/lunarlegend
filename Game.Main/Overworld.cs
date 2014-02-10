@@ -298,8 +298,8 @@ public class Overworld : BaseGame
     private List<PlayerCombatEntity> CreateSamplePlayerParty()
     {
         List<PlayerCombatEntity> playerParty = new List<PlayerCombatEntity>();
-        playerParty.Add(new PlayerCombatEntity("Brandon", 50, 10));
-        playerParty.Add(new PlayerCombatEntity("Spencer", 50, 10));
+        playerParty.Add(new PlayerCombatEntity("Brandon", 50, 25));
+        playerParty.Add(new PlayerCombatEntity("Spencer", 50, 25));
         return playerParty;
     }
 }
